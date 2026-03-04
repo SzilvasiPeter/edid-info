@@ -1,0 +1,28 @@
+[package]
+name = "edid-info"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Lightweight Rust library for reading EDID data"
+repository = "https://github.com/SzilvasiPeter/edid-info"
+readme = "README.md"
+keywords = ["give me a keyword"]
+categories = ["give me a category"] # see: https://crates.io/category_slugs
+
+[dependencies]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"
+pedantic = "deny"
+nursery = "deny"
+cargo = "deny"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

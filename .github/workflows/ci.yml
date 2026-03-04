@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: rustup toolchain install nightly --component llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit,cargo-deny,cargo-udeps,cargo-geiger,cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run linters
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Run tests
+        run: cargo test --all-targets --all-features
+
+      - name: Audit dependencies
+        run: cargo audit
+      - name: Enforce deny policies
+        run: cargo deny check
+      - name: Find unused deps
+        run: cargo +nightly udeps --all-targets
+      - name: Measure unsafe usage
+        run: cargo geiger --all-features
+
+      - name: Test Coverage
+        run: |
+          cargo llvm-cov --all-features --html --output-dir target/coverage
+          cargo llvm-cov --all-features --json --output-path target/coverage/coverage.json
+
+          pct=$(jq -r '.data[0].totals.lines.percent' target/coverage/coverage.json)
+          pct_i=$(printf '%.0f' "$pct")
+          color=yellow
+          if [ "$pct_i" -ge 90 ]; then color=brightgreen; \
+          elif [ "$pct_i" -ge 80 ]; then color=green; fi
+
+          jq -n --arg message "$(printf '%.2f%%' "$pct")" --arg color "$color" \
+            '{"schemaVersion":1,"label":"coverage","message":$message,"color":$color}' > target/coverage/badge.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: target/coverage
+
+  pages:
+    if: github.event_name != 'pull_request'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-html
+          path: target/coverage
+      - name: Prepare Pages content
+        run: |
+          mkdir -p site/coverage
+          cp -r target/coverage/html/* site/coverage/
+          cp target/coverage/badge.json site/coverage/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+      - name: Print Pages URL
+        run: echo "GitHub Pages available at ${{ steps.deploy.outputs.page_url }}coverage/index.html"
