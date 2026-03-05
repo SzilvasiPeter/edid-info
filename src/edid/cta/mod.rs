@@ -90,7 +90,7 @@ impl Cta {
     }
 
     #[must_use]
-    pub fn data_blocks(&self) -> DataBlockIter<'_> {
+    pub const fn data_blocks(&self) -> DataBlockIter<'_> {
         DataBlockIter {
             raw: &self.raw,
             at: 4,

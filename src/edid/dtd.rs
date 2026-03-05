@@ -27,11 +27,10 @@ impl Dtd {
             let off = DTD_OFF + i * DTD_LEN;
             let mut desc_raw = [0; DETAILED_LEN];
             desc_raw.copy_from_slice(&raw[off..off + DTD_LEN]);
-            modes[i] = if let Some(timing) = DetailedTiming::parse(&desc_raw) {
-                Some(Mode::Timing(timing))
-            } else {
-                MonitorDesc::parse(&desc_raw).map(Mode::Display)
-            };
+            modes[i] = DetailedTiming::parse(&desc_raw).map_or_else(
+                || MonitorDesc::parse(&desc_raw).map(Mode::Display),
+                |timing| Some(Mode::Timing(timing)),
+            );
             i += 1;
         }
 
