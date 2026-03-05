@@ -1,4 +1,4 @@
-use edid_info::edid::cta::{BlockTag, CTA_LEN, Cta};
+use edid_info::edid::cta::{AudioExtFormat, AudioFormat, BlockTag, CTA_LEN, Cta};
 
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
@@ -38,6 +38,14 @@ fn parse_cta_happy_path_from_real_edid() {
     assert_eq!(blocks[2].ext_tag(), Some(0x05));
     assert_eq!(blocks[3].tag(), BlockTag::Vendor);
     assert_eq!(blocks[4].tag(), BlockTag::Audio);
+    let sad = blocks[4].sad(0).expect("sad");
+    assert_eq!(blocks[4].sads().count(), 1);
+    assert_eq!(sad.format(), AudioFormat::Lpcm);
+    assert_eq!(sad.channels(), 2);
+    assert!(sad.has_rate(32));
+    assert!(sad.has_rate(44));
+    assert!(sad.has_rate(48));
+    assert_eq!(sad.lpcm_depth(), 0b111);
 
     let dtd0 = out.dtd(0).expect("cta dtd 0");
     assert_eq!(dtd0.pixel_clock_hz(), 174_500_000);
@@ -121,4 +129,34 @@ fn resolve_common_vic_timings() {
             (97, "2160p60", 3840, 2160, 60_000),
         ]
     );
+}
+
+#[test]
+fn parse_audio_sad_formats() {
+    let mut raw = [0u8; CTA_LEN];
+    raw[0] = 2;
+    raw[2] = 11;
+    raw[4] = 38;
+    raw[5] = 21;
+    raw[6] = 7;
+    raw[7] = 80;
+    raw[8] = 122;
+    raw[9] = 4;
+    raw[10] = 99;
+
+    let cta = Cta::parse(&raw).expect("cta parse");
+    let block = cta.data_blocks().next().expect("data block");
+    assert_eq!(block.tag(), BlockTag::Audio);
+
+    let ac3 = block.sad(0).expect("ac3");
+    assert_eq!(ac3.format(), AudioFormat::Ac3);
+    assert_eq!(ac3.channels(), 6);
+    assert_eq!(ac3.max_kbps(), Some(640));
+    assert_eq!(ac3.ext(), None);
+
+    let ext = block.sad(1).expect("ext");
+    assert_eq!(ext.format(), AudioFormat::Ext);
+    assert_eq!(ext.channels(), 3);
+    assert_eq!(ext.ext(), Some(AudioExtFormat::Ac4));
+    assert_eq!(ext.max_kbps(), None);
 }
