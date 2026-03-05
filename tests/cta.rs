@@ -34,9 +34,26 @@ fn parse_cta_happy_path_from_real_edid() {
         ]
     );
     assert_eq!(blocks[1].tag(), BlockTag::Vendor);
+    assert_eq!(blocks[1].vendor_oui(), Some(0x000_0c03));
+    let hdmi = blocks[1].hdmi_vsdb().expect("hdmi vsdb");
+    assert_eq!(hdmi.oui(), 0x000_0c03);
+    assert_eq!(hdmi.phys_addr(), (1, 0, 0, 0));
+    assert!(!hdmi.ai());
+    assert!(!hdmi.dc_48());
+    assert!(hdmi.dc_36());
+    assert!(hdmi.dc_30());
+    assert!(hdmi.dc_444());
+    assert!(!hdmi.dvi_dual());
+    assert_eq!(hdmi.max_tmds_mhz(), Some(250));
+    assert!(!hdmi.lat_present());
+    assert!(!hdmi.ilat_present());
+    assert_eq!(hdmi.video_lat_ms(), None);
+    assert_eq!(hdmi.audio_lat_ms(), None);
     assert_eq!(blocks[2].tag(), BlockTag::Extended);
     assert_eq!(blocks[2].ext_tag(), Some(0x05));
     assert_eq!(blocks[3].tag(), BlockTag::Vendor);
+    assert_eq!(blocks[3].vendor_oui(), Some(0x000_001a));
+    assert_eq!(blocks[3].hdmi_vsdb(), None);
     assert_eq!(blocks[4].tag(), BlockTag::Audio);
     let sad = blocks[4].sad(0).expect("sad");
     assert_eq!(blocks[4].sads().count(), 1);
@@ -159,4 +176,44 @@ fn parse_audio_sad_formats() {
     assert_eq!(ext.channels(), 3);
     assert_eq!(ext.ext(), Some(AudioExtFormat::Ac4));
     assert_eq!(ext.max_kbps(), None);
+}
+
+#[test]
+fn parse_hdmi_vsdb_with_latency_fields() {
+    let mut raw = [0u8; CTA_LEN];
+    raw[0] = 2;
+    raw[2] = 18;
+    raw[4] = 109;
+    raw[5] = 3;
+    raw[6] = 12;
+    raw[7] = 0;
+    raw[8] = 32;
+    raw[9] = 16;
+    raw[10] = 168;
+    raw[11] = 192;
+    raw[12] = 192;
+    raw[13] = 6;
+    raw[14] = 11;
+    raw[15] = 251;
+    raw[16] = 0;
+    raw[17] = 26;
+
+    let cta = Cta::parse(&raw).expect("cta parse");
+    let block = cta.data_blocks().next().expect("data block");
+    let vsdb = block.hdmi_vsdb().expect("hdmi vsdb");
+    assert_eq!(vsdb.oui(), 0x000_c03);
+    assert_eq!(vsdb.phys_addr(), (2, 0, 1, 0));
+    assert!(vsdb.ai());
+    assert!(!vsdb.dc_48());
+    assert!(vsdb.dc_36());
+    assert!(!vsdb.dc_30());
+    assert!(vsdb.dc_444());
+    assert!(!vsdb.dvi_dual());
+    assert_eq!(vsdb.max_tmds_mhz(), Some(960));
+    assert!(vsdb.lat_present());
+    assert!(vsdb.ilat_present());
+    assert_eq!(vsdb.video_lat_ms(), Some(10));
+    assert_eq!(vsdb.audio_lat_ms(), Some(20));
+    assert_eq!(vsdb.interlaced_video_lat_ms(), Some(500));
+    assert_eq!(vsdb.interlaced_audio_lat_ms(), None);
 }

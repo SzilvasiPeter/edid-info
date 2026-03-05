@@ -77,6 +77,19 @@ pub struct Sad {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct HdmiVsdb {
+    org_uid: u32,
+    phys_addr: (u8, u8, u8, u8),
+    deep_color: u8,
+    max_tmds_mhz: Option<u16>,
+    lat: u8,
+    video_lat: Option<u16>,
+    audio_lat: Option<u16>,
+    video_ilat: Option<u16>,
+    audio_ilat: Option<u16>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Vic {
     name: &'static str,
     width: u16,
@@ -327,6 +340,69 @@ impl Sad {
     }
 }
 
+impl HdmiVsdb {
+    #[must_use]
+    pub const fn oui(&self) -> u32 {
+        self.org_uid
+    }
+    #[must_use]
+    pub const fn phys_addr(&self) -> (u8, u8, u8, u8) {
+        self.phys_addr
+    }
+    #[must_use]
+    pub const fn ai(&self) -> bool {
+        (self.deep_color & 0b1000_0000) != 0
+    }
+    #[must_use]
+    pub const fn dc_48(&self) -> bool {
+        (self.deep_color & 0b0100_0000) != 0
+    }
+    #[must_use]
+    pub const fn dc_36(&self) -> bool {
+        (self.deep_color & 0b0010_0000) != 0
+    }
+    #[must_use]
+    pub const fn dc_30(&self) -> bool {
+        (self.deep_color & 0b0001_0000) != 0
+    }
+    #[must_use]
+    pub const fn dc_444(&self) -> bool {
+        (self.deep_color & 0b0000_1000) != 0
+    }
+    #[must_use]
+    pub const fn dvi_dual(&self) -> bool {
+        (self.deep_color & 0b0000_0001) != 0
+    }
+    #[must_use]
+    pub const fn max_tmds_mhz(&self) -> Option<u16> {
+        self.max_tmds_mhz
+    }
+    #[must_use]
+    pub const fn lat_present(&self) -> bool {
+        (self.lat & 0b1000_0000) != 0
+    }
+    #[must_use]
+    pub const fn ilat_present(&self) -> bool {
+        (self.lat & 0b0100_0000) != 0
+    }
+    #[must_use]
+    pub const fn video_lat_ms(&self) -> Option<u16> {
+        self.video_lat
+    }
+    #[must_use]
+    pub const fn audio_lat_ms(&self) -> Option<u16> {
+        self.audio_lat
+    }
+    #[must_use]
+    pub const fn interlaced_video_lat_ms(&self) -> Option<u16> {
+        self.video_ilat
+    }
+    #[must_use]
+    pub const fn interlaced_audio_lat_ms(&self) -> Option<u16> {
+        self.audio_ilat
+    }
+}
+
 impl DataBlock {
     #[must_use]
     pub const fn tag(&self) -> BlockTag {
@@ -381,6 +457,66 @@ impl DataBlock {
         };
         SadIter { raw, at: 0 }
     }
+
+    #[must_use]
+    pub fn vendor_oui(&self) -> Option<u32> {
+        if self.tag != BlockTag::Vendor {
+            return None;
+        }
+        let raw = self.data();
+        if raw.len() < 3 {
+            return None;
+        }
+        Some(u32::from(raw[0]) | (u32::from(raw[1]) << 8) | (u32::from(raw[2]) << 16))
+    }
+
+    #[must_use]
+    pub fn hdmi_vsdb(&self) -> Option<HdmiVsdb> {
+        let raw = self.data();
+        if self.tag != BlockTag::Vendor || raw.len() < 5 {
+            return None;
+        }
+        let oui = self.vendor_oui()?;
+        if oui != 0x0000_0c03 {
+            return None;
+        }
+        let pa0 = raw[3] >> 4;
+        let pa1 = raw[3] & 0x0f;
+        let pa2 = raw[4] >> 4;
+        let pa3 = raw[4] & 0x0f;
+        let dc = raw.get(5).copied().unwrap_or(0);
+        let max_tmds_mhz = raw
+            .get(6)
+            .copied()
+            .filter(|v| *v != 0)
+            .map(|v| u16::from(v) * 5);
+        let lat = raw.get(7).copied().unwrap_or(0) & 0b1100_0000;
+        let has_lat = (lat & 0b1000_0000) != 0;
+        let has_int_lat = has_lat && (lat & 0b0100_0000) != 0;
+        let v_ms = has_lat
+            .then(|| raw.get(8).copied().and_then(lat_ms))
+            .flatten();
+        let a_ms = has_lat
+            .then(|| raw.get(9).copied().and_then(lat_ms))
+            .flatten();
+        let video_latency = has_int_lat
+            .then(|| raw.get(10).copied().and_then(lat_ms))
+            .flatten();
+        let audio_latency = has_int_lat
+            .then(|| raw.get(11).copied().and_then(lat_ms))
+            .flatten();
+        Some(HdmiVsdb {
+            org_uid: oui,
+            phys_addr: (pa0, pa1, pa2, pa3),
+            deep_color: dc,
+            max_tmds_mhz,
+            lat,
+            video_lat: v_ms,
+            audio_lat: a_ms,
+            video_ilat: video_latency,
+            audio_ilat: audio_latency,
+        })
+    }
 }
 
 impl Iterator for SvdIter<'_> {
@@ -402,6 +538,18 @@ impl Iterator for SadIter<'_> {
         }
         self.at = at + 3;
         Some(Sad::parse(raw[at], raw[at + 1], raw[at + 2]))
+    }
+}
+
+const fn lat_ms(raw: u8) -> Option<u16> {
+    if raw == 0 {
+        None
+    } else if raw == 251 {
+        Some(500)
+    } else if raw < 251 {
+        Some(((raw as u16) - 1) * 2)
+    } else {
+        None
     }
 }
 
