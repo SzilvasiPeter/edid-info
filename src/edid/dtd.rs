@@ -22,16 +22,16 @@ impl Dtd {
     pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
         let mut modes = [None; DTD_NUM];
 
-        let mut timing_raw = [0; DETAILED_LEN];
-        timing_raw.copy_from_slice(&raw[DTD_OFF..DTD_OFF + DTD_LEN]);
-        modes[0] = DetailedTiming::parse(&timing_raw).map(Mode::Timing);
-
-        let mut i = 1;
+        let mut i = 0;
         while i < DTD_NUM {
             let off = DTD_OFF + i * DTD_LEN;
-            let mut display_raw = [0; DTD_LEN];
-            display_raw.copy_from_slice(&raw[off..off + DTD_LEN]);
-            modes[i] = MonitorDesc::parse(&display_raw).map(Mode::Display);
+            let mut desc_raw = [0; DETAILED_LEN];
+            desc_raw.copy_from_slice(&raw[off..off + DTD_LEN]);
+            modes[i] = if let Some(timing) = DetailedTiming::parse(&desc_raw) {
+                Some(Mode::Timing(timing))
+            } else {
+                MonitorDesc::parse(&desc_raw).map(Mode::Display)
+            };
             i += 1;
         }
 
@@ -41,5 +41,24 @@ impl Dtd {
     #[must_use]
     pub const fn mode(&self, i: usize) -> Option<Mode> {
         if i < DTD_NUM { self.modes[i] } else { None }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DTD_LEN, DTD_OFF, Dtd, Mode};
+
+    #[test]
+    fn parse_timing_in_second_slot() {
+        let mut raw = [0_u8; 128];
+        let off = DTD_OFF + DTD_LEN;
+        raw[off] = 0x01;
+        raw[off + 1] = 0x1d;
+
+        let out = Dtd::parse_base(&raw);
+        match out.mode(1) {
+            Some(Mode::Timing(timing)) => assert_eq!(timing.pixel_clock_hz(), 74_250_000),
+            _ => panic!("slot 1 should parse as timing"),
+        }
     }
 }
