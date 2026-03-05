@@ -1,4 +1,4 @@
-use edid_info::edid::cta::{BlockTag, Cta};
+use edid_info::edid::cta::{BlockTag, Cta, CTA_LEN};
 
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
@@ -23,6 +23,18 @@ fn parse_cta_happy_path_from_real_edid() {
     assert_eq!(blocks[2].ext_tag(), Some(0x05));
     assert_eq!(blocks[3].tag(), BlockTag::Vendor);
     assert_eq!(blocks[4].tag(), BlockTag::Audio);
+    assert_eq!(
+        blocks[0].svds().map(|svd| (svd.vic(), svd.native())).collect::<Vec<_>>(),
+        vec![
+            (16, true),
+            (1, false),
+            (3, false),
+            (4, false),
+            (18, false),
+            (19, false),
+            (31, true),
+        ]
+    );
 
     let dtd0 = out.dtd(0).expect("cta dtd 0");
     assert_eq!(dtd0.pixel_clock_hz(), 174_500_000);
@@ -37,4 +49,19 @@ fn parse_cta_happy_path_from_real_edid() {
     assert!(out.dtd(2).is_none());
     assert_eq!(out.checksum(), 0x92);
     assert!(out.checksum_ok());
+}
+
+#[test]
+fn parse_video_svd_vic_8bit() {
+    let mut raw = [0u8; CTA_LEN];
+    raw[0] = 0x02;
+    raw[2] = 6;
+    raw[4] = 0x41;
+    raw[5] = 0xC1;
+
+    let cta = Cta::parse(&raw).expect("cta parse");
+    let block = cta.data_blocks().next().expect("data block");
+    let svd = block.svd(0).expect("svd");
+    assert_eq!(svd.vic(), 193);
+    assert!(!svd.native());
 }

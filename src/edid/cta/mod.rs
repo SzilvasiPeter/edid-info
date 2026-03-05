@@ -26,6 +26,37 @@ pub struct DataBlock {
     data: [u8; DB_MAX_LEN],
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Svd {
+    vic: u8,
+    native: bool,
+}
+
+impl Svd {
+    #[must_use]
+    pub const fn vic(&self) -> u8 {
+        self.vic
+    }
+
+    #[must_use]
+    pub const fn native(&self) -> bool {
+        self.native
+    }
+
+    const fn parse(raw: u8) -> Self {
+        let lo = raw & 0b0111_1111;
+        let hi = (raw & 0b1000_0000) != 0;
+        let native = hi && lo > 0 && lo <= 64;
+        let vic = if hi && lo >= 65 { lo | 0b1000_0000 } else { lo };
+        Self { vic, native }
+    }
+}
+
+pub struct SvdIter<'a> {
+    raw: &'a [u8],
+    at: usize,
+}
+
 impl DataBlock {
     #[must_use]
     pub const fn tag(&self) -> BlockTag {
@@ -36,12 +67,35 @@ impl DataBlock {
         self.ext_tag
     }
     #[must_use]
-    pub const fn len(&self) -> u8 {
-        self.len
-    }
-    #[must_use]
     pub fn data(&self) -> &[u8] {
         &self.data[..usize::from(self.len)]
+    }
+
+    #[must_use]
+    pub fn svd(&self, i: usize) -> Option<Svd> {
+        if self.tag != BlockTag::Video {
+            return None;
+        }
+        self.data().get(i).copied().map(Svd::parse)
+    }
+
+    #[must_use]
+    pub fn svds(&self) -> SvdIter<'_> {
+        let raw = if self.tag == BlockTag::Video {
+            self.data()
+        } else {
+            &[]
+        };
+        SvdIter { raw, at: 0 }
+    }
+}
+
+impl Iterator for SvdIter<'_> {
+    type Item = Svd;
+    fn next(&mut self) -> Option<Self::Item> {
+        let out = self.raw.get(self.at).copied().map(Svd::parse);
+        self.at += usize::from(out.is_some());
+        out
     }
 }
 
