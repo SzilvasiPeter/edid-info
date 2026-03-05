@@ -1,4 +1,4 @@
-use edid_info::edid::cta::{BlockTag, Cta, CTA_LEN};
+use edid_info::edid::cta::{BlockTag, CTA_LEN, Cta};
 
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
@@ -18,13 +18,11 @@ fn parse_cta_happy_path_from_real_edid() {
     let blocks: Vec<_> = out.data_blocks().collect();
     assert_eq!(blocks.len(), 5);
     assert_eq!(blocks[0].tag(), BlockTag::Video);
-    assert_eq!(blocks[1].tag(), BlockTag::Vendor);
-    assert_eq!(blocks[2].tag(), BlockTag::Extended);
-    assert_eq!(blocks[2].ext_tag(), Some(0x05));
-    assert_eq!(blocks[3].tag(), BlockTag::Vendor);
-    assert_eq!(blocks[4].tag(), BlockTag::Audio);
     assert_eq!(
-        blocks[0].svds().map(|svd| (svd.vic(), svd.native())).collect::<Vec<_>>(),
+        blocks[0]
+            .svds()
+            .map(|svd| (svd.vic(), svd.native()))
+            .collect::<Vec<_>>(),
         vec![
             (16, true),
             (1, false),
@@ -35,6 +33,11 @@ fn parse_cta_happy_path_from_real_edid() {
             (31, true),
         ]
     );
+    assert_eq!(blocks[1].tag(), BlockTag::Vendor);
+    assert_eq!(blocks[2].tag(), BlockTag::Extended);
+    assert_eq!(blocks[2].ext_tag(), Some(0x05));
+    assert_eq!(blocks[3].tag(), BlockTag::Vendor);
+    assert_eq!(blocks[4].tag(), BlockTag::Audio);
 
     let dtd0 = out.dtd(0).expect("cta dtd 0");
     assert_eq!(dtd0.pixel_clock_hz(), 174_500_000);
@@ -54,14 +57,68 @@ fn parse_cta_happy_path_from_real_edid() {
 #[test]
 fn parse_video_svd_vic_8bit() {
     let mut raw = [0u8; CTA_LEN];
-    raw[0] = 0x02;
+    raw[0] = 2;
     raw[2] = 6;
-    raw[4] = 0x41;
-    raw[5] = 0xC1;
+    raw[4] = 65;
+    raw[5] = 193;
 
     let cta = Cta::parse(&raw).expect("cta parse");
     let block = cta.data_blocks().next().expect("data block");
     let svd = block.svd(0).expect("svd");
     assert_eq!(svd.vic(), 193);
     assert!(!svd.native());
+}
+
+#[test]
+fn resolve_common_vic_timings() {
+    let mut raw = [0u8; CTA_LEN];
+    raw[0] = 2;
+    raw[2] = 17;
+    raw[4] = 76;
+    raw[5] = 129;
+    raw[6] = 3;
+    raw[7] = 4;
+    raw[8] = 144;
+    raw[9] = 18;
+    raw[10] = 19;
+    raw[11] = 159;
+    raw[12] = 93;
+    raw[13] = 94;
+    raw[14] = 95;
+    raw[15] = 96;
+    raw[16] = 97;
+
+    let cta = Cta::parse(&raw).expect("cta parse");
+    let block = cta.data_blocks().next().expect("data block");
+    let out = block
+        .svds()
+        .filter_map(|svd| {
+            svd.timing().map(|t| {
+                (
+                    svd.vic(),
+                    t.name(),
+                    t.width(),
+                    t.height(),
+                    t.vfreq_millihz(),
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        out,
+        vec![
+            (1, "DMT0659", 640, 480, 59_940),
+            (3, "480pH", 720, 480, 59_940),
+            (4, "720p", 1280, 720, 60_000),
+            (16, "1080p", 1920, 1080, 60_000),
+            (18, "576pH", 720, 576, 50_000),
+            (19, "720p50", 1280, 720, 50_000),
+            (31, "1080p50", 1920, 1080, 50_000),
+            (93, "2160p24", 3840, 2160, 24_000),
+            (94, "2160p25", 3840, 2160, 25_000),
+            (95, "2160p30", 3840, 2160, 30_000),
+            (96, "2160p50", 3840, 2160, 50_000),
+            (97, "2160p60", 3840, 2160, 60_000),
+        ]
+    );
 }

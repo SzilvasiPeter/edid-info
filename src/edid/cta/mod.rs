@@ -32,6 +32,111 @@ pub struct Svd {
     native: bool,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Vic {
+    name: &'static str,
+    width: u16,
+    height: u16,
+    vfreq_millihz: u32,
+}
+
+impl Vic {
+    #[must_use]
+    pub const fn name(&self) -> &'static str {
+        self.name
+    }
+    #[must_use]
+    pub const fn width(&self) -> u16 {
+        self.width
+    }
+    #[must_use]
+    pub const fn height(&self) -> u16 {
+        self.height
+    }
+    #[must_use]
+    pub const fn vfreq_millihz(&self) -> u32 {
+        self.vfreq_millihz
+    }
+    #[must_use]
+    pub const fn from_vic(vic: u8) -> Option<Self> {
+        match vic {
+            1 => Some(Self {
+                name: "DMT0659",
+                width: 640,
+                height: 480,
+                vfreq_millihz: 59_940,
+            }),
+            3 => Some(Self {
+                name: "480pH",
+                width: 720,
+                height: 480,
+                vfreq_millihz: 59_940,
+            }),
+            4 => Some(Self {
+                name: "720p",
+                width: 1280,
+                height: 720,
+                vfreq_millihz: 60_000,
+            }),
+            16 => Some(Self {
+                name: "1080p",
+                width: 1920,
+                height: 1080,
+                vfreq_millihz: 60_000,
+            }),
+            18 => Some(Self {
+                name: "576pH",
+                width: 720,
+                height: 576,
+                vfreq_millihz: 50_000,
+            }),
+            19 => Some(Self {
+                name: "720p50",
+                width: 1280,
+                height: 720,
+                vfreq_millihz: 50_000,
+            }),
+            31 => Some(Self {
+                name: "1080p50",
+                width: 1920,
+                height: 1080,
+                vfreq_millihz: 50_000,
+            }),
+            93 => Some(Self {
+                name: "2160p24",
+                width: 3840,
+                height: 2160,
+                vfreq_millihz: 24_000,
+            }),
+            94 => Some(Self {
+                name: "2160p25",
+                width: 3840,
+                height: 2160,
+                vfreq_millihz: 25_000,
+            }),
+            95 => Some(Self {
+                name: "2160p30",
+                width: 3840,
+                height: 2160,
+                vfreq_millihz: 30_000,
+            }),
+            96 => Some(Self {
+                name: "2160p50",
+                width: 3840,
+                height: 2160,
+                vfreq_millihz: 50_000,
+            }),
+            97 => Some(Self {
+                name: "2160p60",
+                width: 3840,
+                height: 2160,
+                vfreq_millihz: 60_000,
+            }),
+            _ => None,
+        }
+    }
+}
+
 impl Svd {
     #[must_use]
     pub const fn vic(&self) -> u8 {
@@ -41,6 +146,10 @@ impl Svd {
     #[must_use]
     pub const fn native(&self) -> bool {
         self.native
+    }
+    #[must_use]
+    pub const fn timing(&self) -> Option<Vic> {
+        Vic::from_vic(self.vic)
     }
 
     const fn parse(raw: u8) -> Self {
