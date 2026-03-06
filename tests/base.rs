@@ -1,5 +1,5 @@
 use edid_info::edid::base::BaseEdid;
-use edid_info::edid::cta::{BlockTag, Cta};
+use edid_info::edid::cta::{BlockTag, Cta, Speaker};
 use edid_info::edid::descriptor::monitor::DescTag;
 use edid_info::edid::dtd::Mode;
 
@@ -83,6 +83,11 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(blocks.len(), 6);
     assert_eq!(blocks[0].tag(), BlockTag::Audio);
     assert_eq!(blocks[1].tag(), BlockTag::Speaker);
+    let spk = blocks[1].speaker_alloc().expect("speaker alloc");
+    assert!(spk.has(Speaker::FlFr));
+    assert!(!spk.has(Speaker::Lfe));
+    assert!(!spk.has(Speaker::Fc));
+    assert_eq!(spk.bytes(), (0x01, 0x00, 0x00));
     assert_eq!(blocks[2].tag(), BlockTag::Vendor);
     assert_eq!(blocks[2].vendor_oui(), Some(0x0000_044b));
 

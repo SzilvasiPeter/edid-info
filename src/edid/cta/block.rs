@@ -1,4 +1,5 @@
 use crate::edid::cta::audio::{Sad, SadIter};
+use crate::edid::cta::speaker::SpeakerAlloc;
 use crate::edid::cta::vendor::HdmiVsdb;
 use crate::edid::cta::video::{Svd, SvdIter};
 
@@ -97,6 +98,18 @@ impl DataBlock {
             return None;
         }
         HdmiVsdb::parse(self.data())
+    }
+
+    #[must_use]
+    pub fn speaker_alloc(&self) -> Option<SpeakerAlloc> {
+        if self.tag != BlockTag::Speaker {
+            return None;
+        }
+        let raw = self.data();
+        if raw.len() < 3 {
+            return None;
+        }
+        Some(SpeakerAlloc::parse(raw[0], raw[1], raw[2]))
     }
 }
 
