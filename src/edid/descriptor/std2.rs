@@ -1,4 +1,4 @@
-use crate::edid::standard::{Timing, parse_timing_bytes};
+use crate::edid::std1::{Timing, parse_timing_bytes};
 
 const DESC_LEN: usize = 18;
 const MODE_NUM: usize = 6;

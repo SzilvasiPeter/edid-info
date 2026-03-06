@@ -1,5 +1,7 @@
 use crate::edid::base::BASE_LEN;
 
+/// Header structure containing manufacturer ID, product code, serial, and version info.
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Header {
     magic: [u8; 8],
@@ -16,8 +18,10 @@ impl Header {
     #[must_use]
     pub fn parse(raw: &[u8; BASE_LEN]) -> Self {
         let maker_raw = u16::from_be_bytes([raw[8], raw[9]]);
+        let mut magic = [0; 8];
+        magic.copy_from_slice(&raw[0..8]);
         Self {
-            magic: raw[0..8].try_into().unwrap_or_else(|_| unreachable!()),
+            magic,
             maker: [
                 maker_char((maker_raw >> 10) & 0x1F),
                 maker_char((maker_raw >> 5) & 0x1F),
@@ -73,9 +77,11 @@ impl Header {
     }
 }
 
+/// Converts a 5-bit EDID manufacturer code to ASCII.
+/// EDID encodes letters as 1='A' through 26='Z', so we add 64 to get ASCII values.
 fn maker_char(raw: u16) -> char {
     if (1..=26).contains(&raw) {
-        (u8::try_from(raw).unwrap_or_else(|_| unreachable!()) + b'@') as char
+        char::from_u32(u32::from(raw) + 64).unwrap_or('?')
     } else {
         '?'
     }

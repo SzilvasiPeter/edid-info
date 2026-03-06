@@ -29,6 +29,6 @@ impl Footer {
 
     #[must_use]
     pub fn checksum_ok(raw: &[u8; BASE_LEN]) -> bool {
-        raw.iter().fold(0u8, |sum, byte| sum.wrapping_add(*byte)) == 0
+        crate::edid::check(raw)
     }
 }

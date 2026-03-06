@@ -4,8 +4,12 @@ use crate::edid::dtd::Dtd;
 use crate::edid::established::Established;
 use crate::edid::footer::Footer;
 use crate::edid::header::Header;
-use crate::edid::standard::Standard;
+use crate::edid::std1::Std1;
 
+/// Base EDID block length in bytes.
+///
+/// # References
+/// - <https://en.wikipedia.org/wiki/Extended_Display_Identification_Data>
 pub const BASE_LEN: usize = 128;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BaseEdid {
@@ -14,7 +18,7 @@ pub struct BaseEdid {
     basic: Basic,
     chroma: Chroma,
     established: Established,
-    standard: Standard,
+    standard: Std1,
     dtd: Dtd,
     footer: Footer,
 }
@@ -28,7 +32,7 @@ impl BaseEdid {
             basic: Basic::parse_base(raw),
             chroma: Chroma::parse_base(raw),
             established: Established::parse_base(raw),
-            standard: Standard::parse_base(raw),
+            standard: Std1::parse_base(raw),
             dtd: Dtd::parse_base(raw),
             footer: Footer::parse(raw),
         }
@@ -55,7 +59,7 @@ impl BaseEdid {
     }
 
     #[must_use]
-    pub const fn standard(&self) -> Standard {
+    pub const fn standard(&self) -> Std1 {
         self.standard
     }
 

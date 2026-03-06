@@ -1,7 +1,7 @@
 use edid_info::edid::dtd::{DTD_LEN, DTD_OFF, Dtd, Mode};
 
 #[test]
-fn parse_timing_in_second_slot() {
+fn parse_dtd_synthetic() {
     let mut raw = [0_u8; 128];
     let off = DTD_OFF + DTD_LEN;
     raw[off] = 1;

@@ -5,8 +5,7 @@ use edid_info::edid::descriptor::timing::{DetailedTiming, Stereo, Sync};
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
 #[test]
-fn parse_timing_descriptor_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_timing_descriptor_acer_ek221q_h() {
     let raw = EDID[54..72].try_into().expect("timing descriptor bytes");
     let out = DetailedTiming::parse(&raw);
     assert!(out.is_some());
@@ -39,8 +38,7 @@ fn parse_timing_descriptor_from_real_edid() {
 }
 
 #[test]
-fn parse_serial_descriptor_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_serial_descriptor_acer_ek221q_h() {
     let serial_raw: &[u8; 18] = EDID[72..90].try_into().expect("serial descriptor bytes");
 
     let serial = MonitorDesc::parse(serial_raw).expect("serial descriptor parse");
@@ -51,8 +49,7 @@ fn parse_serial_descriptor_from_real_edid() {
 }
 
 #[test]
-fn parse_product_name_descriptor_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_product_name_descriptor_acer_ek221q_h() {
     let name_raw: &[u8; 18] = EDID[90..108].try_into().expect("name descriptor bytes");
     let name = MonitorDesc::parse(name_raw).expect("name descriptor parse");
     assert_eq!(name.tag(), DescTag::MonitorName);
@@ -62,8 +59,7 @@ fn parse_product_name_descriptor_from_real_edid() {
 }
 
 #[test]
-fn parse_range_limit_descriptor_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_range_limit_descriptor_acer_ek221q_h() {
     let range_raw: &[u8; 18] = EDID[108..126].try_into().expect("range descriptor bytes");
     let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);

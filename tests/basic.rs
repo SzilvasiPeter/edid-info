@@ -3,7 +3,7 @@ use edid_info::edid::basic::{Basic, BitDepth, DigitalType, DisplayType, InputKin
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
 #[test]
-fn parse_basic_happy_path_from_real_edid() {
+fn parse_basic_acer_ek221q_h() {
     assert_eq!(EDID.len(), 256);
     let raw: &[u8; 5] = EDID[20..25].try_into().expect("basic bytes");
     let out = Basic::parse(raw);

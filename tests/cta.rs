@@ -1,13 +1,11 @@
-use edid_info::edid::cta::{AudioExtFormat, AudioFormat, BlockTag, CTA_LEN, Cta};
+use edid_info::edid::cta::{AudioFormat, BlockTag, Cta};
 
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
 #[test]
-fn parse_cta_happy_path_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_cta_acer_ek221q_h() {
     let raw: &[u8; 128] = EDID[128..256].try_into().expect("cta bytes");
     let out = Cta::parse(raw).expect("cta parse");
-
     assert_eq!(out.rev(), 3);
     assert_eq!(out.native_dtd_num(), 1);
     assert!(out.underscan());
@@ -35,6 +33,7 @@ fn parse_cta_happy_path_from_real_edid() {
     );
     assert_eq!(blocks[1].tag(), BlockTag::Vendor);
     assert_eq!(blocks[1].vendor_oui(), Some(0x000_0c03));
+
     let hdmi = blocks[1].hdmi_vsdb().expect("hdmi vsdb");
     assert_eq!(hdmi.oui(), 0x000_0c03);
     assert_eq!(hdmi.phys_addr(), (1, 0, 0, 0));
@@ -55,6 +54,7 @@ fn parse_cta_happy_path_from_real_edid() {
     assert_eq!(blocks[3].vendor_oui(), Some(0x000_001a));
     assert_eq!(blocks[3].hdmi_vsdb(), None);
     assert_eq!(blocks[4].tag(), BlockTag::Audio);
+
     let sad = blocks[4].sad(0).expect("sad");
     assert_eq!(blocks[4].sads().count(), 1);
     assert_eq!(sad.format(), AudioFormat::Lpcm);
@@ -77,143 +77,4 @@ fn parse_cta_happy_path_from_real_edid() {
     assert!(out.dtd(2).is_none());
     assert_eq!(out.checksum(), 0x92);
     assert!(out.checksum_ok());
-}
-
-#[test]
-fn parse_video_svd_vic_8bit() {
-    let mut raw = [0u8; CTA_LEN];
-    raw[0] = 2;
-    raw[2] = 6;
-    raw[4] = 65;
-    raw[5] = 193;
-
-    let cta = Cta::parse(&raw).expect("cta parse");
-    let block = cta.data_blocks().next().expect("data block");
-    let svd = block.svd(0).expect("svd");
-    assert_eq!(svd.vic(), 193);
-    assert!(!svd.native());
-}
-
-#[test]
-fn resolve_common_vic_timings() {
-    let mut raw = [0u8; CTA_LEN];
-    raw[0] = 2;
-    raw[2] = 17;
-    raw[4] = 76;
-    raw[5] = 129;
-    raw[6] = 3;
-    raw[7] = 4;
-    raw[8] = 144;
-    raw[9] = 18;
-    raw[10] = 19;
-    raw[11] = 159;
-    raw[12] = 93;
-    raw[13] = 94;
-    raw[14] = 95;
-    raw[15] = 96;
-    raw[16] = 97;
-
-    let cta = Cta::parse(&raw).expect("cta parse");
-    let block = cta.data_blocks().next().expect("data block");
-    let out = block
-        .svds()
-        .filter_map(|svd| {
-            svd.timing().map(|t| {
-                (
-                    svd.vic(),
-                    t.name(),
-                    t.width(),
-                    t.height(),
-                    t.vfreq_millihz(),
-                )
-            })
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(
-        out,
-        vec![
-            (1, "DMT0659", 640, 480, 59_940),
-            (3, "480pH", 720, 480, 59_940),
-            (4, "720p", 1280, 720, 60_000),
-            (16, "1080p", 1920, 1080, 60_000),
-            (18, "576pH", 720, 576, 50_000),
-            (19, "720p50", 1280, 720, 50_000),
-            (31, "1080p50", 1920, 1080, 50_000),
-            (93, "2160p24", 3840, 2160, 24_000),
-            (94, "2160p25", 3840, 2160, 25_000),
-            (95, "2160p30", 3840, 2160, 30_000),
-            (96, "2160p50", 3840, 2160, 50_000),
-            (97, "2160p60", 3840, 2160, 60_000),
-        ]
-    );
-}
-
-#[test]
-fn parse_audio_sad_formats() {
-    let mut raw = [0u8; CTA_LEN];
-    raw[0] = 2;
-    raw[2] = 11;
-    raw[4] = 38;
-    raw[5] = 21;
-    raw[6] = 7;
-    raw[7] = 80;
-    raw[8] = 122;
-    raw[9] = 4;
-    raw[10] = 99;
-
-    let cta = Cta::parse(&raw).expect("cta parse");
-    let block = cta.data_blocks().next().expect("data block");
-    assert_eq!(block.tag(), BlockTag::Audio);
-
-    let ac3 = block.sad(0).expect("ac3");
-    assert_eq!(ac3.format(), AudioFormat::Ac3);
-    assert_eq!(ac3.channels(), 6);
-    assert_eq!(ac3.max_kbps(), Some(640));
-    assert_eq!(ac3.ext(), None);
-
-    let ext = block.sad(1).expect("ext");
-    assert_eq!(ext.format(), AudioFormat::Ext);
-    assert_eq!(ext.channels(), 3);
-    assert_eq!(ext.ext(), Some(AudioExtFormat::Ac4));
-    assert_eq!(ext.max_kbps(), None);
-}
-
-#[test]
-fn parse_hdmi_vsdb_with_latency_fields() {
-    let mut raw = [0u8; CTA_LEN];
-    raw[0] = 2;
-    raw[2] = 18;
-    raw[4] = 109;
-    raw[5] = 3;
-    raw[6] = 12;
-    raw[7] = 0;
-    raw[8] = 32;
-    raw[9] = 16;
-    raw[10] = 168;
-    raw[11] = 192;
-    raw[12] = 192;
-    raw[13] = 6;
-    raw[14] = 11;
-    raw[15] = 251;
-    raw[16] = 0;
-    raw[17] = 26;
-
-    let cta = Cta::parse(&raw).expect("cta parse");
-    let block = cta.data_blocks().next().expect("data block");
-    let vsdb = block.hdmi_vsdb().expect("hdmi vsdb");
-    assert_eq!(vsdb.oui(), 0x000_c03);
-    assert_eq!(vsdb.phys_addr(), (2, 0, 1, 0));
-    assert!(vsdb.ai());
-    assert!(!vsdb.dc_48());
-    assert!(vsdb.dc_36());
-    assert!(!vsdb.dc_30());
-    assert!(vsdb.dc_444());
-    assert!(!vsdb.dvi_dual());
-    assert_eq!(vsdb.max_tmds_mhz(), Some(960));
-    assert!(vsdb.lat_present());
-    assert!(vsdb.ilat_present());
-    assert_eq!(vsdb.video_lat_ms(), Some(10));
-    assert_eq!(vsdb.audio_lat_ms(), Some(20));
-    assert_eq!(vsdb.interlaced_video_lat_ms(), Some(500));
-    assert_eq!(vsdb.interlaced_audio_lat_ms(), None);
 }

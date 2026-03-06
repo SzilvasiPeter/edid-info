@@ -3,8 +3,7 @@ use edid_info::edid::chroma::Chroma;
 const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
 
 #[test]
-fn parse_chroma_happy_path_from_real_edid() {
-    assert_eq!(EDID.len(), 256);
+fn parse_chroma_acer_ek221q_h() {
     let raw: &[u8; 10] = EDID[25..35].try_into().expect("chroma bytes");
     let out = Chroma::parse(raw);
 

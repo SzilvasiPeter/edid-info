@@ -43,11 +43,11 @@ impl Timing {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Standard {
+pub struct Std1 {
     modes: [Option<Timing>; STANDARD_NUM],
 }
 
-impl Standard {
+impl Std1 {
     #[must_use]
     pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
         let mut out = [0; STANDARD_LEN];
