@@ -1,4 +1,5 @@
 use crate::edid::cta::audio::{Sad, SadIter};
+use crate::edid::cta::room::RoomConfig;
 use crate::edid::cta::speaker::SpeakerAlloc;
 use crate::edid::cta::vendor::HdmiVsdb;
 use crate::edid::cta::video::{Svd, SvdIter};
@@ -110,6 +111,14 @@ impl DataBlock {
             return None;
         }
         Some(SpeakerAlloc::parse(raw[0], raw[1], raw[2]))
+    }
+
+    #[must_use]
+    pub fn room_config(&self) -> Option<RoomConfig> {
+        if self.tag != BlockTag::Extended || self.ext_tag != Some(13) {
+            return None;
+        }
+        RoomConfig::parse(self.data())
     }
 }
 

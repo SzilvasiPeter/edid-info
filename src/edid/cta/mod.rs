@@ -6,6 +6,7 @@
 pub mod audio;
 pub mod block;
 pub mod header;
+pub mod room;
 pub mod speaker;
 pub mod vendor;
 pub mod vic;
@@ -16,6 +17,7 @@ use crate::edid::descriptor::timing::{DETAILED_LEN, DetailedTiming};
 pub use audio::{AudioExtFormat, AudioFormat, Sad, SadIter};
 pub use block::{BlockTag, DataBlock, DataBlockIter};
 pub use header::{CTA_LEN, CTA_TAG};
+pub use room::{Coords3, RoomCfg, RoomConfig};
 pub use speaker::{Speaker, SpeakerAlloc};
 pub use vendor::HdmiVsdb;
 pub use vic::Vic;
