@@ -1,10 +1,11 @@
 use edid_info::edid::header::Header;
 
-const EDID: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
+const ACER: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
+const ASUS: &[u8] = include_bytes!("data/asus_rog_pg27u.edid");
 
 #[test]
 fn parse_header_acer_ek221q_h() {
-    let raw: &[u8; 128] = EDID[0..128].try_into().expect("base block bytes");
+    let raw: &[u8; 128] = ACER[0..128].try_into().expect("base block bytes");
     let out = Header::parse(raw);
 
     assert_eq!(
@@ -18,4 +19,22 @@ fn parse_header_acer_ek221q_h() {
     assert_eq!(out.year(), 2023);
     assert_eq!(out.major(), 1);
     assert_eq!(out.minor(), 3);
+}
+
+#[test]
+fn parse_header_asus_rog_pg27u() {
+    let raw: &[u8; 128] = ASUS[0..128].try_into().expect("base block bytes");
+    let out = Header::parse(raw);
+
+    assert_eq!(
+        out.magic(),
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    assert_eq!(out.maker(), ['A', 'U', 'S']);
+    assert_eq!(out.product(), 10148);
+    assert_eq!(out.serial(), 0x0001_b5bc);
+    assert_eq!(out.week(), 30);
+    assert_eq!(out.year(), 2018);
+    assert_eq!(out.major(), 1);
+    assert_eq!(out.minor(), 4);
 }

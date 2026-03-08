@@ -1,4 +1,5 @@
-use crate::edid::base::BASE_LEN;
+use crate::edid::BLOCK_LEN;
+use crate::edid::bits::{get_bits, is_set};
 
 pub const BASIC_OFF: usize = 20;
 pub const BASIC_LEN: usize = 5;
@@ -14,7 +15,7 @@ pub struct Basic {
 
 impl Basic {
     #[must_use]
-    pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
+    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut out = [0; BASIC_LEN];
         out.copy_from_slice(&raw[BASIC_OFF..BASIC_OFF + BASIC_LEN]);
         Self::parse(&out)
@@ -23,10 +24,7 @@ impl Basic {
     #[must_use]
     pub const fn parse(raw: &[u8; BASIC_LEN]) -> Self {
         let input = VideoInput::parse(raw[0]);
-        let is_digital = match input.kind() {
-            InputKind::Digital { .. } => true,
-            InputKind::Analog { .. } => false,
-        };
+        let is_digital = matches!(input.kind(), InputKind::Digital { .. });
         Self {
             input,
             width_cm: raw[1],
@@ -51,7 +49,6 @@ impl Basic {
         self.height_cm
     }
 
-    /// TODO: Check if 255, then gamma is defined by DI-EXT block. If bad ext-block, return None.
     #[must_use]
     pub const fn gamma_raw(&self) -> u8 {
         self.gamma
@@ -118,18 +115,18 @@ pub struct VideoInput {
 impl VideoInput {
     #[must_use]
     pub const fn parse(raw: u8) -> Self {
-        let kind = if (raw & 0b1000_0000) != 0 {
-            let depth = match raw & 0b0111_0000 {
-                0b0000_0000 => BitDepth::Undef,
-                0b0001_0000 => BitDepth::B6,
-                0b0010_0000 => BitDepth::B8,
-                0b0011_0000 => BitDepth::B10,
-                0b0100_0000 => BitDepth::B12,
-                0b0101_0000 => BitDepth::B14,
-                0b0110_0000 => BitDepth::B16,
+        let kind = if is_set(raw, 7) {
+            let depth = match get_bits(raw, 0b0111_0000, 4) {
+                0b000 => BitDepth::Undef,
+                0b001 => BitDepth::B6,
+                0b010 => BitDepth::B8,
+                0b011 => BitDepth::B10,
+                0b100 => BitDepth::B12,
+                0b101 => BitDepth::B14,
+                0b110 => BitDepth::B16,
                 _ => BitDepth::Reserved,
             };
-            let iface = match raw & 0b0000_1111 {
+            let iface = match get_bits(raw, 0b0000_1111, 0) {
                 0 => Interface::Undef,
                 1 => Interface::Dvi,
                 2 => Interface::HdmiA,
@@ -140,19 +137,19 @@ impl VideoInput {
             };
             InputKind::Digital { depth, iface }
         } else {
-            let level = match raw & 0b0110_0000 {
-                0b0000_0000 => Level::V700_300,
-                0b0010_0000 => Level::V714_286,
-                0b0100_0000 => Level::V1000_400,
+            let level = match get_bits(raw, 0b0110_0000, 5) {
+                0b00 => Level::V700_300,
+                0b01 => Level::V714_286,
+                0b10 => Level::V1000_400,
                 _ => Level::V700_000,
             };
             InputKind::Analog {
                 level,
-                setup: (raw & 0b0001_0000) != 0,
-                sep: (raw & 0b0000_1000) != 0,
-                comp: (raw & 0b0000_0100) != 0,
-                sog: (raw & 0b0000_0010) != 0,
-                serr: (raw & 0b0000_0001) != 0,
+                setup: is_set(raw, 4),
+                sep: is_set(raw, 3),
+                comp: is_set(raw, 2),
+                sog: is_set(raw, 1),
+                serr: is_set(raw, 0),
             }
         };
         Self { kind }
@@ -202,28 +199,28 @@ impl Features {
     #[must_use]
     pub const fn parse(raw: u8, is_digital: bool) -> Self {
         let display = if is_digital {
-            DisplayType::Digital(match raw & 0b0001_1000 {
-                0b0000_0000 => DigitalType::Rgb444,
-                0b0000_1000 => DigitalType::Rgb444Y444,
-                0b0001_0000 => DigitalType::Rgb444Y422,
+            DisplayType::Digital(match get_bits(raw, 0b0001_1000, 3) {
+                0b00 => DigitalType::Rgb444,
+                0b01 => DigitalType::Rgb444Y444,
+                0b10 => DigitalType::Rgb444Y422,
                 _ => DigitalType::Rgb444Y444Y422,
             })
         } else {
-            DisplayType::Analog(match raw & 0b0001_1000 {
-                0b0000_0000 => AnalogType::MonoGray,
-                0b0000_1000 => AnalogType::Rgb,
-                0b0001_0000 => AnalogType::NonRgb,
+            DisplayType::Analog(match get_bits(raw, 0b0001_1000, 3) {
+                0b00 => AnalogType::MonoGray,
+                0b01 => AnalogType::Rgb,
+                0b10 => AnalogType::NonRgb,
                 _ => AnalogType::Undef,
             })
         };
         Self {
-            stand: (raw & 0b1000_0000) != 0,
-            susp: (raw & 0b0100_0000) != 0,
-            off: (raw & 0b0010_0000) != 0,
+            stand: is_set(raw, 7),
+            susp: is_set(raw, 6),
+            off: is_set(raw, 5),
             display,
-            srgb: (raw & 0b0000_0100) != 0,
-            pref: (raw & 0b0000_0010) != 0,
-            cont: (raw & 0b0000_0001) != 0,
+            srgb: is_set(raw, 2),
+            pref: is_set(raw, 1),
+            cont: is_set(raw, 0),
         }
     }
 

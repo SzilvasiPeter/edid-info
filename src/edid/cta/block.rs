@@ -2,8 +2,15 @@ use crate::edid::cta::audio::{Sad, SadIter};
 use crate::edid::cta::room::RoomConfig;
 use crate::edid::cta::speaker::SpeakerAlloc;
 use crate::edid::cta::vendor::HdmiVsdb;
-use crate::edid::cta::video::{Svd, SvdIter};
+use crate::edid::cta::video::Svd;
 
+/// Maximum length of a CTA data block payload.
+///
+/// Per CTA-861 spec, the data block collection spans bytes 4 to (`DTD_offset` - 1).
+/// The DTD offset minimum is 4, and the maximum practical offset is 127 (before
+/// the checksum at byte 127). Thus the maximum data block collection size is
+/// 127 - 4 = 123 bytes. However, individual data blocks are limited by their
+/// 5-bit length field (max value 31), so no single block can exceed 31 bytes.
 const DB_MAX_LEN: usize = 31;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -48,31 +55,30 @@ impl DataBlock {
         self.data().get(i).copied().map(Svd::parse)
     }
 
-    #[must_use]
-    pub fn svds(&self) -> SvdIter<'_> {
-        let raw = if self.tag == BlockTag::Video {
-            self.data()
-        } else {
-            &[]
-        };
-        SvdIter { raw, at: 0 }
+    fn block_iter<'a, T, F>(&'a self, tag: BlockTag, f: F) -> impl Iterator<Item = T> + 'a
+    where
+        F: Fn(u8) -> T + 'a,
+    {
+        let raw = if self.tag == tag { self.data() } else { &[] };
+        raw.iter().copied().map(f)
+    }
+
+    pub fn svds(&self) -> impl Iterator<Item = Svd> + '_ {
+        self.block_iter(BlockTag::Video, Svd::parse)
     }
 
     #[must_use]
     pub fn sad(&self, i: usize) -> Option<Sad> {
-        if self.tag != BlockTag::Audio {
-            return None;
-        }
-        let at = i * 3;
-        let raw = self.data();
-        if at + 2 >= raw.len() {
-            return None;
-        }
-        Some(Sad::parse(raw[at], raw[at + 1], raw[at + 2]))
+        (self.tag == BlockTag::Audio)
+            .then(|| {
+                let at = i * 3;
+                let raw = self.data();
+                (at + 2 < raw.len()).then(|| Sad::parse(raw[at], raw[at + 1], raw[at + 2]))
+            })
+            .flatten()
     }
 
-    #[must_use]
-    pub fn sads(&self) -> SadIter<'_> {
+    pub fn sads(&self) -> impl Iterator<Item = Sad> + '_ {
         let raw = if self.tag == BlockTag::Audio {
             self.data()
         } else {

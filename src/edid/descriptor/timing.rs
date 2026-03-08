@@ -1,4 +1,6 @@
-pub const DETAILED_LEN: usize = 18;
+use crate::edid::DESC_LEN;
+use crate::edid::bits::{u6_pack, u10_lo, u12_hi, u12_lo};
+
 const CLK_UNIT: u32 = 10_000;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -71,23 +73,23 @@ pub struct DetailedTiming {
 
 impl DetailedTiming {
     #[must_use]
-    pub fn parse(raw: &[u8; DETAILED_LEN]) -> Option<Self> {
+    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         let clk = u32::from(u16::from_le_bytes([raw[0], raw[1]])) * CLK_UNIT;
         if clk == 0 {
             return None;
         }
         Some(Self {
             pixel_clock_hz: clk,
-            h_active: part12_hi(raw[2], raw[4]),
-            h_blank: part12_lo(raw[3], raw[4]),
-            v_active: part12_hi(raw[5], raw[7]),
-            v_blank: part12_lo(raw[6], raw[7]),
-            h_front: part10(raw[8], raw[11] >> 6),
-            h_sync: part10(raw[9], (raw[11] >> 4) & 0x03),
-            v_front: part6((raw[10] >> 4) & 0x0f, (raw[11] >> 2) & 0x03),
-            v_sync: part6(raw[10] & 0x0f, raw[11] & 0x03),
-            h_size_mm: part12_hi(raw[12], raw[14]),
-            v_size_mm: part12_lo(raw[13], raw[14]),
+            h_active: u12_hi(raw[2], raw[4]),
+            h_blank: u12_lo(raw[3], raw[4]),
+            v_active: u12_hi(raw[5], raw[7]),
+            v_blank: u12_lo(raw[6], raw[7]),
+            h_front: u10_lo(raw[8], u16::from(raw[11] >> 6)),
+            h_sync: u10_lo(raw[9], u16::from((raw[11] >> 4) & 0x03)),
+            v_front: u6_pack((raw[10] >> 4) & 0x0f, (raw[11] >> 2) & 0x03),
+            v_sync: u6_pack(raw[10] & 0x0f, raw[11] & 0x03),
+            h_size_mm: u12_hi(raw[12], raw[14]),
+            v_size_mm: u12_lo(raw[13], raw[14]),
             h_border: raw[15],
             v_border: raw[16],
             feat: parse_feat(raw[17]),
@@ -168,19 +170,6 @@ impl DetailedTiming {
     pub const fn feat(&self) -> Features {
         self.feat
     }
-}
-
-const fn part12_hi(lo: u8, mix: u8) -> u16 {
-    u16::from_le_bytes([lo, (mix >> 4) & 0x0f])
-}
-const fn part12_lo(lo: u8, mix: u8) -> u16 {
-    u16::from_le_bytes([lo, mix & 0x0f])
-}
-const fn part10(lo: u8, hi: u8) -> u16 {
-    u16::from_le_bytes([lo, hi & 0x03])
-}
-const fn part6(lo: u8, hi: u8) -> u8 {
-    (lo & 0x0f) | ((hi & 0x03) << 4)
 }
 
 const fn parse_feat(raw: u8) -> Features {

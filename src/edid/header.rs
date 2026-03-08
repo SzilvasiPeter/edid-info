@@ -1,4 +1,4 @@
-use crate::edid::base::BASE_LEN;
+use crate::edid::BLOCK_LEN;
 
 /// Header structure containing manufacturer ID, product code, serial, and version info.
 
@@ -16,16 +16,14 @@ pub struct Header {
 
 impl Header {
     #[must_use]
-    pub fn parse(raw: &[u8; BASE_LEN]) -> Self {
-        let maker_raw = u16::from_be_bytes([raw[8], raw[9]]);
-        let mut magic = [0; 8];
-        magic.copy_from_slice(&raw[0..8]);
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let m = u16::from_be_bytes([raw[8], raw[9]]);
         Self {
-            magic,
+            magic: raw[..8].try_into().unwrap_or([0; 8]),
             maker: [
-                maker_char((maker_raw >> 10) & 0x1F),
-                maker_char((maker_raw >> 5) & 0x1F),
-                maker_char(maker_raw & 0x1F),
+                maker_char((m >> 10) & 0x1F),
+                maker_char((m >> 5) & 0x1F),
+                maker_char(m & 0x1F),
             ],
             product: u16::from_le_bytes([raw[10], raw[11]]),
             serial: u32::from_le_bytes([raw[12], raw[13], raw[14], raw[15]]),

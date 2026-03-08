@@ -1,4 +1,4 @@
-const DESC_LEN: usize = 18;
+use crate::edid::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Point {

@@ -1,4 +1,5 @@
-const DESC_LEN: usize = 18;
+use crate::edid::DESC_LEN;
+
 const VERSION: u8 = 0x01;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

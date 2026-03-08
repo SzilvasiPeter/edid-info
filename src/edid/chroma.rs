@@ -1,4 +1,5 @@
-use crate::edid::base::BASE_LEN;
+use crate::edid::BLOCK_LEN;
+use crate::edid::bits::{u2_from_masks, u10_hi};
 
 pub const CHROMA_OFF: usize = 25;
 pub const CHROMA_LEN: usize = 10;
@@ -31,7 +32,7 @@ pub struct Chroma {
 
 impl Chroma {
     #[must_use]
-    pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
+    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut out = [0; CHROMA_LEN];
         out.copy_from_slice(&raw[CHROMA_OFF..CHROMA_OFF + CHROMA_LEN]);
         Self::parse(&out)
@@ -39,33 +40,24 @@ impl Chroma {
 
     #[must_use]
     pub const fn parse(raw: &[u8; CHROMA_LEN]) -> Self {
-        const fn bit(value: u8, mask: u8) -> u16 {
-            if (value & mask) != 0 { 1 } else { 0 }
-        }
-        const fn pair(value: u8, high: u8, low: u8) -> u16 {
-            (bit(value, high) << 1) | bit(value, low)
-        }
-        const fn pack_10bit(msb: u8, lsb: u16) -> u16 {
-            ((msb as u16) << 2) | (lsb & 0x03)
-        }
         let rg = raw[0];
         let bw = raw[1];
         Self {
             red: Coord {
-                x: pack_10bit(raw[2], pair(rg, 0b1000_0000, 0b0100_0000)),
-                y: pack_10bit(raw[3], pair(rg, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(raw[2], u2_from_masks(rg, 0b1000_0000, 0b0100_0000)),
+                y: u10_hi(raw[3], u2_from_masks(rg, 0b0010_0000, 0b0001_0000)),
             },
             green: Coord {
-                x: pack_10bit(raw[4], pair(rg, 0b0000_1000, 0b0000_0100)),
-                y: pack_10bit(raw[5], pair(rg, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(raw[4], u2_from_masks(rg, 0b0000_1000, 0b0000_0100)),
+                y: u10_hi(raw[5], u2_from_masks(rg, 0b0000_0010, 0b0000_0001)),
             },
             blue: Coord {
-                x: pack_10bit(raw[6], pair(bw, 0b1000_0000, 0b0100_0000)),
-                y: pack_10bit(raw[7], pair(bw, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(raw[6], u2_from_masks(bw, 0b1000_0000, 0b0100_0000)),
+                y: u10_hi(raw[7], u2_from_masks(bw, 0b0010_0000, 0b0001_0000)),
             },
             white: Coord {
-                x: pack_10bit(raw[8], pair(bw, 0b0000_1000, 0b0000_0100)),
-                y: pack_10bit(raw[9], pair(bw, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(raw[8], u2_from_masks(bw, 0b0000_1000, 0b0000_0100)),
+                y: u10_hi(raw[9], u2_from_masks(bw, 0b0000_0010, 0b0000_0001)),
             },
         }
     }

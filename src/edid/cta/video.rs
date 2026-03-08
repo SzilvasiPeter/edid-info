@@ -30,18 +30,3 @@ impl Svd {
         Self { vic, native }
     }
 }
-
-/// Iterator over SVDs in a Video Data Block.
-pub struct SvdIter<'a> {
-    pub raw: &'a [u8],
-    pub at: usize,
-}
-
-impl Iterator for SvdIter<'_> {
-    type Item = Svd;
-    fn next(&mut self) -> Option<Self::Item> {
-        let out = self.raw.get(self.at).copied().map(Svd::parse);
-        self.at += usize::from(out.is_some());
-        out
-    }
-}

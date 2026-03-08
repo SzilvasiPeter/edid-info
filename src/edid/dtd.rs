@@ -1,9 +1,8 @@
-use crate::edid::base::BASE_LEN;
 use crate::edid::descriptor::monitor::MonitorDesc;
-use crate::edid::descriptor::timing::{DETAILED_LEN, DetailedTiming};
+use crate::edid::descriptor::timing::DetailedTiming;
+use crate::edid::{BLOCK_LEN, DESC_LEN};
 
 pub const DTD_OFF: usize = 54;
-pub const DTD_LEN: usize = 18;
 pub const DTD_NUM: usize = 4;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -19,19 +18,16 @@ pub struct Dtd {
 
 impl Dtd {
     #[must_use]
-    pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
+    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut modes = [None; DTD_NUM];
 
-        let mut i = 0;
-        while i < DTD_NUM {
-            let off = DTD_OFF + i * DTD_LEN;
-            let mut desc_raw = [0; DETAILED_LEN];
-            desc_raw.copy_from_slice(&raw[off..off + DTD_LEN]);
-            modes[i] = DetailedTiming::parse(&desc_raw).map_or_else(
-                || MonitorDesc::parse(&desc_raw).map(Mode::Display),
-                |timing| Some(Mode::Timing(timing)),
-            );
-            i += 1;
+        let chunks = raw[DTD_OFF..DTD_OFF + DTD_NUM * DESC_LEN].chunks_exact(DESC_LEN);
+        for (mode, chunk) in modes.iter_mut().zip(chunks) {
+            if let Ok(desc_raw) = chunk.try_into() {
+                *mode = DetailedTiming::parse(desc_raw)
+                    .map(Mode::Timing)
+                    .or_else(|| MonitorDesc::parse(desc_raw).map(Mode::Display));
+            }
         }
 
         Self { modes }

@@ -1,4 +1,6 @@
-pub const CTA_LEN: usize = 128;
+use crate::edid::BLOCK_LEN;
+use crate::edid::bits::is_set;
+
 pub const CTA_TAG: u8 = 0b0000_0010;
 
 /// CTA Extension Block header structure.
@@ -12,7 +14,7 @@ pub struct Header {
 
 impl Header {
     #[must_use]
-    pub fn parse(raw: &[u8; CTA_LEN]) -> Option<Self> {
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
         (raw[0] == CTA_TAG).then_some(Self {
             tag: raw[0],
             rev: raw[1],
@@ -38,22 +40,22 @@ impl Header {
 
     #[must_use]
     pub const fn underscan(&self) -> bool {
-        (self.flags & 0b1000_0000) != 0
+        is_set(self.flags, 7)
     }
 
     #[must_use]
     pub const fn basic_audio(&self) -> bool {
-        (self.flags & 0b0100_0000) != 0
+        is_set(self.flags, 6)
     }
 
     #[must_use]
     pub const fn ycbcr_444(&self) -> bool {
-        (self.flags & 0b0010_0000) != 0
+        is_set(self.flags, 5)
     }
 
     #[must_use]
     pub const fn ycbcr_422(&self) -> bool {
-        (self.flags & 0b0001_0000) != 0
+        is_set(self.flags, 4)
     }
 
     #[must_use]

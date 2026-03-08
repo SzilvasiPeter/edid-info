@@ -9,6 +9,14 @@ readme = "README.md"
 keywords = ["edid", "display", "monitor", "parsing", "hardware"]
 categories = ["parsing", "hardware-support", "multimedia"]
 
+[[test]]
+name = "descriptor"
+path = "tests/descriptor/mod.rs"
+
+[[test]]
+name = "cta"
+path = "tests/cta/mod.rs"
+
 [dependencies]
 
 [lints.rust]

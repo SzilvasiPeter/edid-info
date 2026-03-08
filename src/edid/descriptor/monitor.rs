@@ -1,11 +1,10 @@
+use crate::edid::DESC_LEN;
 use crate::edid::descriptor::color::Color;
 use crate::edid::descriptor::cvt3::Cvt3;
 use crate::edid::descriptor::range::Range;
 use crate::edid::descriptor::std2::Std2;
 use crate::edid::descriptor::std3::Std3;
 use crate::edid::descriptor::white_point::WhitePoint;
-
-const DESC_LEN: usize = 18;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DescTag {

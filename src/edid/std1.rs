@@ -1,4 +1,4 @@
-use crate::edid::base::BASE_LEN;
+use crate::edid::BLOCK_LEN;
 
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
@@ -49,7 +49,7 @@ pub struct Std1 {
 
 impl Std1 {
     #[must_use]
-    pub fn parse_base(raw: &[u8; BASE_LEN]) -> Self {
+    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut out = [0; STANDARD_LEN];
         out.copy_from_slice(&raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN]);
         Self::parse(&out)

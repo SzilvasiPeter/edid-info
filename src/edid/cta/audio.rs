@@ -171,7 +171,7 @@ impl Iterator for SadIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let at = self.at;
         let raw = self.raw;
-        if at + 2 >= raw.len() {
+        if at + 3 > raw.len() {
             return None;
         }
         self.at = at + 3;

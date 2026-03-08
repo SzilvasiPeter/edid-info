@@ -1,6 +1,6 @@
+use crate::edid::DESC_LEN;
 use crate::edid::std1::{Timing, parse_timing_bytes};
 
-const DESC_LEN: usize = 18;
 const MODE_NUM: usize = 6;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

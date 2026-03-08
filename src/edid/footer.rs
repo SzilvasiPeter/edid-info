@@ -1,4 +1,4 @@
-use crate::edid::base::BASE_LEN;
+use crate::edid::BLOCK_LEN;
 
 pub const FOOTER_OFF: usize = 126;
 
@@ -10,7 +10,7 @@ pub struct Footer {
 
 impl Footer {
     #[must_use]
-    pub const fn parse(raw: &[u8; BASE_LEN]) -> Self {
+    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
         Self {
             extension_num: raw[FOOTER_OFF],
             checksum: raw[FOOTER_OFF + 1],
@@ -28,7 +28,7 @@ impl Footer {
     }
 
     #[must_use]
-    pub fn checksum_ok(raw: &[u8; BASE_LEN]) -> bool {
+    pub fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
         crate::edid::check(raw)
     }
 }

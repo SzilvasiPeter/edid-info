@@ -1,3 +1,4 @@
+use crate::edid::BLOCK_LEN;
 use crate::edid::basic::Basic;
 use crate::edid::chroma::Chroma;
 use crate::edid::dtd::Dtd;
@@ -6,14 +7,9 @@ use crate::edid::footer::Footer;
 use crate::edid::header::Header;
 use crate::edid::std1::Std1;
 
-/// Base EDID block length in bytes.
-///
-/// # References
-/// - <https://en.wikipedia.org/wiki/Extended_Display_Identification_Data>
-pub const BASE_LEN: usize = 128;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BaseEdid {
-    raw: [u8; BASE_LEN],
+    raw: [u8; BLOCK_LEN],
     header: Header,
     basic: Basic,
     chroma: Chroma,
@@ -25,7 +21,7 @@ pub struct BaseEdid {
 
 impl BaseEdid {
     #[must_use]
-    pub fn parse(raw: &[u8; BASE_LEN]) -> Self {
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
         Self {
             raw: *raw,
             header: Header::parse(raw),

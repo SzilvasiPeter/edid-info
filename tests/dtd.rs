@@ -1,9 +1,10 @@
-use edid_info::edid::dtd::{DTD_LEN, DTD_OFF, Dtd, Mode};
+use edid_info::edid::DESC_LEN;
+use edid_info::edid::dtd::{DTD_OFF, Dtd, Mode};
 
 #[test]
 fn parse_dtd_synthetic() {
     let mut raw = [0_u8; 128];
-    let off = DTD_OFF + DTD_LEN;
+    let off = DTD_OFF + DESC_LEN;
     raw[off] = 1;
     raw[off + 1] = 29;
 
