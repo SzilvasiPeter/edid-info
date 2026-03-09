@@ -1,7 +1,32 @@
 //! CTA-861 Extension Block parsing.
 //!
+//! The CTA-861 extension is the most common EDID extension, used for
+//! HDMI and TV displays. It contains video/audio capabilities, vendor
+//! specific data, speaker allocation, and detailed timing descriptors.
+//!
+//! # CTA-861 Block Structure (128 bytes)
+//!
+//! | Offset | Size | Description |
+//! |--------|------|-------------|
+//! | 0      | 1    | Tag (0x02) |
+//! | 1      | 1    | Revision |
+//! | 2      | 1    | DTD offset |
+//! | 3      | 1    | Flags (underscan, audio, YCbCr support) |
+//! | 4–N    | var  | Data blocks (video, audio, vendor, speaker) |
+//! | N–126  | var  | Detailed timing descriptors |
+//! | 127    | 1    | Checksum |
+//!
+//! # Data Block Types
+//!
+//! - **Video (tag 2)**: Short Video Descriptors (SVDs) with VIC codes
+//! - **Audio (tag 1)**: Short Audio Descriptors (SADs)
+//! - **Vendor (tag 3)**: Vendor-specific data (e.g., HDMI VSDB)
+//! - **Speaker (tag 4)**: Speaker allocation map
+//!
 //! # References
-//! - <https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#CTA_Extension_Block>
+//!
+//! - [Wikipedia: CTA Extension Block](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#CTA_EDID_Timing_Extension_Block)
+//! - CTA-861-G Specification
 
 pub mod audio;
 pub mod block;

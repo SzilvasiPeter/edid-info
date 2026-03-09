@@ -1,3 +1,19 @@
+//! Display Operating Range Descriptor.
+//!
+//! Specifies the supported vertical and horizontal frequency ranges,
+//! maximum pixel clock, and timing formula type (GTF, CVT).
+//!
+//! # Range Descriptor Structure (tag 0xFD)
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 5    | Minimum vertical rate (Hz) |
+//! | 6    | Maximum vertical rate (Hz) |
+//! | 7    | Minimum horizontal rate (kHz) |
+//! | 8    | Maximum horizontal rate (kHz) |
+//! | 9    | Maximum pixel clock (×10 MHz) |
+//! | 10   | Timing formula type |
+
 use crate::edid::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

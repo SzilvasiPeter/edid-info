@@ -1,3 +1,20 @@
+//! Standard Timing Identification (bytes 38–53).
+//!
+//! Contains 8 timing descriptors, each 2 bytes, describing common
+//! display resolutions and refresh rates.
+//!
+//! # Structure
+//!
+//! Each 2-byte entry encodes:
+//! - Byte N: Horizontal resolution code ((width/8) - 31)
+//! - Byte N+1: Aspect ratio (bits 7–6) + vertical refresh (bits 5–0)
+//!
+//! | Offset | Count | Description |
+//! |--------|-------|-------------|
+//! | 38–53  | 8×2   | Standard timing descriptors |
+//!
+//! If both bytes are 0x01, the entry is unused.
+
 use crate::edid::BLOCK_LEN;
 
 pub const STANDARD_OFF: usize = 38;

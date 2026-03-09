@@ -1,3 +1,14 @@
+//! EDID block footer (bytes 126–127).
+//!
+//! Contains the extension count and checksum for the block.
+//!
+//! # Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 126  | Number of extension blocks following this block |
+//! | 127  | Checksum (sum of all 128 bytes must equal 0) |
+
 use crate::edid::BLOCK_LEN;
 
 pub const FOOTER_OFF: usize = 126;

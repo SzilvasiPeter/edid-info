@@ -1,3 +1,19 @@
+//! CTA Immersive Audio Room Configuration.
+//!
+//! Extended data block (tag 7, extended tag 13) that describes
+//! speaker layout and room geometry for immersive audio setups.
+//!
+//! # Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 0    | Extended tag (13) |
+//! | 1    | Revision |
+//! | 2    | Configuration flags |
+//! | 3–5  | Speaker allocation |
+//! | 6–8  | Farthest listener coordinates (x, y, z) |
+//! | 9–11 | Display coordinates (x, y, z) |
+
 use crate::edid::cta::speaker::{Speaker, SpeakerAlloc};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

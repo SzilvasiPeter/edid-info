@@ -1,3 +1,18 @@
+//! Basic display parameters (bytes 20–24).
+//!
+//! Contains video input definition (analog/digital), display size,
+//! gamma, and feature support flags.
+//!
+//! # Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 20   | Video input definition |
+//! | 21   | Horizontal display size (cm) |
+//! | 22   | Vertical display size (cm) |
+//! | 23   | Gamma (value - 1.0, scaled by 100) |
+//! | 24   | Feature support flags |
+
 use crate::edid::BLOCK_LEN;
 use crate::edid::bits::{get_bits, is_set};
 

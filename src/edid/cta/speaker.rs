@@ -1,3 +1,15 @@
+//! CTA Speaker Allocation.
+//!
+//! Describes which speaker positions are present in an audio system.
+//! Used in the Speaker Data Block (tag 4) and Room Configuration.
+//!
+//! # Speaker Allocation Structure (3 bytes)
+//!
+//! Each bit represents a speaker position:
+//! - Byte 1: FL/FR, LFE, FC, BL/BR, BC, FLC/FRC, RLC/RRC, FLW/FRW
+//! - Byte 2: TPFL/TPFR, TPC, TPFC, LS/RS, LFE2, TPBC, SIL/SIR, TPSIL/TPSIR
+//! - Byte 3: TPLS/TPRS, TPBL/TPBR, BTFC, BTFL/BTFR
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Speaker {
     FlFr,

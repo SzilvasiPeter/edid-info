@@ -1,4 +1,9 @@
 //! Bit manipulation helpers for EDID parsing.
+//!
+//! EDID encodes many fields using bitfields, packed values, and
+//! non-standard integer formats (e.g., 10-bit or 12-bit values
+//! split across multiple bytes). This module provides utilities
+//! for extracting and packing these values.
 
 /// Checks if a specific bit is set in a byte.
 #[must_use]

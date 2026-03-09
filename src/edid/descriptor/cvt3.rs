@@ -1,3 +1,16 @@
+//! CVT 3-Byte Timing Codes Descriptor.
+//!
+//! Compact timing descriptors using the Coordinated Video Timing
+//! standard. Each 3-byte entry encodes vertical lines, aspect ratio,
+//! and supported refresh rates. Uses tag 0xF8 and version 0x01.
+//!
+//! # CVT 3-Byte Entry Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 0–1  | Vertical lines / 2 - 1 (11 bits) + aspect ratio (2 bits) |
+//! | 2    | Refresh rate flags + preferred rate |
+
 use crate::edid::DESC_LEN;
 
 const VERSION: u8 = 0x01;

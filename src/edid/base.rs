@@ -1,3 +1,9 @@
+//! EDID 1.4 base block structure.
+//!
+//! The base block is the first 128 bytes of an EDID blob and contains
+//! all essential display information including manufacturer data, display
+//! parameters, color characteristics, and timing descriptors.
+
 use crate::edid::BLOCK_LEN;
 use crate::edid::basic::Basic;
 use crate::edid::chroma::Chroma;

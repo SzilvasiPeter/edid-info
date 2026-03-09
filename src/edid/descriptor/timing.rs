@@ -1,3 +1,21 @@
+//! Detailed Timing Descriptor (DTD).
+//!
+//! An 18-byte structure describing a single video timing mode with
+//! precise parameters including pixel clock, active pixels, blanking,
+//! sync polarities, and physical display size.
+//!
+//! # DTD Structure (18 bytes)
+//!
+//! | Bytes | Description |
+//! |-------|-------------|
+//! | 0–1   | Pixel clock (×10 kHz, little-endian) |
+//! | 2–4   | Horizontal active + blanking |
+//! | 5–7   | Vertical active + blanking |
+//! | 8–11  | Front porch, sync width (h/v) |
+//! | 12–13 | Image size (mm, little-endian) |
+//! | 14    | Border size |
+//! | 15–17 | Flags (interlace, stereo, sync type) |
+
 use crate::edid::DESC_LEN;
 use crate::edid::bits::{u6_pack, u10_lo, u12_hi, u12_lo};
 

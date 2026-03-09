@@ -3,7 +3,7 @@ use edid_info::edid::cta::{BlockTag, Cta, Speaker};
 use edid_info::edid::descriptor::monitor::DescTag;
 use edid_info::edid::dtd::Mode;
 
-const ACER: &[u8] = include_bytes!("data/acer_ek221q_h.edid");
+const ACER: &[u8] = include_bytes!("data/ACER_EK221Q_H.edid");
 
 #[test]
 fn parse_base_acer_ek221q_h() {
@@ -39,7 +39,7 @@ fn parse_base_acer_ek221q_h() {
     assert!(out.checksum_ok());
 }
 
-const ASUS: &[u8] = include_bytes!("data/asus_rog_pg27u.edid");
+const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_base_asus_rog_pg27u() {

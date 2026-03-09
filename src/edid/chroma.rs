@@ -1,3 +1,24 @@
+//! Color chromaticity coordinates (bytes 25–34).
+//!
+//! Contains CIE 1931 xy chromaticity coordinates for the red,
+//! green, blue, and white primaries. Each coordinate is encoded
+//! as a 10-bit value (0–1023) representing 0.0–1.0.
+//!
+//! # Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 25   | Red-x LSBs + Green-x LSBs |
+//! | 26   | Blue-x LSBs + White-x LSBs |
+//! | 27   | Red-x MSBs |
+//! | 28   | Red-y MSBs |
+//! | 29   | Green-x MSBs |
+//! | 30   | Green-y MSBs |
+//! | 31   | Blue-x MSBs |
+//! | 32   | Blue-y MSBs |
+//! | 33   | White-x MSBs |
+//! | 34   | White-y MSBs |
+
 use crate::edid::BLOCK_LEN;
 use crate::edid::bits::{u2_from_masks, u10_hi};
 

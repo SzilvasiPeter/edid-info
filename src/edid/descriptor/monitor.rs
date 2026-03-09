@@ -1,3 +1,9 @@
+//! Monitor Descriptor parsing.
+//!
+//! Monitor descriptors provide display metadata such as serial number,
+//! name, range limits, and color characteristics. Identified by
+//! bytes 0–2 being zero.
+
 use crate::edid::DESC_LEN;
 use crate::edid::descriptor::color::Color;
 use crate::edid::descriptor::cvt3::Cvt3;

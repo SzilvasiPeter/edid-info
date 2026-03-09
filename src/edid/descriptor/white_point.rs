@@ -1,3 +1,16 @@
+//! White Point Data Descriptor.
+//!
+//! Contains up to two white point index entries with chromaticity
+//! coordinates and gamma values. Uses tag 0xFB.
+//!
+//! # Structure
+//!
+//! Each white point entry (5 bytes):
+//! - Byte 0: Index (0 = unused)
+//! - Byte 1–2: White point x coordinate (10-bit)
+//! - Byte 3: White point y coordinate (10-bit)
+//! - Byte 4: Gamma (value - 1.0, scaled by 100)
+
 use crate::edid::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

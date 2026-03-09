@@ -1,3 +1,16 @@
+//! CTA Extension Block header.
+//!
+//! The 4-byte header at the start of every CTA-861 extension block.
+//!
+//! # Header Structure (4 bytes)
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 0    | Tag (always 0x02) |
+//! | 1    | Revision number |
+//! | 2    | Offset to DTDs (0 if none) |
+//! | 3    | Flags: underscan, basic audio, YCbCr 4:4:4, YCbCr 4:2:2, native DTD count |
+
 use crate::edid::BLOCK_LEN;
 use crate::edid::bits::is_set;
 

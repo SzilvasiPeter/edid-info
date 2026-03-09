@@ -1,3 +1,9 @@
+//! Standard Timing Identification Level 3.
+//!
+//! A bitmap of supported additional standard timings.
+//! Uses tag 0xF7 and version 0x10.
+//! Contains 48 bits (6 bytes) representing predefined timing codes.
+
 use crate::edid::DESC_LEN;
 
 const VERSION: u8 = 0x10;

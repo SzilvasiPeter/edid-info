@@ -1,3 +1,19 @@
+//! CTA Vendor Specific Data Blocks.
+//!
+//! Contains vendor-specific information, most commonly the HDMI
+//! Vendor Specific Data Block (VSDB) with IEEE registration number
+//! 0x00000C03 (HDMI Licensing Administrator).
+//!
+//! # HDMI VSDB Structure
+//!
+//! | Byte(s) | Description |
+//! |---------|-------------|
+//! | 0–2     | IEEE OUI (0x00000C03 little-endian) |
+//! | 3–4     | Physical address (4 nibbles) |
+//! | 5       | Deep color support flags |
+//! | 6       | Max TMDS clock (×5 MHz) |
+//! | 7+      | Latency and other flags |
+
 /// HDMI Vendor Specific Data Block.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct HdmiVsdb {

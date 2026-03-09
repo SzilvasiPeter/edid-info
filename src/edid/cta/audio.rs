@@ -1,3 +1,17 @@
+//! CTA Short Audio Descriptors (SADs).
+//!
+//! Each SAD is 3 bytes and describes a supported audio format,
+//! channel count, sample rates, and format-specific parameters.
+//!
+//! # SAD Structure (3 bytes)
+//!
+//! | Byte | Bits | Description |
+//! |------|------|-------------|
+//! | 0    | 7–3  | Audio format code |
+//! | 0    | 2–0  | Maximum channels - 1 |
+//! | 1    | 6–0  | Supported sample rates (bitmap) |
+//! | 2    | 7–0  | Format-specific parameter (bit depth or max bitrate) |
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AudioFormat {
     Reserved,

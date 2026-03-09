@@ -1,7 +1,24 @@
+//! EDID header (bytes 0–19).
+//!
+//! Contains the EDID magic pattern, manufacturer identification,
+//! product code, serial number, and version/manufacture date.
+//!
+//! # Structure
+//!
+//! | Offset | Size | Description |
+//! |--------|------|-------------|
+//! | 0–7    | 8    | Header magic (0x00FFFFFFFFFFFF00) |
+//! | 8–9    | 2    | Manufacturer ID (3-letter code, big-endian) |
+//! | 10–11  | 2    | Product code |
+//! | 12–15  | 4    | Serial number (little-endian) |
+//! | 16     | 1    | Week of manufacture |
+//! | 17     | 1    | Year of manufacture (offset from 1990) |
+//! | 18     | 1    | EDID version major |
+//! | 19     | 1    | EDID version minor |
+
 use crate::edid::BLOCK_LEN;
 
 /// Header structure containing manufacturer ID, product code, serial, and version info.
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Header {
     magic: [u8; 8],

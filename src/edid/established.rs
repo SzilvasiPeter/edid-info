@@ -1,3 +1,17 @@
+//! Established Timings (bytes 35–37).
+//!
+//! A bitmap of supported legacy video modes. Bytes 35–36 define
+//! standard VESA and IBM timings, while byte 37 contains
+//! manufacturer-defined reserved bits.
+//!
+//! # Structure
+//!
+//! | Byte | Description |
+//! |------|-------------|
+//! | 35   | 720×400@70, 640×480 variants |
+//! | 36   | 800×600, 1024×768, 1280×1024 variants |
+//! | 37   | 1152×870 + 7 manufacturer-reserved bits |
+
 use crate::edid::BLOCK_LEN;
 
 pub const ESTABLISHED_OFF: usize = 35;

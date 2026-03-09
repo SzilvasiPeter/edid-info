@@ -1,3 +1,17 @@
+//! Detailed Timing Descriptors (DTDs) and Monitor Descriptors (bytes 54–125).
+//!
+//! Four 18-byte descriptors provide detailed timing information or
+//! monitor metadata (serial number, name, range limits, color data, etc.).
+//!
+//! # Structure
+//!
+//! Each descriptor is 18 bytes. If bytes 0–1 are both zero, the descriptor
+//! is a monitor descriptor; otherwise it's a detailed timing descriptor.
+//!
+//! | Offset | Count | Description |
+//! |--------|-------|-------------|
+//! | 54     | 4×18  | Detailed timing / monitor descriptors |
+
 use crate::edid::descriptor::monitor::MonitorDesc;
 use crate::edid::descriptor::timing::DetailedTiming;
 use crate::edid::{BLOCK_LEN, DESC_LEN};

@@ -1,7 +1,7 @@
 use edid_info::edid::cta::header::Header;
 
-const ACER: &[u8] = include_bytes!("../data/acer_ek221q_h.edid");
-const ASUS: &[u8] = include_bytes!("../data/asus_rog_pg27u.edid");
+const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
+const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_cta_header_acer_ek221q_h() {

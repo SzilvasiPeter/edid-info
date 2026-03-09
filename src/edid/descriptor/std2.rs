@@ -1,3 +1,9 @@
+//! Standard Timing Identification Level 2.
+//!
+//! Additional standard timing descriptors using the same format
+//! as the base Standard Timing Identification block. Uses tag 0xFA.
+//! Contains 6 timing entries (12 bytes total).
+
 use crate::edid::DESC_LEN;
 use crate::edid::std1::{Timing, parse_timing_bytes};
 

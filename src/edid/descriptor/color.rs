@@ -1,3 +1,8 @@
+//! Display Color Management (DCM) Descriptor.
+//!
+//! Describes color correction coefficients for the display panel.
+//! Uses tag 0xF9 and version 0x03.
+
 use crate::edid::DESC_LEN;
 
 const VERSION: u8 = 0x03;

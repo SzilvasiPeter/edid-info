@@ -1,6 +1,6 @@
 use edid_info::edid::cta::{BlockTag, Cta};
 
-const ACER: &[u8] = include_bytes!("../data/acer_ek221q_h.edid");
+const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 
 #[test]
 fn parse_video_block_acer_ek221q_h() {

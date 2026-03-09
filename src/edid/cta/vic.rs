@@ -1,3 +1,17 @@
+//! Video Identification Codes (VICs).
+//!
+//! VICs are standardized video format codes defined in CTA-861.
+//! Each VIC represents a specific resolution, refresh rate, and
+//! timing parameters. VICs 1–127 are defined in CTA-861, and
+//! VICs 193–219 are additional codes.
+//!
+//! # VIC Encoding in SVDs
+//!
+//! | Bit | Description |
+//! |-----|-------------|
+//! | 7   | Native flag (1 = native resolution) |
+//! | 6–0 | VIC code (1–127, or 65–127 for extended range) |
+
 /// Represents a display aspect ratio.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AspectRatio {

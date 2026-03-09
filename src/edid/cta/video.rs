@@ -1,3 +1,9 @@
+//! CTA Short Video Descriptors (SVDs).
+//!
+//! SVDs reference VIC codes to indicate supported video formats.
+//! The MSB indicates whether the format is the display's native
+//! resolution.
+
 use crate::edid::cta::vic::Vic;
 
 /// Short Video Descriptor.

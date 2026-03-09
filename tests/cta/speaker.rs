@@ -1,6 +1,6 @@
 use edid_info::edid::cta::{BlockTag, Cta, Speaker};
 
-const ASUS: &[u8] = include_bytes!("../data/asus_rog_pg27u.edid");
+const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_speaker_block_asus_rog_pg27u() {

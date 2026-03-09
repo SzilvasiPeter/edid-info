@@ -1,3 +1,15 @@
+//! CTA Data Block parsing.
+//!
+//! Data blocks contain collections of descriptors (video, audio, vendor,
+//! speaker) and are located at the start of the CTA extension block.
+//!
+//! # Data Block Header (1 byte)
+//!
+//! | Bits | Description |
+//! |------|-------------|
+//! | 7–5  | Block tag (type) |
+//! | 4–0  | Payload length (0–31) |
+
 use crate::edid::cta::audio::{Sad, SadIter};
 use crate::edid::cta::room::RoomConfig;
 use crate::edid::cta::speaker::SpeakerAlloc;
