@@ -5,6 +5,7 @@ const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 const PHL: &[u8] = include_bytes!("../data/PHL_22PFL3606.edid");
 const SDC: &[u8] = include_bytes!("../data/SDC_123YL01.edid");
+const ROL: &[u8] = include_bytes!("../data/ROL_ROLSEN_C707N.edid");
 
 #[test]
 fn parse_range_limit_descriptor_acer_ek221q_h() {
@@ -102,4 +103,18 @@ fn parse_range_cvt_sdc_123yl01() {
         }
         _ => panic!("Expected Cvt timing"),
     }
+}
+
+#[test]
+fn parse_range_limits_descriptor_rol_rolsen_c707n() {
+    let range_raw: &[u8; 18] = ROL[108..126].try_into().expect("range descriptor bytes");
+    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    assert_eq!(range.tag(), DescTag::RangeLimits);
+    let vals = range.range().expect("range parse");
+    assert_eq!(vals.v_min_hz(), 50);
+    assert_eq!(vals.v_max_hz(), 90);
+    assert_eq!(vals.h_min_khz(), 30);
+    assert_eq!(vals.h_max_khz(), 88);
+    assert_eq!(vals.pixel_mhz(), 180);
+    assert_eq!(vals.timing(), Timing::DefaultGtf);
 }
