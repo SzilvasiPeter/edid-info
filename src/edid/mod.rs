@@ -27,15 +27,17 @@
 pub mod base;
 pub mod basic;
 pub mod bits;
+pub mod check;
 pub mod chroma;
 pub mod cta;
 pub mod descriptor;
-pub mod displayid;
 pub mod dtd;
 pub mod established;
 pub mod footer;
 pub mod header;
 pub mod std1;
+
+pub use check::check;
 
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
@@ -52,7 +54,6 @@ pub struct Edid {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Extension {
     Cta(cta::Cta),
-    DisplayId(displayid::DisplayId),
     Unknown([u8; BLOCK_LEN]),
 }
 
@@ -65,17 +66,22 @@ impl Edid {
 
         let base_raw: &[u8; BLOCK_LEN] = raw[..BLOCK_LEN].try_into().ok()?;
         let base = base::BaseEdid::parse(base_raw);
+        if base.header().magic() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00] {
+            return None;
+        }
+        if !base.checksum_ok() {
+            return None;
+        }
         let ext_num = base.footer().extension_num() as usize;
+        let avail = raw.len() / BLOCK_LEN - 1;
+        if ext_num > avail {
+            return None;
+        }
 
-        // Note: we take as many extensions as specified in the base block,
-        // or as many as are present in the raw data, whichever is smaller.
         let mut extensions = Vec::with_capacity(ext_num);
         for chunk in raw[BLOCK_LEN..].chunks_exact(BLOCK_LEN).take(ext_num) {
             let ext_raw: &[u8; BLOCK_LEN] = chunk.try_into().ok()?;
-            let ext = cta::Cta::parse(ext_raw)
-                .map(Extension::Cta)
-                .or_else(|| displayid::DisplayId::parse(ext_raw).map(Extension::DisplayId))
-                .unwrap_or(Extension::Unknown(*ext_raw));
+            let ext = cta::Cta::parse(ext_raw).map_or(Extension::Unknown(*ext_raw), Extension::Cta);
             extensions.push(ext);
         }
 
@@ -91,9 +97,4 @@ impl Edid {
     pub fn extensions(&self) -> &[Extension] {
         &self.extensions
     }
-}
-
-#[must_use]
-pub fn check(raw: &[u8]) -> bool {
-    raw.iter().fold(0u8, |a, b| a.wrapping_add(*b)) == 0
 }

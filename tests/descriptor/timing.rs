@@ -65,3 +65,20 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
         }
     );
 }
+
+#[test]
+fn test_timing_frame_rate_interlaced() {
+    let mut raw = [0u8; 18];
+    raw[0] = 0x01; // clock
+    raw[2] = 0x10; // h active
+    raw[3] = 0x10; // h blank
+    raw[5] = 0x10; // v active
+    raw[6] = 0x10; // v blank
+    raw[17] = 0x80; // interlaced
+
+    let dt = DetailedTiming::parse(&raw).expect("parse");
+    assert!(dt.feat().interlaced());
+    let v_hz = dt.v_hz();
+    let frame_hz = dt.frame_rate_hz();
+    assert!((frame_hz - v_hz / 2.0).abs() < 1e-9);
+}

@@ -17,10 +17,6 @@ path = "tests/descriptor/mod.rs"
 name = "cta"
 path = "tests/cta/mod.rs"
 
-[[test]]
-name = "displayid"
-path = "tests/displayid/mod.rs"
-
 [dependencies]
 
 [lints.rust]

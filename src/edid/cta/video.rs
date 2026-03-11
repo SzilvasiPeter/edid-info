@@ -31,8 +31,10 @@ impl Svd {
     pub const fn parse(raw: u8) -> Self {
         let lo = raw & 0b0111_1111;
         let hi = (raw & 0b1000_0000) != 0;
+
         let native = hi && lo > 0 && lo <= 64;
         let vic = if hi && lo >= 65 { lo | 0b1000_0000 } else { lo };
+
         Self { vic, native }
     }
 }

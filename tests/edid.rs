@@ -20,7 +20,6 @@ fn parse_edid_acer_ek221q_h() {
             assert_eq!(cta.rev(), 3);
             assert!(cta.checksum_ok());
         }
-        Extension::DisplayId(_) => panic!("expected CTA extension for Acer, got DisplayId"),
         Extension::Unknown(_) => panic!("expected CTA extension for Acer, got Unknown"),
     }
 }
@@ -44,18 +43,7 @@ fn parse_edid_asus_rog_pg27u() {
             assert_eq!(cta.rev(), 3);
             assert!(cta.checksum_ok());
         }
-        Extension::DisplayId(_) => panic!("expected CTA extension for Asus block 1, got DisplayId"),
         Extension::Unknown(_) => panic!("expected CTA extension for Asus block 1, got Unknown"),
-    }
-
-    // Block 2: DisplayID (tag 0x70)
-    match &extensions[1] {
-        Extension::DisplayId(did) => {
-            assert!(did.version() != 0);
-            assert!(did.section_len() > 0);
-            assert!(did.checksum_ok());
-        }
-        _ => panic!("expected DisplayId extension for Asus block 2"),
     }
 }
 

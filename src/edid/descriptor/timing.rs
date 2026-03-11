@@ -162,11 +162,29 @@ impl DetailedTiming {
     pub fn h_khz(&self) -> f64 {
         f64::from(self.pixel_clock_hz) / f64::from(self.h_active + self.h_blank) / 1000.0
     }
+    /// Vertical refresh rate in Hz.
+    ///
+    /// For interlaced modes, this returns the field rate (e.g., 60Hz for 1080i).
+    /// Use [`frame_rate_hz`](Self::frame_rate_hz) to get the frame rate.
     #[must_use]
     pub fn v_hz(&self) -> f64 {
         f64::from(self.pixel_clock_hz)
             / f64::from(self.h_active + self.h_blank)
             / f64::from(self.v_active + self.v_blank)
+    }
+
+    /// Frame refresh rate in Hz.
+    ///
+    /// For progressive modes, this is identical to [`v_hz`](Self::v_hz).
+    /// For interlaced modes, this is half of the field rate.
+    #[must_use]
+    pub fn frame_rate_hz(&self) -> f64 {
+        let v_hz = self.v_hz();
+        if self.feat().interlaced() {
+            v_hz / 2.0
+        } else {
+            v_hz
+        }
     }
     #[must_use]
     pub const fn h_size_mm(&self) -> u16 {
