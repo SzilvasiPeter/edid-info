@@ -7,7 +7,7 @@ Lightweight Rust library for reading EDID data and extracting monitor name, reso
 ## Features
 
 - Zero-copy parsing of EDID 1.4 base blocks
-- Support for CTA-861 and DisplayID 2.0 extensions
+- Support for CTA-861
 - No external dependencies
 - `#![forbid(unsafe_code)]`
 
@@ -131,7 +131,7 @@ for ext in edid.extensions() {
 |------|-------------|
 | `Edid` | Main entry point for parsing EDID data |
 | `BaseEdid` | EDID 1.4 base block (128 bytes) |
-| `Extension` | Extension block (CTA or DisplayID) |
+| `Extension` | Extension block (CTA) |
 | `Cta` | CTA-861 extension block |
 
 ### Base Block Accessors
