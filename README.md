@@ -118,7 +118,6 @@ assert!(edid.base().checksum_ok());
 for ext in edid.extensions() {
     match ext {
         Extension::Cta(cta) => assert!(cta.checksum_ok()),
-        Extension::DisplayId(did) => assert!(did.checksum_ok()),
         _ => {}
     }
 }
@@ -134,7 +133,6 @@ for ext in edid.extensions() {
 | `BaseEdid` | EDID 1.4 base block (128 bytes) |
 | `Extension` | Extension block (CTA or DisplayID) |
 | `Cta` | CTA-861 extension block |
-| `DisplayId` | DisplayID 2.0 extension block |
 
 ### Base Block Accessors
 
