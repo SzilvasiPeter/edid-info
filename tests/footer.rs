@@ -10,7 +10,6 @@ fn parse_footer_acer_ek221q_h() {
 
     assert_eq!(out.extension_num(), 1);
     assert_eq!(out.checksum(), 0x18);
-    assert!(Footer::checksum_ok(raw));
 }
 
 #[test]
@@ -20,5 +19,4 @@ fn parse_footer_asus_rog_pg27u() {
 
     assert_eq!(out.extension_num(), 2);
     assert_eq!(out.checksum(), 0x72);
-    assert!(Footer::checksum_ok(raw));
 }

@@ -8,6 +8,6 @@
 /// Returns `true` if the sum of all bytes in the block equals zero
 /// (with u8 wrapping).
 #[must_use]
-pub fn check(raw: &[u8]) -> bool {
+pub fn checksum_ok(raw: &[u8]) -> bool {
     raw.iter().fold(0u8, |a, b| a.wrapping_add(*b)) == 0
 }

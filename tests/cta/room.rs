@@ -19,6 +19,9 @@ fn parse_cta_room_config() {
     raw[14] = 40;
     raw[15] = 50;
     raw[16] = 60;
+    let sum: u16 = raw[..127].iter().map(|&b| u16::from(b)).sum();
+    let chk = (256u16 - (sum % 256)) % 256;
+    raw[127] = u8::try_from(chk).expect("checksum byte");
 
     let out = Cta::parse(&raw).expect("cta parse");
     let block = out.data_blocks().next().expect("block");

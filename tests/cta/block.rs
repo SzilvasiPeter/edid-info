@@ -7,12 +7,13 @@ const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 fn parse_cta_acer_ek221q_h() {
     let raw: &[u8; 128] = ACER[128..256].try_into().expect("cta bytes");
     let out = Cta::parse(raw).expect("cta parse");
-    assert_eq!(out.rev(), 3);
-    assert_eq!(out.native_dtd_num(), 1);
-    assert!(out.underscan());
-    assert!(out.basic_audio());
-    assert!(out.ycbcr_444());
-    assert!(out.ycbcr_422());
+    let header = out.header();
+    assert_eq!(header.rev(), 3);
+    assert_eq!(header.native_dtd_num(), 1);
+    assert!(header.underscan());
+    assert!(header.basic_audio());
+    assert!(header.ycbcr_444());
+    assert!(header.ycbcr_422());
 
     let blocks: Vec<_> = out.data_blocks().collect();
     assert_eq!(blocks.len(), 5);
@@ -34,19 +35,19 @@ fn parse_cta_acer_ek221q_h() {
 
     assert!(out.dtd(2).is_none());
     assert_eq!(out.checksum(), 0x92);
-    assert!(out.checksum_ok());
 }
 
 #[test]
 fn parse_cta_asus_rog_pg27u() {
     let raw: &[u8; 128] = ASUS[128..256].try_into().expect("cta bytes");
     let out = Cta::parse(raw).expect("cta parse");
-    assert_eq!(out.rev(), 3);
-    assert_eq!(out.native_dtd_num(), 1);
-    assert!(out.underscan());
-    assert!(out.basic_audio());
-    assert!(out.ycbcr_444());
-    assert!(out.ycbcr_422());
+    let header = out.header();
+    assert_eq!(header.rev(), 3);
+    assert_eq!(header.native_dtd_num(), 1);
+    assert!(header.underscan());
+    assert!(header.basic_audio());
+    assert!(header.ycbcr_444());
+    assert!(header.ycbcr_422());
 
     let blocks: Vec<_> = out.data_blocks().collect();
     assert_eq!(blocks.len(), 6);
@@ -70,5 +71,4 @@ fn parse_cta_asus_rog_pg27u() {
 
     assert!(out.dtd(2).is_none());
     assert_eq!(out.checksum(), 0x46);
-    assert!(out.checksum_ok());
 }

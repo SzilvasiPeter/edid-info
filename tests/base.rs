@@ -16,13 +16,13 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.chroma().white().x(), 321);
     assert!(out.established().t_1280_1024_75());
     assert_eq!(
-        out.standard()
+        out.timings()
             .mode(7)
             .map(|m| (m.width(), m.height(), m.vfreq())),
         Some((1920, 1080, 75))
     );
 
-    match out.dtd().mode(1).expect("dtd mode 1 should exist") {
+    match out.descriptors().mode(1).expect("dtd mode 1 should exist") {
         Mode::Timing(timing) => {
             assert_eq!(timing.h_active(), 1920);
             assert_eq!(timing.v_active(), 1080);
@@ -36,7 +36,6 @@ fn parse_base_acer_ek221q_h() {
 
     assert_eq!(out.footer().extension_num(), 1);
     assert_eq!(out.footer().checksum(), 0x18);
-    assert!(out.checksum_ok());
 }
 
 const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
@@ -65,19 +64,18 @@ fn parse_base_asus_rog_pg27u() {
 
     assert_eq!(base.footer().extension_num(), 2);
     assert_eq!(base.footer().checksum(), 0x72);
-    assert!(base.checksum_ok());
 
     let raw_cta: &[u8; 128] = ASUS[128..256].try_into().expect("cta block");
     let cta = Cta::parse(raw_cta).expect("cta parse");
+    let header = cta.header();
 
-    assert_eq!(cta.rev(), 3);
-    assert_eq!(cta.native_dtd_num(), 1);
-    assert!(cta.underscan());
-    assert!(cta.basic_audio());
-    assert!(cta.ycbcr_444());
-    assert!(cta.ycbcr_422());
+    assert_eq!(header.rev(), 3);
+    assert_eq!(header.native_dtd_num(), 1);
+    assert!(header.underscan());
+    assert!(header.basic_audio());
+    assert!(header.ycbcr_444());
+    assert!(header.ycbcr_422());
     assert_eq!(cta.checksum(), 0x46);
-    assert!(cta.checksum_ok());
 
     let blocks: Vec<_> = cta.data_blocks().collect();
     assert_eq!(blocks.len(), 6);

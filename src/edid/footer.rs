@@ -37,9 +37,4 @@ impl Footer {
     pub const fn checksum(&self) -> u8 {
         self.checksum
     }
-
-    #[must_use]
-    pub fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
-        crate::edid::check(raw)
-    }
 }

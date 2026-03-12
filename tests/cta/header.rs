@@ -19,8 +19,6 @@ fn parse_cta_header_acer_ek221q_h() {
     // Check offsets
     let dtd_off = header.dtd_off();
     assert!(dtd_off >= 4);
-    assert_eq!(header.dtd_start(), Some(dtd_off as usize));
-    assert_eq!(header.data_block_end(), dtd_off as usize);
 }
 
 #[test]

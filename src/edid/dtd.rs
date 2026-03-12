@@ -26,11 +26,11 @@ pub enum Mode {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Dtd {
+pub struct Descriptors {
     modes: [Option<Mode>; DTD_NUM],
 }
 
-impl Dtd {
+impl Descriptors {
     #[must_use]
     pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut modes = [None; DTD_NUM];

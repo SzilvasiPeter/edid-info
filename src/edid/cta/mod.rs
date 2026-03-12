@@ -38,8 +38,9 @@ pub mod vic;
 pub mod video;
 
 use crate::edid::descriptor::timing::DetailedTiming;
-use crate::edid::{BLOCK_LEN, DESC_LEN};
+use crate::edid::{BLOCK_LEN, DESC_LEN, check};
 
+// TODO: Remove the unused imports
 pub use audio::{AudioExtFormat, AudioFormat, Sad, SadIter};
 pub use block::{BlockTag, DataBlock, DataBlockIter};
 pub use header::CTA_TAG;
@@ -50,6 +51,9 @@ pub use vic::Vic;
 pub use video::Svd;
 
 /// CTA Extension Block.
+/// TODO: Refactor to contain the header information (rev, dtd_num, etc.) explicitely, then remove the `header`
+/// TODO: Create "Data Block Collection" field instead of raw bytes
+/// TODO: store the checksum here
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Cta {
     header: header::Header,
@@ -59,6 +63,9 @@ pub struct Cta {
 impl Cta {
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
+        if !check::checksum_ok(raw) {
+            return None;
+        }
         header::Header::parse(raw).map(|header| Self { header, raw: *raw })
     }
 
@@ -68,33 +75,12 @@ impl Cta {
     }
 
     #[must_use]
-    pub const fn rev(&self) -> u8 {
-        self.header.rev()
-    }
-
-    #[must_use]
-    pub const fn native_dtd_num(&self) -> u8 {
-        self.header.native_dtd_num()
-    }
-
-    #[must_use]
-    pub const fn underscan(&self) -> bool {
-        self.header.underscan()
-    }
-
-    #[must_use]
-    pub const fn basic_audio(&self) -> bool {
-        self.header.basic_audio()
-    }
-
-    #[must_use]
-    pub const fn ycbcr_444(&self) -> bool {
-        self.header.ycbcr_444()
-    }
-
-    #[must_use]
-    pub const fn ycbcr_422(&self) -> bool {
-        self.header.ycbcr_422()
+    pub const fn data_blocks(&self) -> DataBlockIter<'_> {
+        DataBlockIter {
+            raw: &self.raw,
+            at: 4,
+            end: self.data_block_end(),
+        }
     }
 
     #[must_use]
@@ -103,22 +89,8 @@ impl Cta {
     }
 
     #[must_use]
-    pub fn checksum_ok(&self) -> bool {
-        crate::edid::check(&self.raw)
-    }
-
-    #[must_use]
-    pub const fn data_blocks(&self) -> DataBlockIter<'_> {
-        DataBlockIter {
-            raw: &self.raw,
-            at: 4,
-            end: self.header.data_block_end(),
-        }
-    }
-
-    #[must_use]
     pub fn dtd(&self, i: usize) -> Option<DetailedTiming> {
-        let start = self.header.dtd_start()?;
+        let start = self.dtd_start()?;
         let off = start + i * DESC_LEN;
         let end = off + DESC_LEN;
         if end > 127 || (self.raw[off] == 0 && self.raw[off + 1] == 0) {
@@ -127,5 +99,25 @@ impl Cta {
         let mut raw = [0; DESC_LEN];
         raw.copy_from_slice(&self.raw[off..end]);
         DetailedTiming::parse(&raw)
+    }
+
+    const fn data_block_end(&self) -> usize {
+        let dtd_off = self.header.dtd_off();
+        if dtd_off == 0 {
+            127
+        } else if dtd_off >= 4 {
+            dtd_off as usize
+        } else {
+            4
+        }
+    }
+
+    const fn dtd_start(&self) -> Option<usize> {
+        let dtd_off = self.header.dtd_off();
+        if dtd_off >= 4 && dtd_off < 127 {
+            Some(dtd_off as usize)
+        } else {
+            None
+        }
     }
 }

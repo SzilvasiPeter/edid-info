@@ -14,7 +14,7 @@
 use crate::edid::BLOCK_LEN;
 use crate::edid::bits::is_set;
 
-pub const CTA_TAG: u8 = 0b0000_0010;
+pub const CTA_TAG: u8 = 0x02;
 
 /// CTA Extension Block header structure.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -74,25 +74,5 @@ impl Header {
     #[must_use]
     pub const fn native_dtd_num(&self) -> u8 {
         self.flags & 0b0000_1111
-    }
-
-    #[must_use]
-    pub const fn data_block_end(&self) -> usize {
-        if self.dtd_off == 0 {
-            127
-        } else if self.dtd_off >= 4 {
-            self.dtd_off as usize
-        } else {
-            4
-        }
-    }
-
-    #[must_use]
-    pub const fn dtd_start(&self) -> Option<usize> {
-        if self.dtd_off >= 4 && self.dtd_off < 127 {
-            Some(self.dtd_off as usize)
-        } else {
-            None
-        }
     }
 }

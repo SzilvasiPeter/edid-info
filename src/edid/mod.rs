@@ -1,28 +1,4 @@
 //! EDID 1.4 base block and extension parsing.
-//!
-//! # EDID 1.4 Base Block Structure (128 bytes)
-//!
-//! | Offset | Size | Description |
-//! |--------|------|-------------|
-//! | 0–7    | 8    | Header (magic, manufacturer, product, serial) |
-//! | 8–9    | 2    | Manufacturer ID (3-letter code, big-endian) |
-//! | 10–11  | 2    | Product code |
-//! | 12–15  | 4    | Serial number |
-//! | 16     | 1    | Week of manufacture |
-//! | 17     | 1    | Year of manufacture (offset from 1990) |
-//! | 18     | 1    | EDID version major |
-//! | 19     | 1    | EDID version minor |
-//! | 20–24  | 5    | Basic display parameters |
-//! | 25–34  | 10   | Color characteristics (chromaticity) |
-//! | 35–37  | 3    | Established timings |
-//! | 38–53  | 16   | Standard timing identification (8 × 2 bytes) |
-//! | 54–125 | 72   | Detailed timing descriptors (4 × 18 bytes) |
-//! | 126    | 1    | Extension count |
-//! | 127    | 1    | Checksum |
-//!
-//! # References
-//!
-//! - [Wikipedia: EDID 1.4 Structure](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
 
 pub mod base;
 pub mod basic;
@@ -37,8 +13,6 @@ pub mod footer;
 pub mod header;
 pub mod std1;
 
-pub use check::check;
-
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
 
@@ -51,6 +25,21 @@ pub struct Edid {
     extensions: Vec<Extension>,
 }
 
+/// EDID Extensions assigned by VESA
+///
+/// - Timing Extension (00)
+/// - Additional Timing Data Block (CTA EDID Timing Extension) (02)
+/// - Video Timing Block Extension (VTB-EXT) (10)
+/// - EDID 2.0 Extension (20)
+/// - Display Information Extension (DI-EXT) (40)
+/// - Localized String Extension (LS-EXT) (50)
+/// - Microdisplay Interface Extension (MI-EXT) (60)
+/// - Display ID Extension (70)
+/// - Display Transfer Characteristics Data Block (DTCDB) (A7, AF, BF)
+/// - Block Map (F0)
+/// - Display Device Data Block (DDDB) (FF): contains information such as subpixel layout
+/// - Extension defined by monitor manufacturer (FF): According to LS-EXT, actual contents
+///   varies from manufacturer. However, the value is later used by DDDB.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Extension {
     Cta(cta::Cta),
@@ -66,24 +55,26 @@ impl Edid {
 
         let base_raw: &[u8; BLOCK_LEN] = raw[..BLOCK_LEN].try_into().ok()?;
         let base = base::BaseEdid::parse(base_raw);
-        if base.header().magic() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00] {
-            return None;
-        }
-        if !base.checksum_ok() {
-            return None;
-        }
-        let ext_num = base.footer().extension_num() as usize;
-        let avail = raw.len() / BLOCK_LEN - 1;
-        if ext_num > avail {
+        if base.header().magic() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+            || !check::checksum_ok(base_raw)
+        {
             return None;
         }
 
-        let mut extensions = Vec::with_capacity(ext_num);
-        for chunk in raw[BLOCK_LEN..].chunks_exact(BLOCK_LEN).take(ext_num) {
-            let ext_raw: &[u8; BLOCK_LEN] = chunk.try_into().ok()?;
-            let ext = cta::Cta::parse(ext_raw).map_or(Extension::Unknown(*ext_raw), Extension::Cta);
-            extensions.push(ext);
+        let ext_num = base.footer().extension_num() as usize;
+        let blocks = raw.len() / BLOCK_LEN - 1;
+        if ext_num > blocks {
+            return None;
         }
+
+        let extensions = raw[BLOCK_LEN..]
+            .chunks_exact(BLOCK_LEN)
+            .take(ext_num)
+            .filter_map(|chunk| {
+                let block: &[u8; BLOCK_LEN] = chunk.try_into().ok()?;
+                Some(cta::Cta::parse(block).map_or(Extension::Unknown(*block), Extension::Cta))
+            })
+            .collect();
 
         Some(Self { base, extensions })
     }

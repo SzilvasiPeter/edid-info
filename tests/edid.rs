@@ -17,8 +17,7 @@ fn parse_edid_acer_ek221q_h() {
     assert_eq!(extensions.len(), 1);
     match &extensions[0] {
         Extension::Cta(cta) => {
-            assert_eq!(cta.rev(), 3);
-            assert!(cta.checksum_ok());
+            assert_eq!(cta.header().rev(), 3);
         }
         Extension::Unknown(_) => panic!("expected CTA extension for Acer, got Unknown"),
     }
@@ -40,8 +39,7 @@ fn parse_edid_asus_rog_pg27u() {
     // Block 1: CTA
     match &extensions[0] {
         Extension::Cta(cta) => {
-            assert_eq!(cta.rev(), 3);
-            assert!(cta.checksum_ok());
+            assert_eq!(cta.header().rev(), 3);
         }
         Extension::Unknown(_) => panic!("expected CTA extension for Asus block 1, got Unknown"),
     }

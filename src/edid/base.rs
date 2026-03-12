@@ -7,12 +7,26 @@
 use crate::edid::BLOCK_LEN;
 use crate::edid::basic::Basic;
 use crate::edid::chroma::Chroma;
-use crate::edid::dtd::Dtd;
+use crate::edid::dtd::Descriptors;
 use crate::edid::established::Established;
 use crate::edid::footer::Footer;
 use crate::edid::header::Header;
 use crate::edid::std1::Std1;
 
+/// # EDID 1.4 Base Block Structure (128 bytes)
+///
+/// | Bytes | Description |
+/// | :--- | :--- |
+/// | 0–19 | Header information |
+/// | 20–24 | Basic display parameters |
+/// | 25–34 | Chromaticity coordinates |
+/// | 35–37 | Established timing bitmap |
+/// | 38–53 | Standard timing information |
+/// | 54–125 | Display timing descriptor followed by display/monitor descriptors |
+/// | 126–127 | Extension flag and checksum |
+///
+/// # References
+/// - [Wikipedia: EDID 1.4 Structure](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BaseEdid {
     raw: [u8; BLOCK_LEN],
@@ -20,8 +34,8 @@ pub struct BaseEdid {
     basic: Basic,
     chroma: Chroma,
     established: Established,
-    standard: Std1,
-    dtd: Dtd,
+    timings: Std1,
+    descriptors: Descriptors,
     footer: Footer,
 }
 
@@ -34,8 +48,8 @@ impl BaseEdid {
             basic: Basic::parse_base(raw),
             chroma: Chroma::parse_base(raw),
             established: Established::parse_base(raw),
-            standard: Std1::parse_base(raw),
-            dtd: Dtd::parse_base(raw),
+            timings: Std1::parse_base(raw),
+            descriptors: Descriptors::parse_base(raw),
             footer: Footer::parse(raw),
         }
     }
@@ -61,22 +75,17 @@ impl BaseEdid {
     }
 
     #[must_use]
-    pub const fn standard(&self) -> Std1 {
-        self.standard
+    pub const fn timings(&self) -> Std1 {
+        self.timings
     }
 
     #[must_use]
-    pub const fn dtd(&self) -> Dtd {
-        self.dtd
+    pub const fn descriptors(&self) -> Descriptors {
+        self.descriptors
     }
 
     #[must_use]
     pub const fn footer(&self) -> Footer {
         self.footer
-    }
-
-    #[must_use]
-    pub fn checksum_ok(&self) -> bool {
-        Footer::checksum_ok(&self.raw)
     }
 }
