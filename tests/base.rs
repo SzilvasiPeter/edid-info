@@ -11,7 +11,7 @@ fn parse_base_acer_ek221q_h() {
 
     let raw: &[u8; 128] = ACER[0..128].try_into().expect("base block bytes");
     let out = BaseEdid::parse(raw);
-    assert_eq!(out.header().maker(), ['A', 'C', 'R']);
+    assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.basic().width_cm(), 48);
     assert_eq!(out.chroma().white().x(), 321);
     assert!(out.established().t_1280_1024_75());
@@ -47,10 +47,10 @@ fn parse_base_asus_rog_pg27u() {
     let raw_base: &[u8; 128] = ASUS[0..128].try_into().expect("base block");
     let base = BaseEdid::parse(raw_base);
     assert_eq!(
-        base.header().magic(),
+        base.header().pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
     );
-    assert_eq!(base.header().maker(), ['A', 'U', 'S']);
+    assert_eq!(base.header().manufacturer(), ['A', 'U', 'S']);
     assert_eq!(base.header().product(), 10148);
     assert_eq!(base.header().serial(), 0x0001_b5bc);
     assert_eq!(base.header().week(), 30);

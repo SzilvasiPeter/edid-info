@@ -71,6 +71,7 @@ impl Features {
     }
 }
 
+// TODO: Group the horizontal and vertical fields together
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
     pixel_clock_hz: u32,
@@ -162,6 +163,7 @@ impl DetailedTiming {
     pub fn h_khz(&self) -> f64 {
         f64::from(self.pixel_clock_hz) / f64::from(self.h_active + self.h_blank) / 1000.0
     }
+
     /// Vertical refresh rate in Hz.
     ///
     /// For interlaced modes, this returns the field rate (e.g., 60Hz for 1080i).

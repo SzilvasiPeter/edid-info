@@ -9,7 +9,7 @@ fn parse_edid_acer_ek221q_h() {
     let edid = Edid::parse(ACER).expect("should parse Acer EDID");
 
     // Verify base block
-    assert_eq!(edid.base().header().maker(), ['A', 'C', 'R']);
+    assert_eq!(edid.base().header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(edid.base().footer().extension_num(), 1);
 
     // Verify extensions
@@ -29,7 +29,7 @@ fn parse_edid_asus_rog_pg27u() {
     let edid = Edid::parse(ASUS).expect("should parse Asus EDID");
 
     // Verify base block
-    assert_eq!(edid.base().header().maker(), ['A', 'U', 'S']);
+    assert_eq!(edid.base().header().manufacturer(), ['A', 'U', 'S']);
     assert_eq!(edid.base().footer().extension_num(), 2);
 
     // Verify extensions (footer says 2, so we expect 2 parsed extensions even if file is longer)

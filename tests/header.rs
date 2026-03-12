@@ -9,10 +9,10 @@ fn parse_header_acer_ek221q_h() {
     let out = Header::parse(raw);
 
     assert_eq!(
-        out.magic(),
+        out.pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
     );
-    assert_eq!(out.maker(), ['A', 'C', 'R']);
+    assert_eq!(out.manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.product(), 2909);
     assert_eq!(out.serial(), 0x3480_002C);
     assert_eq!(out.week(), 48);
@@ -27,10 +27,10 @@ fn parse_header_asus_rog_pg27u() {
     let out = Header::parse(raw);
 
     assert_eq!(
-        out.magic(),
+        out.pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
     );
-    assert_eq!(out.maker(), ['A', 'U', 'S']);
+    assert_eq!(out.manufacturer(), ['A', 'U', 'S']);
     assert_eq!(out.product(), 10148);
     assert_eq!(out.serial(), 0x0001_b5bc);
     assert_eq!(out.week(), 30);

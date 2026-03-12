@@ -5,6 +5,7 @@
 //! split across multiple bytes). This module provides utilities
 //! for extracting and packing these values.
 
+// TODO: Use more descriptive and explicit function names
 /// Checks if a specific bit is set in a byte.
 #[must_use]
 pub const fn is_set(val: u8, bit: u8) -> bool {

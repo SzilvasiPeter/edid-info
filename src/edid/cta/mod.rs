@@ -40,7 +40,6 @@ pub mod video;
 use crate::edid::descriptor::timing::DetailedTiming;
 use crate::edid::{BLOCK_LEN, DESC_LEN, check};
 
-// TODO: Remove the unused imports
 pub use audio::{AudioExtFormat, AudioFormat, Sad, SadIter};
 pub use block::{BlockTag, DataBlock, DataBlockIter};
 pub use header::CTA_TAG;

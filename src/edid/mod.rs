@@ -55,7 +55,7 @@ impl Edid {
 
         let base_raw: &[u8; BLOCK_LEN] = raw[..BLOCK_LEN].try_into().ok()?;
         let base = base::BaseEdid::parse(base_raw);
-        if base.header().magic() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+        if base.header().pattern() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
             || !check::checksum_ok(base_raw)
         {
             return None;
