@@ -50,10 +50,10 @@ pub use vendor::HdmiVsdb;
 pub use vic::Vic;
 pub use video::Svd;
 
+// TODO: Refactor to contain the header information (rev, dtd_num, etc.) explicitely, then remove the `header`
+// TODO: Create "Data Block Collection" field instead of raw bytes
+// TODO: store the checksum here
 /// CTA Extension Block.
-/// TODO: Refactor to contain the header information (rev, dtd_num, etc.) explicitely, then remove the `header`
-/// TODO: Create "Data Block Collection" field instead of raw bytes
-/// TODO: store the checksum here
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Cta {
     header: header::Header,
