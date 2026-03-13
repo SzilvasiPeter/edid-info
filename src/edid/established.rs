@@ -12,8 +12,6 @@
 //! | 36   | 800×600, 1024×768, 1280×1024 variants |
 //! | 37   | 1152×870 + 7 manufacturer-reserved bits |
 
-use crate::edid::BLOCK_LEN;
-
 pub const ESTABLISHED_OFF: usize = 35;
 pub const ESTABLISHED_LEN: usize = 3;
 
@@ -24,13 +22,6 @@ pub struct Established {
 
 #[rustfmt::skip]
 impl Established {
-    #[must_use]
-    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
-        let mut out = [0; ESTABLISHED_LEN];
-        out.copy_from_slice(&raw[ESTABLISHED_OFF..ESTABLISHED_OFF + ESTABLISHED_LEN]);
-        Self::parse(&out)
-    }
-
     #[must_use]
     pub const fn parse(raw: &[u8; ESTABLISHED_LEN]) -> Self {
         Self { raw: *raw }

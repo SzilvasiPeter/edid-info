@@ -9,8 +9,8 @@ const ACER: &[u8] = include_bytes!("data/ACER_EK221Q_H.edid");
 fn parse_base_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
 
-    let raw: &[u8; 128] = ACER[0..128].try_into().expect("base block bytes");
-    let out = BaseEdid::parse(raw);
+    let raw: [u8; 128] = std::array::from_fn(|i| ACER[i]);
+    let out = BaseEdid::parse(&raw);
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.basic().width_cm(), 48);
     assert_eq!(out.chroma().white().x(), 321);
@@ -44,8 +44,8 @@ const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 fn parse_base_asus_rog_pg27u() {
     assert_eq!(ASUS.len(), 768);
 
-    let raw_base: &[u8; 128] = ASUS[0..128].try_into().expect("base block");
-    let base = BaseEdid::parse(raw_base);
+    let raw_base: [u8; 128] = std::array::from_fn(|i| ASUS[i]);
+    let base = BaseEdid::parse(&raw_base);
     assert_eq!(
         base.header().pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
@@ -65,8 +65,8 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(base.footer().extension_num(), 2);
     assert_eq!(base.footer().checksum(), 0x72);
 
-    let raw_cta: &[u8; 128] = ASUS[128..256].try_into().expect("cta block");
-    let cta = Cta::parse(raw_cta).expect("cta parse");
+    let raw_cta: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
+    let cta = Cta::parse(&raw_cta).expect("cta parse");
     let header = cta.header();
 
     assert_eq!(header.rev(), 3);

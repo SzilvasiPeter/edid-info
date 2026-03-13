@@ -5,9 +5,9 @@ const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_standard_acer_ek221q_h() {
-    let raw: &[u8; 16] = ACER[38..54].try_into().expect("standard bytes");
+    let raw: [u8; 16] = std::array::from_fn(|i| ACER[38 + i]);
     let mode = |i| {
-        Std1::parse(raw)
+        Std1::parse(&raw)
             .mode(i)
             .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
     };
@@ -25,9 +25,9 @@ fn parse_standard_acer_ek221q_h() {
 
 #[test]
 fn parse_standard_asus_rog_pg27u() {
-    let raw: &[u8; 16] = ASUS[38..54].try_into().expect("standard bytes");
+    let raw: [u8; 16] = std::array::from_fn(|i| ASUS[38 + i]);
     let mode = |i| {
-        Std1::parse(raw)
+        Std1::parse(&raw)
             .mode(i)
             .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
     };

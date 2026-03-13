@@ -5,8 +5,8 @@ const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_header_acer_ek221q_h() {
-    let raw: &[u8; 128] = ACER[0..128].try_into().expect("base block bytes");
-    let out = Header::parse(raw);
+    let raw: [u8; 20] = std::array::from_fn(|i| ACER[i]);
+    let out = Header::parse(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -23,8 +23,8 @@ fn parse_header_acer_ek221q_h() {
 
 #[test]
 fn parse_header_asus_rog_pg27u() {
-    let raw: &[u8; 128] = ASUS[0..128].try_into().expect("base block bytes");
-    let out = Header::parse(raw);
+    let raw: [u8; 20] = std::array::from_fn(|i| ASUS[i]);
+    let out = Header::parse(&raw);
 
     assert_eq!(
         out.pattern(),

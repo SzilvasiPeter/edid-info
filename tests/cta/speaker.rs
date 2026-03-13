@@ -4,8 +4,8 @@ const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_speaker_block_asus_rog_pg27u() {
-    let raw: &[u8; 128] = ASUS[128..256].try_into().expect("cta bytes");
-    let out = Cta::parse(raw).expect("cta parse");
+    let raw: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
+    let out = Cta::parse(&raw).expect("cta parse");
 
     let blocks: Vec<_> = out.data_blocks().collect();
     let speaker_block = blocks

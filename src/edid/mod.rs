@@ -16,9 +16,6 @@ pub mod std1;
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
 
-/// Length of a detailed timing or monitor descriptor in bytes.
-pub const DESC_LEN: usize = 18;
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edid {
     base: base::BaseEdid,
@@ -53,10 +50,10 @@ impl Edid {
             return None;
         }
 
-        let base_raw: &[u8; BLOCK_LEN] = raw[..BLOCK_LEN].try_into().ok()?;
-        let base = base::BaseEdid::parse(base_raw);
+        let base_raw: [u8; BLOCK_LEN] = std::array::from_fn(|i| raw[i]);
+        let base = base::BaseEdid::parse(&base_raw);
         if base.header().pattern() != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
-            || !check::checksum_ok(base_raw)
+            || !check::checksum_ok(&base_raw)
         {
             return None;
         }
@@ -70,9 +67,9 @@ impl Edid {
         let extensions = raw[BLOCK_LEN..]
             .chunks_exact(BLOCK_LEN)
             .take(ext_num)
-            .filter_map(|chunk| {
-                let block: &[u8; BLOCK_LEN] = chunk.try_into().ok()?;
-                Some(cta::Cta::parse(block).map_or(Extension::Unknown(*block), Extension::Cta))
+            .map(|chunk| {
+                let block: [u8; BLOCK_LEN] = std::array::from_fn(|i| chunk[i]);
+                cta::Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta)
             })
             .collect();
 

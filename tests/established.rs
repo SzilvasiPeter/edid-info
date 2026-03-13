@@ -5,8 +5,8 @@ const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_established_acer_ek221q_h() {
-    let raw: &[u8; 3] = ACER[35..38].try_into().expect("established bytes");
-    let out = Established::parse(raw);
+    let raw: [u8; 3] = std::array::from_fn(|i| ACER[35 + i]);
+    let out = Established::parse(&raw);
 
     assert!(out.t_720_400_70());
     assert!(!out.t_720_400_88());
@@ -30,8 +30,8 @@ fn parse_established_acer_ek221q_h() {
 
 #[test]
 fn parse_established_asus_rog_pg27u() {
-    let raw: &[u8; 3] = ASUS[35..38].try_into().expect("established bytes");
-    let out = Established::parse(raw);
+    let raw: [u8; 3] = std::array::from_fn(|i| ASUS[35 + i]);
+    let out = Established::parse(&raw);
 
     assert!(!out.t_720_400_70());
     assert!(!out.t_720_400_88());

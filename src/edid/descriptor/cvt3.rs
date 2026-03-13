@@ -11,7 +11,7 @@
 //! | 0–1  | Vertical lines / 2 - 1 (11 bits) + aspect ratio (2 bits) |
 //! | 2    | Refresh rate flags + preferred rate |
 
-use crate::edid::DESC_LEN;
+use crate::edid::descriptor::DESC_LEN;
 
 const VERSION: u8 = 0x01;
 

@@ -5,7 +5,7 @@ const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_timing_descriptor_acer_ek221q_h() {
-    let raw = ACER[54..72].try_into().expect("timing descriptor bytes");
+    let raw = std::array::from_fn(|i| ACER[54 + i]);
     let out = DetailedTiming::parse(&raw);
     assert!(out.is_some());
 
@@ -38,7 +38,7 @@ fn parse_timing_descriptor_acer_ek221q_h() {
 
 #[test]
 fn parse_timing_descriptor_asus_rog_pg27u() {
-    let raw = ASUS[54..72].try_into().expect("timing descriptor bytes");
+    let raw = std::array::from_fn(|i| ASUS[54 + i]);
     let out = DetailedTiming::parse(&raw);
     assert!(out.is_some());
 

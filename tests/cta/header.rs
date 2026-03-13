@@ -5,8 +5,8 @@ const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_cta_header_acer_ek221q_h() {
-    let raw: &[u8; 128] = ACER[128..256].try_into().expect("cta bytes");
-    let header = Header::parse(raw).expect("cta header parse");
+    let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
+    let header = Header::parse(&raw).expect("cta header parse");
 
     assert_eq!(header.tag(), 0x02);
     assert_eq!(header.rev(), 3);
@@ -23,8 +23,8 @@ fn parse_cta_header_acer_ek221q_h() {
 
 #[test]
 fn parse_cta_header_asus_rog_pg27u_block_1() {
-    let raw: &[u8; 128] = ASUS[128..256].try_into().expect("cta bytes block 1");
-    let header = Header::parse(raw).expect("cta header parse block 1");
+    let raw: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
+    let header = Header::parse(&raw).expect("cta header parse block 1");
 
     assert_eq!(header.tag(), 0x02);
     assert_eq!(header.rev(), 3);
@@ -37,8 +37,8 @@ fn parse_cta_header_asus_rog_pg27u_block_1() {
 
 #[test]
 fn parse_cta_header_asus_rog_pg27u_block_4() {
-    let raw: &[u8; 128] = ASUS[512..640].try_into().expect("cta bytes block 4");
-    let header = Header::parse(raw).expect("cta header parse block 4");
+    let raw: [u8; 128] = std::array::from_fn(|i| ASUS[512 + i]);
+    let header = Header::parse(&raw).expect("cta header parse block 4");
 
     assert_eq!(header.tag(), 0x02);
     assert_eq!(header.rev(), 3);

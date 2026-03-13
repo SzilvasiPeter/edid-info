@@ -5,13 +5,14 @@
 //! parameters, color characteristics, and timing descriptors.
 
 use crate::edid::BLOCK_LEN;
-use crate::edid::basic::Basic;
-use crate::edid::chroma::Chroma;
-use crate::edid::dtd::Descriptors;
-use crate::edid::established::Established;
-use crate::edid::footer::Footer;
-use crate::edid::header::Header;
-use crate::edid::std1::Std1;
+use crate::edid::basic::{BASIC_LEN, BASIC_OFF, Basic};
+use crate::edid::chroma::{CHROMA_LEN, CHROMA_OFF, Chroma};
+use crate::edid::descriptor::DESC_LEN;
+use crate::edid::dtd::{DTD_NUM, DTD_OFF, Descriptors};
+use crate::edid::established::{ESTABLISHED_LEN, ESTABLISHED_OFF, Established};
+use crate::edid::footer::{FOOTER_LEN, FOOTER_OFF, Footer};
+use crate::edid::header::{HEADER_LEN, HEADER_OFF, Header};
+use crate::edid::std1::{STANDARD_LEN, STANDARD_OFF, Std1};
 
 /// # EDID 1.4 Base Block Structure (128 bytes)
 ///
@@ -42,15 +43,22 @@ pub struct BaseEdid {
 impl BaseEdid {
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let header: [u8; HEADER_LEN] = std::array::from_fn(|i| raw[HEADER_OFF + i]);
+        let basic: [u8; BASIC_LEN] = std::array::from_fn(|i| raw[BASIC_OFF + i]);
+        let chroma: [u8; CHROMA_LEN] = std::array::from_fn(|i| raw[CHROMA_OFF + i]);
+        let established: [u8; ESTABLISHED_LEN] = std::array::from_fn(|i| raw[ESTABLISHED_OFF + i]);
+        let std1: [u8; STANDARD_LEN] = std::array::from_fn(|i| raw[STANDARD_OFF + i]);
+        let dtd: [u8; DTD_NUM * DESC_LEN] = std::array::from_fn(|i| raw[DTD_OFF + i]);
+        let footer: [u8; FOOTER_LEN] = std::array::from_fn(|i| raw[FOOTER_OFF + i]);
         Self {
             raw: *raw,
-            header: Header::parse(raw),
-            basic: Basic::parse_base(raw),
-            chroma: Chroma::parse_base(raw),
-            established: Established::parse_base(raw),
-            timings: Std1::parse_base(raw),
-            descriptors: Descriptors::parse_base(raw),
-            footer: Footer::parse(raw),
+            header: Header::parse(&header),
+            basic: Basic::parse(&basic),
+            chroma: Chroma::parse(&chroma),
+            established: Established::parse(&established),
+            timings: Std1::parse(&std1),
+            descriptors: Descriptors::parse(&dtd),
+            footer: Footer::parse(&footer),
         }
     }
 

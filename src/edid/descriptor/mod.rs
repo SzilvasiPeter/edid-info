@@ -19,6 +19,9 @@
 //! | 0xF7 | Standard Timing 3 | More standard timings |
 //! | 0x00–0x0F | Vendor Reserved | Vendor-specific data |
 
+/// Length of a detailed timing or monitor descriptor in bytes.
+pub const DESC_LEN: usize = 18;
+
 pub mod color;
 pub mod cvt3;
 pub mod monitor;

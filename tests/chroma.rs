@@ -5,8 +5,8 @@ const ASUS: &[u8] = include_bytes!("data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_chroma_acer_ek221q_h() {
-    let raw: &[u8; 10] = ACER[25..35].try_into().expect("chroma bytes");
-    let out = Chroma::parse(raw);
+    let raw: [u8; 10] = std::array::from_fn(|i| ACER[25 + i]);
+    let out = Chroma::parse(&raw);
 
     assert_eq!(out.red().x(), 662);
     assert_eq!(out.red().y(), 355);
@@ -20,8 +20,8 @@ fn parse_chroma_acer_ek221q_h() {
 
 #[test]
 fn parse_chroma_asus_rog_pg27u() {
-    let raw: &[u8; 10] = ASUS[25..35].try_into().expect("chroma bytes");
-    let out = Chroma::parse(raw);
+    let raw: [u8; 10] = std::array::from_fn(|i| ASUS[25 + i]);
+    let out = Chroma::parse(&raw);
 
     assert_eq!(out.red().x(), 690);
     assert_eq!(out.red().y(), 322);

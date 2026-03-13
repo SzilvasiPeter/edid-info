@@ -14,7 +14,7 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Timing formula type |
 
-use crate::edid::DESC_LEN;
+use crate::edid::descriptor::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Timing {

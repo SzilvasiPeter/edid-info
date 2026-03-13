@@ -16,8 +16,8 @@
 //! | 14    | Border size |
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
-use crate::edid::DESC_LEN;
 use crate::edid::bits::{u6_pack, u10_lo, u12_hi, u12_lo};
+use crate::edid::descriptor::DESC_LEN;
 
 const CLK_UNIT: u32 = 10_000;
 

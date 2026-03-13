@@ -5,8 +5,8 @@ const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_vics_acer_ek221q_h() {
-    let raw: &[u8; 128] = ACER[128..256].try_into().expect("cta bytes");
-    let out = Cta::parse(raw).expect("cta parse");
+    let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
+    let out = Cta::parse(&raw).expect("cta parse");
 
     let video_block = out
         .data_blocks()
@@ -40,12 +40,12 @@ fn parse_vics_acer_ek221q_h() {
 #[test]
 fn parse_vics_asus_rog_pg27u() {
     // ASUS ROG PG27U CTA extensions (Block 1 and Block 4) do not contain Video Data Blocks (VICs)
-    let raw1: &[u8; 128] = ASUS[128..256].try_into().expect("cta bytes block 1");
-    let cta1 = Cta::parse(raw1).expect("cta parse block 1");
+    let raw1: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
+    let cta1 = Cta::parse(&raw1).expect("cta parse block 1");
     assert!(cta1.data_blocks().all(|b| b.tag() != BlockTag::Video));
 
-    let raw4: &[u8; 128] = ASUS[512..640].try_into().expect("cta bytes block 4");
-    let cta4 = Cta::parse(raw4).expect("cta parse block 4");
+    let raw4: [u8; 128] = std::array::from_fn(|i| ASUS[512 + i]);
+    let cta4 = Cta::parse(&raw4).expect("cta parse block 4");
     assert!(cta4.data_blocks().all(|b| b.tag() != BlockTag::Video));
 }
 

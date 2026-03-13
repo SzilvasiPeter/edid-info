@@ -9,9 +9,8 @@
 //! | 126  | Number of extension blocks following this block |
 //! | 127  | Checksum (sum of all 128 bytes must equal 0) |
 
-use crate::edid::BLOCK_LEN;
-
 pub const FOOTER_OFF: usize = 126;
+pub const FOOTER_LEN: usize = 2;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Footer {
@@ -21,10 +20,10 @@ pub struct Footer {
 
 impl Footer {
     #[must_use]
-    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub const fn parse(raw: &[u8; FOOTER_LEN]) -> Self {
         Self {
-            extension_num: raw[FOOTER_OFF],
-            checksum: raw[FOOTER_OFF + 1],
+            extension_num: raw[0],
+            checksum: raw[1],
         }
     }
 

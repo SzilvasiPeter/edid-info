@@ -19,7 +19,6 @@
 //! | 33   | White-x MSBs |
 //! | 34   | White-y MSBs |
 
-use crate::edid::BLOCK_LEN;
 use crate::edid::bits::{u2_from_masks, u10_hi};
 
 pub const CHROMA_OFF: usize = 25;
@@ -52,13 +51,6 @@ pub struct Chroma {
 }
 
 impl Chroma {
-    #[must_use]
-    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
-        let mut out = [0; CHROMA_LEN];
-        out.copy_from_slice(&raw[CHROMA_OFF..CHROMA_OFF + CHROMA_LEN]);
-        Self::parse(&out)
-    }
-
     #[must_use]
     pub const fn parse(raw: &[u8; CHROMA_LEN]) -> Self {
         let rg = raw[0];

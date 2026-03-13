@@ -11,7 +11,7 @@
 //! - Byte 3: White point y coordinate (10-bit)
 //! - Byte 4: Gamma (value - 1.0, scaled by 100)
 
-use crate::edid::DESC_LEN;
+use crate::edid::descriptor::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Point {

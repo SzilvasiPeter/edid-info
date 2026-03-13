@@ -37,8 +37,9 @@ pub mod vendor;
 pub mod vic;
 pub mod video;
 
+use crate::edid::descriptor::DESC_LEN;
 use crate::edid::descriptor::timing::DetailedTiming;
-use crate::edid::{BLOCK_LEN, DESC_LEN, check};
+use crate::edid::{BLOCK_LEN, check};
 
 pub use audio::{AudioExtFormat, AudioFormat, Sad, SadIter};
 pub use block::{BlockTag, DataBlock, DataBlockIter};

@@ -15,7 +15,8 @@
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
 
-use crate::edid::BLOCK_LEN;
+pub const HEADER_OFF: usize = 0;
+pub const HEADER_LEN: usize = 20;
 
 /// Header structure containing manufacturer ID, product code, serial, date and version info.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -32,7 +33,7 @@ pub struct Header {
 
 impl Header {
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn parse(raw: &[u8; HEADER_LEN]) -> Self {
         Self {
             pattern: [
                 raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],

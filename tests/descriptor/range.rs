@@ -9,14 +9,14 @@ const ROL: &[u8] = include_bytes!("../data/ROL_ROLSEN_C707N.edid");
 
 #[test]
 fn parse_range_limit_descriptor_acer_ek221q_h() {
-    let range_raw: &[u8; 18] = ACER[108..126].try_into().expect("range descriptor bytes");
-    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    let range_raw: [u8; 18] = std::array::from_fn(|i| ACER[108 + i]);
+    let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
     assert_eq!(range.serial(), None);
     assert_eq!(range.name(), None);
     assert_eq!(range.text(), None);
 
-    let range = Range::parse(range_raw).expect("range limits parse");
+    let range = Range::parse(&range_raw).expect("range limits parse");
     assert_eq!(range.v_min_hz(), 48);
     assert_eq!(range.v_max_hz(), 100);
     assert_eq!(range.h_min_khz(), 24);
@@ -27,14 +27,14 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
 
 #[test]
 fn parse_range_limit_descriptor_asus_rog_pg27u() {
-    let range_raw: &[u8; 18] = ASUS[90..108].try_into().expect("range descriptor bytes");
-    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    let range_raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
+    let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
     assert_eq!(range.serial(), None);
     assert_eq!(range.name(), None);
     assert_eq!(range.text(), None);
 
-    let range = Range::parse(range_raw).expect("range limits parse");
+    let range = Range::parse(&range_raw).expect("range limits parse");
     assert_eq!(range.v_min_hz(), 24);
     assert_eq!(range.v_max_hz(), 144);
     assert_eq!(range.h_min_khz(), 52);
@@ -45,11 +45,11 @@ fn parse_range_limit_descriptor_asus_rog_pg27u() {
 
 #[test]
 fn parse_range_secondary_gtf_phl_22pfl3606() {
-    let range_raw: &[u8; 18] = PHL[90..108].try_into().expect("range descriptor bytes");
-    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    let range_raw: [u8; 18] = std::array::from_fn(|i| PHL[90 + i]);
+    let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
 
-    let range = Range::parse(range_raw).expect("range limits parse");
+    let range = Range::parse(&range_raw).expect("range limits parse");
     assert_eq!(range.v_min_hz(), 55);
     assert_eq!(range.v_max_hz(), 76);
     assert_eq!(range.h_min_khz(), 15);
@@ -70,11 +70,11 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
 
 #[test]
 fn parse_range_cvt_sdc_123yl01() {
-    let range_raw: &[u8; 18] = SDC[72..90].try_into().expect("range descriptor bytes");
-    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    let range_raw: [u8; 18] = std::array::from_fn(|i| SDC[72 + i]);
+    let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
 
-    let range = Range::parse(range_raw).expect("range limits parse");
+    let range = Range::parse(&range_raw).expect("range limits parse");
     assert_eq!(range.v_min_hz(), 48);
     assert_eq!(range.v_max_hz(), 60);
     assert_eq!(range.h_min_khz(), 0);
@@ -107,8 +107,8 @@ fn parse_range_cvt_sdc_123yl01() {
 
 #[test]
 fn parse_range_limits_descriptor_rol_rolsen_c707n() {
-    let range_raw: &[u8; 18] = ROL[108..126].try_into().expect("range descriptor bytes");
-    let range = MonitorDesc::parse(range_raw).expect("range descriptor parse");
+    let range_raw: [u8; 18] = std::array::from_fn(|i| ROL[108 + i]);
+    let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
     let vals = range.range().expect("range parse");
     assert_eq!(vals.v_min_hz(), 50);

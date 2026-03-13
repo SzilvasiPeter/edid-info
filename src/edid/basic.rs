@@ -1,7 +1,6 @@
 //! Basic display parameters (bytes 20–24).
 //!
-//! Contains video input definition (analog/digital), display size,
-//! gamma, and feature support flags.
+//! Contains video input definition (analog/digital), display size, gamma, and feature support flags.
 //!
 //! # Structure
 //!
@@ -13,7 +12,6 @@
 //! | 23   | Gamma (value - 1.0, scaled by 100) |
 //! | 24   | Feature support flags |
 
-use crate::edid::BLOCK_LEN;
 use crate::edid::bits::{get_bits, is_set};
 
 pub const BASIC_OFF: usize = 20;
@@ -25,17 +23,10 @@ pub struct Basic {
     width_cm: u8,
     height_cm: u8,
     gamma: u8,
-    feat: Features,
+    features: Features,
 }
 
 impl Basic {
-    #[must_use]
-    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
-        let mut out = [0; BASIC_LEN];
-        out.copy_from_slice(&raw[BASIC_OFF..BASIC_OFF + BASIC_LEN]);
-        Self::parse(&out)
-    }
-
     #[must_use]
     pub const fn parse(raw: &[u8; BASIC_LEN]) -> Self {
         let input = VideoInput::parse(raw[0]);
@@ -45,52 +36,86 @@ impl Basic {
             width_cm: raw[1],
             height_cm: raw[2],
             gamma: raw[3],
-            feat: Features::parse(raw[4], is_digital),
+            features: Features::parse(raw[4], is_digital),
         }
     }
 
+    /// Video input parameters bitmap
     #[must_use]
     pub const fn input(&self) -> VideoInput {
         self.input
     }
 
+    /// Horizontal screen size, in centimetres (range 1–255).
+    /// If vertical screen size is 0, landscape aspect ratio (range 1.00–3.54),
+    /// datavalue = (AR×100) − 99 (example: 16:9, 79; 4:3, 34.)
     #[must_use]
     pub const fn width_cm(&self) -> u8 {
         self.width_cm
     }
 
+    /// Vertical screen size, in centimetres.
+    /// If horizontal screen size is 0, portrait aspect ratio (range 0.28–0.99),
+    /// datavalue = (100/AR) − 99 (example: 9:16, 79; 3:4, 34.)
+    /// If both bytes are 0, screen size and aspect ratio are undefined (e.g. projector)
     #[must_use]
     pub const fn height_cm(&self) -> u8 {
         self.height_cm
     }
 
+    /// Display gamma, factory default (range 1.00–3.54),
+    /// datavalue = (gamma×100) − 100 = (gamma − 1)×100.
+    /// If 255, gamma is defined by DI-EXT block.
     #[must_use]
     pub const fn gamma_raw(&self) -> u8 {
         self.gamma
     }
 
+    /// Supported features bitmap
     #[must_use]
-    pub const fn feat(&self) -> Features {
-        self.feat
+    pub const fn features(&self) -> Features {
+        self.features
     }
 }
 
+/// Video input type (Bit 7 of Byte 20).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 1 | Digital input |
+/// | 0 | Analog input |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InputKind {
-    Digital {
-        depth: BitDepth,
-        iface: Interface,
-    },
+    /// Digital input with bit depth and interface.
+    Digital { depth: BitDepth, iface: Interface },
+    /// Analog input with signal level and sync options.
     Analog {
         level: Level,
+        /// Blank-to-black setup (pedestal) expected.
         setup: bool,
+        /// Separate sync supported.
         sep: bool,
+        /// Composite sync (on `HSync`) supported.
         comp: bool,
+        /// Sync on green supported.
         sog: bool,
+        /// `VSync` pulse must be serrated when composite or sync-on-green is used.
         serr: bool,
     },
 }
 
+/// Bit depth (Bits 6–4 of Byte 20 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 000 | undefined |
+/// | 001 | 6 bits per color |
+/// | 010 | 8 bits per color |
+/// | 011 | 10 bits per color |
+/// | 100 | 12 bits per color |
+/// | 101 | 14 bits per color |
+/// | 110 | 16 bits per color |
+/// | 111 | reserved |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BitDepth {
     Undef,
@@ -103,6 +128,16 @@ pub enum BitDepth {
     Reserved,
 }
 
+/// Video interface (Bits 3–0 of Byte 20 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 0000 | undefined |
+/// | 0001 | DVI |
+/// | 0010 | HDMIa |
+/// | 0011 | HDMIb |
+/// | 0100 | MDDI |
+/// | 0101 | DisplayPort |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Interface {
     Undef,
@@ -114,6 +149,14 @@ pub enum Interface {
     Other(u8),
 }
 
+/// Video white and sync levels, relative to blank (Bits 6–5 of Byte 20 when Analog).
+///
+/// | Value | Voltage Levels |
+/// |-------|----------------|
+/// | 00 | +0.7/−0.3 V |
+/// | 01 | +0.714/−0.286 V |
+/// | 10 | +1.0/−0.4 V |
+/// | 11 | +0.7/0 V (EVC) |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Level {
     V700_300,
@@ -170,18 +213,28 @@ impl VideoInput {
         Self { kind }
     }
 
+    /// Digital or analog video input type.
     #[must_use]
     pub const fn kind(&self) -> InputKind {
         self.kind
     }
 }
 
+/// Display type (analog or digital) for features bitmap.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DisplayType {
     Digital(DigitalType),
     Analog(AnalogType),
 }
 
+/// Analog display type (Bits 4-3 of Byte 24 when Analog).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 00 | monochrome or grayscale |
+/// | 01 | RGB color |
+/// | 10 | non-RGB color |
+/// | 11 | undefined |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AnalogType {
     MonoGray,
@@ -190,6 +243,14 @@ pub enum AnalogType {
     Undef,
 }
 
+/// Digital display type (Bits 4-3 of Byte 24 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 00 | RGB 4:4:4 |
+/// | 01 | RGB 4:4:4 + YCrCb 4:4:4 |
+/// | 10 | RGB 4:4:4 + YCrCb 4:2:2 |
+/// | 11 | RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2 |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DigitalType {
     Rgb444,
@@ -198,16 +259,27 @@ pub enum DigitalType {
     Rgb444Y444Y422,
 }
 
+/// Feature support flags (Byte 24).
+///
+/// | Bit | Description |
+/// |-----|-------------|
+/// | 7 | DPMS standby supported |
+/// | 6 | DPMS suspend supported |
+/// | 5 | DPMS active-off supported |
+/// | 4–3 | Display type |
+/// | 2 | Standard sRGB colour space |
+/// | 1 | Preferred timing mode |
+/// | 0 | Continuous timings with GTF or CVT |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[expect(clippy::struct_excessive_bools, reason = "Spec-aligned EDID bitfields")]
 pub struct Features {
-    stand: bool,
-    susp: bool,
-    off: bool,
+    standby: bool,
+    suspend: bool,
+    active_off: bool,
     display: DisplayType,
     srgb: bool,
-    pref: bool,
-    cont: bool,
+    pref_timing_mode: bool,
+    continuous: bool,
 }
 
 impl Features {
@@ -229,48 +301,57 @@ impl Features {
             })
         };
         Self {
-            stand: is_set(raw, 7),
-            susp: is_set(raw, 6),
-            off: is_set(raw, 5),
+            standby: is_set(raw, 7),
+            suspend: is_set(raw, 6),
+            active_off: is_set(raw, 5),
             display,
             srgb: is_set(raw, 2),
-            pref: is_set(raw, 1),
-            cont: is_set(raw, 0),
+            pref_timing_mode: is_set(raw, 1),
+            continuous: is_set(raw, 0),
         }
     }
 
+    /// DPMS standby supported.
     #[must_use]
-    pub const fn stand(&self) -> bool {
-        self.stand
+    pub const fn standby(&self) -> bool {
+        self.standby
     }
 
+    /// DPMS suspend supported.
     #[must_use]
-    pub const fn susp(&self) -> bool {
-        self.susp
+    pub const fn suspend(&self) -> bool {
+        self.suspend
     }
 
+    /// DPMS active-off supported.
     #[must_use]
-    pub const fn off(&self) -> bool {
-        self.off
+    pub const fn active_off(&self) -> bool {
+        self.active_off
     }
 
+    /// Display type.
     #[must_use]
     pub const fn display(&self) -> DisplayType {
         self.display
     }
 
+    /// Standard sRGB colour space. Bytes 25–34 must contain sRGB standard values.
     #[must_use]
     pub const fn srgb(&self) -> bool {
         self.srgb
     }
 
+    /// Preferred timing mode specified in descriptor block 1.
+    /// For EDID 1.3+ the preferred timing mode is always in the first Detailed Timing Descriptor.
+    /// In that case, this bit specifies whether the preferred timing mode includes native pixel format and refresh rate.
     #[must_use]
-    pub const fn pref(&self) -> bool {
-        self.pref
+    pub const fn pref_timing_mode(&self) -> bool {
+        self.pref_timing_mode
     }
 
+    /// Continuous timings with GTF or CVT.
     #[must_use]
-    pub const fn cont(&self) -> bool {
-        self.cont
+    pub const fn continuous(&self) -> bool {
+        self.continuous
     }
 }

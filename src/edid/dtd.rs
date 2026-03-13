@@ -12,9 +12,9 @@
 //! |--------|-------|-------------|
 //! | 54     | 4×18  | Detailed timing / monitor descriptors |
 
+use crate::edid::descriptor::DESC_LEN;
 use crate::edid::descriptor::monitor::MonitorDesc;
 use crate::edid::descriptor::timing::DetailedTiming;
-use crate::edid::{BLOCK_LEN, DESC_LEN};
 
 pub const DTD_OFF: usize = 54;
 pub const DTD_NUM: usize = 4;
@@ -32,10 +32,10 @@ pub struct Descriptors {
 
 impl Descriptors {
     #[must_use]
-    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn parse(raw: &[u8; DTD_NUM * DESC_LEN]) -> Self {
+        // TODO: Create the descriptors immutably
         let mut modes = [None; DTD_NUM];
-
-        let chunks = raw[DTD_OFF..DTD_OFF + DTD_NUM * DESC_LEN].chunks_exact(DESC_LEN);
+        let chunks = raw.chunks_exact(DESC_LEN);
         for (mode, chunk) in modes.iter_mut().zip(chunks) {
             if let Ok(desc_raw) = chunk.try_into() {
                 *mode = DetailedTiming::parse(desc_raw)

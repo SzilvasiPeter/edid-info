@@ -4,8 +4,8 @@ const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 
 #[test]
 fn parse_video_block_acer_ek221q_h() {
-    let raw: &[u8; 128] = ACER[128..256].try_into().expect("cta bytes");
-    let out = Cta::parse(raw).expect("cta parse");
+    let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
+    let out = Cta::parse(&raw).expect("cta parse");
 
     let blocks: Vec<_> = out.data_blocks().collect();
     let video_block = blocks

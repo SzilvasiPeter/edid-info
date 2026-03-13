@@ -15,8 +15,6 @@
 //!
 //! If both bytes are 0x01, the entry is unused.
 
-use crate::edid::BLOCK_LEN;
-
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
 pub const STANDARD_NUM: usize = 8;
@@ -65,13 +63,6 @@ pub struct Std1 {
 }
 
 impl Std1 {
-    #[must_use]
-    pub fn parse_base(raw: &[u8; BLOCK_LEN]) -> Self {
-        let mut out = [0; STANDARD_LEN];
-        out.copy_from_slice(&raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN]);
-        Self::parse(&out)
-    }
-
     #[must_use]
     pub const fn parse(raw: &[u8; STANDARD_LEN]) -> Self {
         let mut modes = [None; STANDARD_NUM];
