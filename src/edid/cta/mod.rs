@@ -85,7 +85,7 @@ impl Cta {
 
     #[must_use]
     pub const fn checksum(&self) -> u8 {
-        self.raw[127]
+        self.raw[BLOCK_LEN - 1]
     }
 
     #[must_use]
@@ -93,7 +93,10 @@ impl Cta {
         let start = self.dtd_start()?;
         let off = start + i * DESC_LEN;
         let end = off + DESC_LEN;
-        if end > 127 || (self.raw[off] == 0 && self.raw[off + 1] == 0) {
+        if end > BLOCK_LEN {
+            return None;
+        }
+        if self.raw[off] == 0 && self.raw[off + 1] == 0 {
             return None;
         }
         let mut raw = [0; DESC_LEN];
@@ -102,20 +105,21 @@ impl Cta {
     }
 
     const fn data_block_end(&self) -> usize {
-        let dtd_off = self.header.dtd_off();
-        if dtd_off == 0 {
+        let dtd_off = self.header.dtd_off() as usize;
+        if dtd_off == 0 || dtd_off > 127 {
             127
         } else if dtd_off >= 4 {
-            dtd_off as usize
+            dtd_off
         } else {
             4
         }
     }
 
     const fn dtd_start(&self) -> Option<usize> {
-        let dtd_off = self.header.dtd_off();
-        if dtd_off >= 4 && dtd_off < 127 {
-            Some(dtd_off as usize)
+        let dtd_off = self.header.dtd_off() as usize;
+        let last_start = BLOCK_LEN - DESC_LEN;
+        if dtd_off >= 4 && dtd_off <= last_start {
+            Some(dtd_off)
         } else {
             None
         }
