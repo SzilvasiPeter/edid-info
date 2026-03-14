@@ -41,6 +41,8 @@ pub struct BaseEdid {
 }
 
 impl BaseEdid {
+    /// Parses the base block.
+    /// Returns [`BaseEdid`].
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
         let header: [u8; HEADER_LEN] = std::array::from_fn(|i| raw[HEADER_OFF + i]);
@@ -50,6 +52,7 @@ impl BaseEdid {
         let std1: [u8; STANDARD_LEN] = std::array::from_fn(|i| raw[STANDARD_OFF + i]);
         let dtd: [u8; DTD_NUM * DESC_LEN] = std::array::from_fn(|i| raw[DTD_OFF + i]);
         let footer: [u8; FOOTER_LEN] = std::array::from_fn(|i| raw[FOOTER_OFF + i]);
+        // TODO: Move the parsing to the getters, only hold the raw bytes, then remove the redundant raw field
         Self {
             raw: *raw,
             header: Header::parse(&header),
@@ -62,36 +65,50 @@ impl BaseEdid {
         }
     }
 
+    /// Header section.
+    /// Returns [`Header`].
     #[must_use]
     pub const fn header(&self) -> Header {
         self.header
     }
 
+    /// Basic display parameters.
+    /// Returns [`Basic`].
     #[must_use]
     pub const fn basic(&self) -> Basic {
         self.basic
     }
 
+    /// Chromaticity coordinates.
+    /// Returns [`Chroma`].
     #[must_use]
     pub const fn chroma(&self) -> Chroma {
         self.chroma
     }
 
+    /// Established timings.
+    /// Returns [`Established`].
     #[must_use]
     pub const fn established(&self) -> Established {
         self.established
     }
 
+    /// Standard timings.
+    /// Returns [`Std1`].
     #[must_use]
     pub const fn timings(&self) -> Std1 {
         self.timings
     }
 
+    /// Detailed timing and display descriptors.
+    /// Returns [`Descriptors`].
     #[must_use]
     pub const fn descriptors(&self) -> Descriptors {
         self.descriptors
     }
 
+    /// Extension count and checksum.
+    /// Returns [`Footer`].
     #[must_use]
     pub const fn footer(&self) -> Footer {
         self.footer
