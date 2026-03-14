@@ -33,7 +33,7 @@ pub struct Header {
 
 impl Header {
     #[must_use]
-    pub const fn parse(raw: &[u8; HEADER_LEN]) -> Self {
+    pub const fn new(raw: &[u8; HEADER_LEN]) -> Self {
         Self {
             pattern: [
                 raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],

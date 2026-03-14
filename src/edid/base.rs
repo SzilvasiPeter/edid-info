@@ -55,7 +55,7 @@ impl BaseEdid {
         // TODO: Move the parsing to the getters, only hold the raw bytes, then remove the redundant raw field
         Self {
             raw: *raw,
-            header: Header::parse(&header),
+            header: Header::new(&header),
             basic: Basic::parse(&basic),
             chroma: Chroma::parse(&chroma),
             established: Established::parse(&established),
