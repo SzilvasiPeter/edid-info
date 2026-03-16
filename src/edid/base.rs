@@ -52,7 +52,11 @@ impl BaseEdid {
         let std1: [u8; STANDARD_LEN] = std::array::from_fn(|i| raw[STANDARD_OFF + i]);
         let dtd: [u8; DTD_NUM * DESC_LEN] = std::array::from_fn(|i| raw[DTD_OFF + i]);
         let footer: [u8; FOOTER_LEN] = std::array::from_fn(|i| raw[FOOTER_OFF + i]);
-        // TODO: Move the parsing to the getters, only hold the raw bytes, then remove the redundant raw field
+        // TODO:
+        // - Move the parsing to the getters
+        // - Hold only the raw bytes
+        // - Remove the redundant raw field
+        // - Rename the parse to new
         Self {
             raw: *raw,
             header: Header::new(&header),

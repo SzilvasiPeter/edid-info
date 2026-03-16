@@ -19,4 +19,5 @@
 //! - [Wikipedia: EDID Structure, version 1.4](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
 
 #![forbid(unsafe_code)]
+// TODO: add #![no_std] support
 pub mod edid;
