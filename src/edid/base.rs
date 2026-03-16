@@ -14,7 +14,7 @@ use crate::edid::footer::{FOOTER_LEN, FOOTER_OFF, Footer};
 use crate::edid::header::{HEADER_LEN, HEADER_OFF, Header};
 use crate::edid::std1::{STANDARD_LEN, STANDARD_OFF, Std1};
 
-/// # EDID 1.4 Base Block Structure (128 bytes)
+/// EDID 1.4 Base Block Structure (128 bytes)
 ///
 /// | Bytes | Description |
 /// | :--- | :--- |

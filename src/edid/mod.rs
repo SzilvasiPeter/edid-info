@@ -1,4 +1,18 @@
-//! EDID 1.4 base block and extension parsing.
+//! EDID parsing for the 128-byte [`base::BaseEdid`] block and [`Extension`]s.
+//!
+//! Parse flow: validate length, parse base header + checksum, then parse
+//! extensions and keep unknown blocks as raw bytes.
+//!
+//! # Example
+//!
+//! ```
+//! use edid_info::edid::Edid;
+//!
+//! let raw = include_bytes!("../../tests/data/ACER_EK221Q_H.edid");
+//! let edid = Edid::parse(raw).expect("valid EDID");
+//!
+//! println!("Manufacturer: {:?}", edid.base().header().manufacturer());
+//! ```
 
 pub mod base;
 pub mod basic;
@@ -16,34 +30,24 @@ pub mod std1;
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
 
+/// Parsed EDID data with the base block and optional extensions.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edid {
     base: base::BaseEdid,
     extensions: Vec<Extension>,
 }
 
-/// EDID Extensions assigned by VESA
-///
-/// - Timing Extension (00)
-/// - Additional Timing Data Block (CTA EDID Timing Extension) (02)
-/// - Video Timing Block Extension (VTB-EXT) (10)
-/// - EDID 2.0 Extension (20)
-/// - Display Information Extension (DI-EXT) (40)
-/// - Localized String Extension (LS-EXT) (50)
-/// - Microdisplay Interface Extension (MI-EXT) (60)
-/// - Display ID Extension (70)
-/// - Display Transfer Characteristics Data Block (DTCDB) (A7, AF, BF)
-/// - Block Map (F0)
-/// - Display Device Data Block (DDDB) (FF): contains information such as subpixel layout
-/// - Extension defined by monitor manufacturer (FF): According to LS-EXT, actual contents
-///   varies from manufacturer. However, the value is later used by DDDB.
+/// EDID extension block types.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Extension {
+    /// CEA-861 extension block.
     Cta(cta::Cta),
+    /// Unrecognized extension type, stored as raw bytes.
     Unknown([u8; BLOCK_LEN]),
 }
 
 impl Edid {
+    /// Parses raw EDID bytes if length, header, and checksum are valid.
     #[must_use]
     pub fn parse(raw: &[u8]) -> Option<Self> {
         if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
@@ -76,11 +80,13 @@ impl Edid {
         Some(Self { base, extensions })
     }
 
+    /// Returns the base block.
     #[must_use]
     pub const fn base(&self) -> &base::BaseEdid {
         &self.base
     }
 
+    /// Returns the extensions.
     #[must_use]
     pub fn extensions(&self) -> &[Extension] {
         &self.extensions
