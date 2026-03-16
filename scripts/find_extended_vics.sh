@@ -40,10 +40,3 @@ echo "=== VIC 193-219 (8-bit extended range) ==="
 VIC_193_219=$(rg -l "^\s+VIC\s+(19[3-9]|20[0-9]|21[0-9]):" "$EDID_REPO" 2>/dev/null | filter_extension_errors | sort -u | head -20)
 if [ -n "$VIC_193_219" ]; then echo "$VIC_193_219"; else echo "(none found)"; fi
 echo
-
-# Copy-ready list
-echo "=== Copy-ready file list ==="
-{
-    echo "$VIC_65_127"
-    echo "$VIC_193_219"
-} | grep -v "^$" | sort -u | head -20 | while read -r f; do basename "$f"; done
