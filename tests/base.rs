@@ -1,7 +1,7 @@
 use edid_info::edid::base::BaseEdid;
 use edid_info::edid::cta::{BlockTag, Cta, Speaker};
-use edid_info::edid::descriptor::monitor::DescTag;
-use edid_info::edid::dtd::Mode;
+use edid_info::edid::descriptors::Mode;
+use edid_info::edid::monitor_descriptor::monitor::DescTag;
 
 const ACER: &[u8] = include_bytes!("data/ACER_EK221Q_H.edid");
 
@@ -10,7 +10,7 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
 
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[i]);
-    let out = BaseEdid::parse(&raw);
+    let out = BaseEdid::parse(&raw).expect("base parse");
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.basic().width_cm(), 48);
     assert_eq!(out.chroma().white().x(), 321);
@@ -45,7 +45,7 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(ASUS.len(), 768);
 
     let raw_base: [u8; 128] = std::array::from_fn(|i| ASUS[i]);
-    let base = BaseEdid::parse(&raw_base);
+    let base = BaseEdid::parse(&raw_base).expect("base parse");
     assert_eq!(
         base.header().pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
@@ -53,7 +53,7 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(base.header().manufacturer(), ['A', 'U', 'S']);
     assert_eq!(base.header().product(), 10148);
     assert_eq!(base.header().serial(), 0x0001_b5bc);
-    assert_eq!(base.header().week(), 30);
+    assert_eq!(base.header().week(), Some(30));
     assert_eq!(base.header().year(), 2018);
     assert_eq!(base.header().major(), 1);
     assert_eq!(base.header().minor(), 4);

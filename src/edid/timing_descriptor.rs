@@ -16,8 +16,9 @@
 //! | 14    | Border size |
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
+use crate::edid::Validation;
 use crate::edid::bits::{u6_pack, u10_lo, u12_hi, u12_lo};
-use crate::edid::descriptor::DESC_LEN;
+use crate::edid::descriptors::DESC_LEN;
 
 const CLK_UNIT: u32 = 10_000;
 
@@ -71,10 +72,10 @@ impl Features {
     }
 }
 
-// TODO: Group the horizontal and vertical fields together
+// TODO: Group the horizontal and vertical fields together at the getters for better usage
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
-    pixel_clock_hz: u32,
+    pixel_clock_10khz: u16,
     h_active: u16,
     h_blank: u16,
     v_active: u16,
@@ -92,19 +93,15 @@ pub struct DetailedTiming {
 
 impl DetailedTiming {
     #[must_use]
-    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        let clk = u32::from(u16::from_le_bytes([raw[0], raw[1]])) * CLK_UNIT;
-        if clk == 0 {
-            return None;
-        }
+    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         Some(Self {
-            pixel_clock_hz: clk,
+            pixel_clock_10khz: u16::from_le_bytes([raw[0], raw[1]]),
             h_active: u12_hi(raw[2], raw[4]),
             h_blank: u12_lo(raw[3], raw[4]),
             v_active: u12_hi(raw[5], raw[7]),
             v_blank: u12_lo(raw[6], raw[7]),
-            h_front: u10_lo(raw[8], u16::from(raw[11] >> 6)),
-            h_sync: u10_lo(raw[9], u16::from((raw[11] >> 4) & 0x03)),
+            h_front: u10_lo(raw[8], (raw[11] >> 6) as u16),
+            h_sync: u10_lo(raw[9], ((raw[11] >> 4) & 0x03) as u16),
             v_front: u6_pack((raw[10] >> 4) & 0x0f, (raw[11] >> 2) & 0x03),
             v_sync: u6_pack(raw[10] & 0x0f, raw[11] & 0x03),
             h_size_mm: u12_hi(raw[12], raw[14]),
@@ -117,7 +114,7 @@ impl DetailedTiming {
 
     #[must_use]
     pub const fn pixel_clock_hz(&self) -> u32 {
-        self.pixel_clock_hz
+        self.pixel_clock_10khz as u32 * CLK_UNIT
     }
     #[must_use]
     pub const fn h_active(&self) -> u16 {
@@ -161,7 +158,7 @@ impl DetailedTiming {
     }
     #[must_use]
     pub fn h_khz(&self) -> f64 {
-        f64::from(self.pixel_clock_hz) / f64::from(self.h_active + self.h_blank) / 1000.0
+        f64::from(self.pixel_clock_hz()) / f64::from(self.h_active + self.h_blank) / 1000.0
     }
 
     /// Vertical refresh rate in Hz.
@@ -170,7 +167,7 @@ impl DetailedTiming {
     /// Use [`frame_rate_hz`](Self::frame_rate_hz) to get the frame rate.
     #[must_use]
     pub fn v_hz(&self) -> f64 {
-        f64::from(self.pixel_clock_hz)
+        f64::from(self.pixel_clock_hz())
             / f64::from(self.h_active + self.h_blank)
             / f64::from(self.v_active + self.v_blank)
     }
@@ -207,6 +204,11 @@ impl DetailedTiming {
     #[must_use]
     pub const fn feat(&self) -> Features {
         self.feat
+    }
+
+    #[must_use]
+    pub fn validate(&self) -> Validation {
+        Validation::new().err_if(self.pixel_clock_10khz == 0, "Invalid pixel clock")
     }
 }
 

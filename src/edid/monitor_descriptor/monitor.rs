@@ -4,13 +4,14 @@
 //! name, range limits, and color characteristics. Identified by
 //! bytes 0–2 being zero.
 
-use crate::edid::descriptor::DESC_LEN;
-use crate::edid::descriptor::color::Color;
-use crate::edid::descriptor::cvt3::Cvt3;
-use crate::edid::descriptor::range::Range;
-use crate::edid::descriptor::std2::Std2;
-use crate::edid::descriptor::std3::Std3;
-use crate::edid::descriptor::white_point::WhitePoint;
+use crate::edid::Validation;
+use crate::edid::descriptors::DESC_LEN;
+use crate::edid::monitor_descriptor::color::Color;
+use crate::edid::monitor_descriptor::cvt3::Cvt3;
+use crate::edid::monitor_descriptor::range::Range;
+use crate::edid::monitor_descriptor::std2::Std2;
+use crate::edid::monitor_descriptor::std3::Std3;
+use crate::edid::monitor_descriptor::white_point::WhitePoint;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DescTag {
@@ -30,15 +31,18 @@ pub enum DescTag {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct MonitorDesc {
+    // TODO: remove the tag and tag_raw field, match on raw[3] at the getter
     tag: DescTag,
     tag_raw: u8,
+    // TODO: remove the byte4 field, then create data slice, starting from 3rd index
     byte4: u8,
     data: [u8; 13],
 }
 
 impl MonitorDesc {
     #[must_use]
-    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+        // TODO: move this to `validate` function
         if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 {
             return None;
         }
@@ -56,16 +60,18 @@ impl MonitorDesc {
             0x00..=0x0F => DescTag::VendorReserved,
             _ => DescTag::Unknown,
         };
+
+        // TODO: move this to `validate` function
         if !matches!(tag, DescTag::RangeLimits) && raw[4] != 0 {
             return None;
         }
-        let mut data = [0; 13];
-        data.copy_from_slice(&raw[5..DESC_LEN]);
+
         Some(Self {
             tag,
             tag_raw: raw[3],
             byte4: raw[4],
-            data,
+            // TODO: slice from 3 after removing the tag_raw and byte4 fields
+            data: crate::edid::slice(raw, 5),
         })
     }
 
@@ -79,6 +85,7 @@ impl MonitorDesc {
         &self.data
     }
 
+    // TODO: remove this after getting rid of the redundant tag_raw and byte4 fields
     fn raw_desc(&self) -> [u8; DESC_LEN] {
         let mut raw = [0; DESC_LEN];
         raw[3] = self.tag_raw;
@@ -190,5 +197,10 @@ impl MonitorDesc {
         } else {
             None
         }
+    }
+
+    #[must_use]
+    pub fn validate() -> Validation {
+        todo!();
     }
 }

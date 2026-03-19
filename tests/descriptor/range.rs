@@ -1,5 +1,5 @@
-use edid_info::edid::descriptor::monitor::{DescTag, MonitorDesc};
-use edid_info::edid::descriptor::range::{AspectPref, Range, Timing};
+use edid_info::edid::monitor_descriptor::monitor::{DescTag, MonitorDesc};
+use edid_info::edid::monitor_descriptor::range::{AspectPref, Range, Timing};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");

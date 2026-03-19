@@ -36,6 +36,7 @@ impl Basic {
             width_cm: raw[1],
             height_cm: raw[2],
             gamma: raw[3],
+            // TODO: store raw bytes, parse in getters
             features: Features::parse(raw[4], is_digital),
         }
     }
@@ -89,6 +90,7 @@ pub enum InputKind {
     /// Digital input with bit depth and interface.
     Digital { depth: BitDepth, iface: Interface },
     /// Analog input with signal level and sync options.
+    // TODO: give better name for fields
     Analog {
         level: Level,
         /// Blank-to-black setup (pedestal) expected.

@@ -1,5 +1,5 @@
-use edid_info::edid::descriptor::DESC_LEN;
-use edid_info::edid::dtd::{DTD_NUM, DTD_OFF, Descriptors, Mode};
+use edid_info::edid::descriptors::DESC_LEN;
+use edid_info::edid::descriptors::{DTD_NUM, DTD_OFF, Descriptors, Mode};
 
 #[test]
 fn parse_dtd_synthetic() {

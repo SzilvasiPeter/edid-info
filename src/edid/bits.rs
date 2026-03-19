@@ -5,7 +5,6 @@
 //! split across multiple bytes). This module provides utilities
 //! for extracting and packing these values.
 
-// TODO: Use more descriptive and explicit function names
 /// Checks if a specific bit is set in a byte.
 #[must_use]
 pub const fn is_set(val: u8, bit: u8) -> bool {
@@ -18,6 +17,7 @@ pub const fn get_bits(val: u8, mask: u8, shift: u8) -> u8 {
     (val & mask) >> shift
 }
 
+// TODO: Use more descriptive and explicit function names for the below helpers
 /// Packs a 12-bit value where the lower 8 bits are in one byte and the upper 4 bits
 /// are in the high nibble of another byte.
 #[must_use]

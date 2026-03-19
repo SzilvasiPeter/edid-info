@@ -1,4 +1,4 @@
-use edid_info::edid::descriptor::color::Color;
+use edid_info::edid::monitor_descriptor::color::Color;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");

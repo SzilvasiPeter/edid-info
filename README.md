@@ -104,25 +104,6 @@ for ext in edid.extensions() {
 }
 ```
 
-### Verify Checksum
-
-```rust
-use edid_info::edid::Edid;
-
-let edid = Edid::parse(&edid_data).unwrap();
-
-// Check base block checksum
-assert!(edid.base().checksum_ok());
-
-// Check extension checksums
-for ext in edid.extensions() {
-    match ext {
-        Extension::Cta(cta) => assert!(cta.checksum_ok()),
-        _ => {}
-    }
-}
-```
-
 ## API Overview
 
 ### Main Types

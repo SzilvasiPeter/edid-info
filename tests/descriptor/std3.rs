@@ -1,4 +1,4 @@
-use edid_info::edid::descriptor::std3::Std3;
+use edid_info::edid::monitor_descriptor::std3::Std3;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");

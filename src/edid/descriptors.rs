@@ -1,4 +1,4 @@
-//! Detailed Timing Descriptors (DTDs) and Monitor Descriptors (bytes 54–125).
+//! Display timing descriptor followed by display/monitor descriptors (bytes 54–125).
 //!
 //! Four 18-byte descriptors provide detailed timing information or
 //! monitor metadata (serial number, name, range limits, color data, etc.).
@@ -12,10 +12,10 @@
 //! |--------|-------|-------------|
 //! | 54     | 4×18  | Detailed timing / monitor descriptors |
 
-use crate::edid::descriptor::DESC_LEN;
-use crate::edid::descriptor::monitor::MonitorDesc;
-use crate::edid::descriptor::timing::DetailedTiming;
+use crate::edid::monitor_descriptor::monitor::MonitorDesc;
+use crate::edid::timing_descriptor::DetailedTiming;
 
+pub const DESC_LEN: usize = 18;
 pub const DTD_OFF: usize = 54;
 pub const DTD_NUM: usize = 4;
 
@@ -32,16 +32,22 @@ pub struct Descriptors {
 
 impl Descriptors {
     #[must_use]
-    pub fn parse(raw: &[u8; DTD_NUM * DESC_LEN]) -> Self {
-        // TODO: Create the descriptors immutably
+    pub const fn parse(raw: &[u8; DTD_NUM * DESC_LEN]) -> Self {
         let mut modes = [None; DTD_NUM];
-        let chunks = raw.chunks_exact(DESC_LEN);
-        for (mode, chunk) in modes.iter_mut().zip(chunks) {
-            if let Ok(desc_raw) = chunk.try_into() {
-                *mode = DetailedTiming::parse(desc_raw)
-                    .map(Mode::Timing)
-                    .or_else(|| MonitorDesc::parse(desc_raw).map(Mode::Display));
+        let mut i = 0;
+
+        while i < DTD_NUM {
+            let offset = i * DESC_LEN;
+            let chunk: [u8; DESC_LEN] = crate::edid::slice(raw, offset);
+
+            if chunk[0] == 0 && chunk[1] == 0 {
+                if let Some(display) = MonitorDesc::parse(&chunk) {
+                    modes[i] = Some(Mode::Display(display));
+                }
+            } else if let Some(timing) = DetailedTiming::parse(&chunk) {
+                modes[i] = Some(Mode::Timing(timing));
             }
+            i += 1;
         }
 
         Self { modes }

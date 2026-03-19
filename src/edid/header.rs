@@ -6,14 +6,16 @@
 //!
 //! | Offset | Size | Description |
 //! |--------|------|-------------|
-//! | 0–7    | 8    | Header pattern (0x00FFFFFFFFFFFF00) |
-//! | 8–9    | 2    | Manufacturer ID (3-letter code, big-endian) |
+//! | 0–7    | 8    | Header pattern |
+//! | 8–9    | 2    | Manufacturer ID |
 //! | 10–11  | 2    | Product code |
-//! | 12–15  | 4    | Serial number (little-endian) |
+//! | 12–15  | 4    | Serial number |
 //! | 16     | 1    | Week of manufacture |
-//! | 17     | 1    | Year of manufacture (offset from 1990) |
+//! | 17     | 1    | Year of manufacture |
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
+
+use crate::edid::Validation;
 
 pub const HEADER_OFF: usize = 0;
 pub const HEADER_LEN: usize = 20;
@@ -22,30 +24,52 @@ pub const HEADER_LEN: usize = 20;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Header {
     pattern: [u8; 8],
-    manufacturer_ids: [u8; 2],
-    product: [u8; 2],
-    serial: [u8; 4],
+    manufacturer: u16,
+    product: u16,
+    serial: u32,
     week: u8,
-    year: u8,
+    year: u16,
     major: u8,
     minor: u8,
 }
 
 impl Header {
+    /// Parses a header from 20 raw bytes, validating the header pattern.
+    ///
+    /// Byte sizes and endianness:
+    /// - `pattern`: 8 bytes, raw
+    /// - `manufacturer_ids`: 2 bytes, big-endian
+    /// - `product`: 2 bytes, little-endian
+    /// - `serial`: 4 bytes, little-endian
+    /// - `week`: 1 byte, raw
+    /// - `year`: 1 byte, raw (offset from 1990)
+    /// - `major`: 1 byte, raw
+    /// - `minor`: 1 byte, raw
     #[must_use]
-    pub const fn new(raw: &[u8; HEADER_LEN]) -> Self {
-        Self {
+    pub const fn parse(raw: &[u8; HEADER_LEN]) -> Option<Self> {
+        if raw[0] != 0x00
+            || raw[1] != 0xFF
+            || raw[2] != 0xFF
+            || raw[3] != 0xFF
+            || raw[4] != 0xFF
+            || raw[5] != 0xFF
+            || raw[6] != 0xFF
+            || raw[7] != 0x00
+        {
+            return None;
+        }
+        Some(Self {
             pattern: [
                 raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
             ],
-            manufacturer_ids: [raw[8], raw[9]],
-            product: [raw[10], raw[11]],
-            serial: [raw[12], raw[13], raw[14], raw[15]],
+            manufacturer: u16::from_be_bytes([raw[8], raw[9]]),
+            product: u16::from_le_bytes([raw[10], raw[11]]),
+            serial: u32::from_le_bytes([raw[12], raw[13], raw[14], raw[15]]),
             week: raw[16],
-            year: raw[17],
+            year: 1990 + raw[17] as u16,
             major: raw[18],
             minor: raw[19],
-        }
+        })
     }
 
     /// Fixed header pattern: `00 FF FF FF FF FF FF 00`
@@ -64,46 +88,43 @@ impl Header {
     /// | 14–10 | First letter of manufacturer ID |
     /// | 9–5 | Second letter of manufacturer ID |
     /// | 4–0 | Third letter of manufacturer ID |
-    ///
-    /// Invalid values (0 or 27–31) are converted to '?'.
     #[must_use]
     pub fn manufacturer(&self) -> [char; 3] {
-        let ids = u16::from_be_bytes(self.manufacturer_ids);
-        let to_char = |bits| {
-            if !(1..=26).contains(&bits) {
-                return '?';
-            }
-            char::from_u32(u32::from(bits) + 64).unwrap_or('?')
-        };
-        let first = to_char((ids >> 10) & 0b11111);
-        let second = to_char((ids >> 5) & 0b11111);
-        let third = to_char(ids & 0b11111);
-        [first, second, third]
+        let to_char = |bits| char::from_u32(u32::from(bits) + 64).unwrap_or('?');
+        let m1 = to_char((self.manufacturer >> 10) & 0b11111);
+        let m2 = to_char((self.manufacturer >> 5) & 0b11111);
+        let m3 = to_char(self.manufacturer & 0b11111);
+        [m1, m2, m3]
     }
 
-    /// Manufacturer product code. 16-bit hex number, little-endian. For example, "C0CF".
+    /// Manufacturer product code. 16-bit hex number, little-endian.
     #[must_use]
     pub const fn product(&self) -> u16 {
-        u16::from_le_bytes(self.product)
+        self.product
     }
 
     /// Serial number. 32 bits, little-endian.
     #[must_use]
     pub const fn serial(&self) -> u32 {
-        u32::from_le_bytes(self.serial)
+        self.serial
     }
 
-    /// Week of manufacture; or `FF` model year flag.
+    /// Week of manufacture; or `None` if model year flag (0xFF) is set.
+    /// A value of 0 means the week is unspecified.
     /// [Week numbering](https://en.wikipedia.org/wiki/Week#Numbering) is not consistent between manufacturers.
     #[must_use]
-    pub const fn week(&self) -> u8 {
-        self.week
+    pub const fn week(&self) -> Option<u8> {
+        if self.week == 0xFF {
+            None
+        } else {
+            Some(self.week)
+        }
     }
 
     /// Year of manufacture, or year of model, if model year flag is set. Year = datavalue + 1990.
     #[must_use]
     pub const fn year(&self) -> u16 {
-        1990 + self.year as u16
+        self.year
     }
 
     /// EDID version, usually `01` (for 1.3 and 1.4)
@@ -116,5 +137,32 @@ impl Header {
     #[must_use]
     pub const fn minor(&self) -> u8 {
         self.minor
+    }
+
+    // TODO: is it possible to make the `validate` constant function?
+    /// Validate header, collecting errors and warnings.
+    #[must_use]
+    pub fn validate(&self) -> Validation {
+        let m1 = (self.manufacturer >> 10) & 0b11111;
+        let m2 = (self.manufacturer >> 5) & 0b11111;
+        let m3 = self.manufacturer & 0b11111;
+        let is_letter = |v| (1..=26).contains(&v);
+        Validation::new()
+            .warn_if(
+                self.manufacturer & 0b1000_0000_0000_0000 != 0,
+                "Manufacturer ID reserved bit (bit 15) is set",
+            )
+            .warn_if(
+                !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
+                "Invalid manufacturer ID bits",
+            )
+            .warn_if(self.product == 0, "Invalid product code")
+            .warn_if(self.serial == 0, "Invalid serial number")
+            .warn_if(self.week > 54 && self.week != 0xFF, "Invalid week value")
+            .warn_if(self.major == 0, "Invalid EDID major version")
+            .warn_if(
+                self.major != 1 || self.minor != 4,
+                "Deprecated EDID version",
+            )
     }
 }

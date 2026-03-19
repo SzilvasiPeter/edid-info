@@ -5,8 +5,7 @@
 
 /// Verifies the checksum of an EDID block.
 ///
-/// Returns `true` if the sum of all bytes in the block equals zero
-/// (with u8 wrapping).
+/// Returns `true` if the sum of all bytes in the block equals zero (with u8 wrapping).
 #[must_use]
 pub fn checksum_ok(raw: &[u8]) -> bool {
     raw.iter().fold(0u8, |a, b| a.wrapping_add(*b)) == 0
