@@ -33,7 +33,9 @@ use crate::edid::std1::{STANDARD_LEN, STANDARD_OFF, Std1};
 /// - [Wikipedia: EDID 1.4 Structure](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BaseEdid {
-    raw: [u8; BLOCK_LEN],
+    // TODO: Actually, we should only keep the raw bytes
+    // Return parsing error on unrecoverable error: invalid header pattern
+    // Then, parse at the getter scope
     header: Header,
     basic: Basic,
     chroma: Chroma,
@@ -59,7 +61,6 @@ impl BaseEdid {
         let dtd: [u8; DTD_NUM * DESC_LEN] = slice(raw, DTD_OFF);
         let footer: [u8; FOOTER_LEN] = slice(raw, FOOTER_OFF);
         Some(Self {
-            raw: *raw,
             header,
             basic: Basic::parse(&basic),
             chroma: Chroma::parse(&chroma),
@@ -68,14 +69,6 @@ impl BaseEdid {
             descriptors: Descriptors::parse(&dtd),
             footer: Footer::parse(&footer),
         })
-    }
-
-    // TODO: Can we get rid of the raw field altogether?
-    // Since the other fields are already hold the data.
-    // Adding the raw field double the size of the BaseId struct.
-    #[must_use]
-    pub const fn raw(&self) -> &[u8; BLOCK_LEN] {
-        &self.raw
     }
 
     /// Header section.
@@ -127,12 +120,11 @@ impl BaseEdid {
         self.footer
     }
 
-    // TODO: Add `.then(self.<field>.validate()` to all fields (basic, chroma, established, etc.)
     /// Validate base block, collecting errors and warnings.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub fn validate(&self, raw: &[u8; BLOCK_LEN]) -> Validation {
         Validation::new()
             .then(self.header.validate())
-            .err_if(!check::checksum_ok(self.raw()), "Invalid base checksum")
+            .err_if(!check::checksum_ok(raw), "Invalid base checksum")
     }
 }

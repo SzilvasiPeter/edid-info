@@ -27,6 +27,7 @@ impl Established {
         Self { raw: *raw }
     }
 
+    // TODO: Use enum instead
     #[must_use]
     pub const fn t_720_400_70(&self) -> bool { (self.raw[0] & 0x80) != 0 }
     #[must_use]

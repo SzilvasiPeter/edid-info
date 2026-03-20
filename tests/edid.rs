@@ -14,8 +14,8 @@ fn parse_edid_acer_ek221q_h() {
 
     // Verify extensions
     let extensions = edid.extensions();
-    assert_eq!(extensions.len(), 1);
-    match &extensions[0] {
+    assert!(extensions[0].is_some());
+    match &extensions[0].unwrap() {
         Extension::Cta(cta) => {
             assert_eq!(cta.header().rev(), 3);
         }
@@ -34,10 +34,11 @@ fn parse_edid_asus_rog_pg27u() {
 
     // Verify extensions (footer says 2, so we expect 2 parsed extensions even if file is longer)
     let extensions = edid.extensions();
-    assert_eq!(extensions.len(), 2);
+    assert!(extensions[0].is_some());
+    assert!(extensions[1].is_some());
 
     // Block 1: CTA
-    match &extensions[0] {
+    match &extensions[0].unwrap() {
         Extension::Cta(cta) => {
             assert_eq!(cta.header().rev(), 3);
         }

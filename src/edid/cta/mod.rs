@@ -39,7 +39,7 @@ pub mod video;
 
 use crate::edid::descriptors::DESC_LEN;
 use crate::edid::timing_descriptor::DetailedTiming;
-use crate::edid::{BLOCK_LEN, check};
+use crate::edid::{BLOCK_LEN, Validation, check};
 
 pub use audio::{AudioExtFormat, AudioFormat, Sad, SadIter};
 pub use block::{BlockTag, DataBlock, DataBlockIter};
@@ -51,7 +51,6 @@ pub use vic::Vic;
 pub use video::Svd;
 
 // TODO: Refactor to contain the header information (rev, dtd_num, etc.) explicitely, then remove the `header`
-// TODO: Create "Data Block Collection" field instead of raw bytes
 // TODO: store the checksum here
 /// CTA Extension Block.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -62,11 +61,11 @@ pub struct Cta {
 
 impl Cta {
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
-        if !check::checksum_ok(raw) {
-            return None;
+    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
+        match header::Header::parse(raw) {
+            Some(header) => Some(Self { header, raw: *raw }),
+            None => None,
         }
-        header::Header::parse(raw).map(|header| Self { header, raw: *raw })
     }
 
     #[must_use]
@@ -102,6 +101,11 @@ impl Cta {
         let mut raw = [0; DESC_LEN];
         raw.copy_from_slice(&self.raw[off..end]);
         DetailedTiming::parse(&raw)
+    }
+
+    #[must_use]
+    pub fn validate(&self) -> Validation {
+        Validation::new().err_if(!check::checksum_ok(&self.raw), "Invalid CTA checksum")
     }
 
     const fn data_block_end(&self) -> usize {

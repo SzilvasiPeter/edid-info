@@ -19,7 +19,12 @@ pub mod timing_descriptor;
 
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
-pub(crate) const fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
+
+// TODO: Check the linuxhw/EDID for the maximum number of extension blocks
+/// Maximum number of extension block.
+pub const MAX_EXT: usize = 10;
+
+const fn slice_unchecked<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
     let mut out = [0u8; N];
     let mut i = 0;
     while i < N {
@@ -29,11 +34,21 @@ pub(crate) const fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: us
     out
 }
 
+pub(crate) const fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
+    assert!(off + N <= M);
+    slice_unchecked(raw, off)
+}
+
+pub(crate) const fn slice_raw<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
+    assert!(off + N <= raw.len());
+    slice_unchecked(raw, off)
+}
+
 /// Parsed EDID data with the base block and optional extensions.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edid {
     base: base::BaseEdid,
-    extensions: Vec<Extension>,
+    extensions: [Option<Extension>; MAX_EXT],
 }
 
 /// EDID extension block types.
@@ -114,11 +129,10 @@ impl Validation {
     }
 }
 
-// TODO: unify the APIs: new (fail-free byte encoding), getters (human-readable where applicable), validate (errors and warnings)
 impl Edid {
     /// Parses raw EDID bytes.
     #[must_use]
-    pub fn parse(raw: &[u8]) -> Option<Self> {
+    pub const fn parse(raw: &[u8]) -> Option<Self> {
         if raw.len() < BLOCK_LEN {
             return None;
         }
@@ -127,19 +141,24 @@ impl Edid {
             return None;
         }
 
-        let base_raw: [u8; BLOCK_LEN] = std::array::from_fn(|i| raw[i]);
-        let base = base::BaseEdid::parse(&base_raw)?;
+        let base_raw: [u8; BLOCK_LEN] = slice_raw(raw, 0);
+        let Some(base) = base::BaseEdid::parse(&base_raw) else {
+            return None;
+        };
 
-        let ext_num = base.footer().extension_num() as usize;
-        let blocks_available = raw.len() / BLOCK_LEN - 1;
-        let extensions = raw[BLOCK_LEN..]
-            .chunks_exact(BLOCK_LEN)
-            .take(ext_num.min(blocks_available))
-            .map(|chunk| {
-                let block: [u8; BLOCK_LEN] = std::array::from_fn(|i| chunk[i]);
-                cta::Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta)
-            })
-            .collect();
+        let mut extensions = [None; MAX_EXT];
+        let mut i = 0;
+        let nblock = raw.len() / BLOCK_LEN - 1;
+        let max = if nblock < MAX_EXT { nblock } else { MAX_EXT };
+        while i < max {
+            let offset = BLOCK_LEN + i * BLOCK_LEN;
+            let block: [u8; BLOCK_LEN] = slice_raw(raw, offset);
+            extensions[i] = match cta::Cta::parse(&block) {
+                Some(cta) => Some(Extension::Cta(cta)),
+                None => Some(Extension::Unknown(block)),
+            };
+            i += 1;
+        }
 
         Some(Self { base, extensions })
     }
@@ -152,16 +171,19 @@ impl Edid {
 
     /// Returns the extensions.
     #[must_use]
-    pub fn extensions(&self) -> &[Extension] {
+    pub const fn extensions(&self) -> &[Option<Extension>; MAX_EXT] {
         &self.extensions
     }
 
+    /// Validates the EDID data.
+    /// Requires the original raw bytes for checksum validation.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub fn validate(&self, base_raw: &[u8; BLOCK_LEN]) -> Validation {
         let ext_num = self.base.footer().extension_num() as usize;
-        Validation::new().then(self.base.validate()).err_if(
-            ext_num != self.extensions.len(),
-            "Extension count differs from extension length",
+        let ext_len = self.extensions.iter().filter(|e| e.is_some()).count();
+        Validation::new().then(self.base.validate(base_raw)).err_if(
+            ext_num != ext_len,
+            "Extension count does not match parsed blocks",
         )
     }
 }

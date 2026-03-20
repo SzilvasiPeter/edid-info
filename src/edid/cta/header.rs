@@ -27,8 +27,11 @@ pub struct Header {
 
 impl Header {
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
-        (raw[0] == CTA_TAG).then_some(Self {
+    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
+        if raw[0] != CTA_TAG {
+            return None;
+        }
+        Some(Self {
             tag: raw[0],
             rev: raw[1],
             dtd_off: raw[2],

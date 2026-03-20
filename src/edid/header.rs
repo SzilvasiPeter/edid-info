@@ -89,11 +89,13 @@ impl Header {
     /// | 9–5 | Second letter of manufacturer ID |
     /// | 4–0 | Third letter of manufacturer ID |
     #[must_use]
-    pub fn manufacturer(&self) -> [char; 3] {
-        let to_char = |bits| char::from_u32(u32::from(bits) + 64).unwrap_or('?');
-        let m1 = to_char((self.manufacturer >> 10) & 0b11111);
-        let m2 = to_char((self.manufacturer >> 5) & 0b11111);
-        let m3 = to_char(self.manufacturer & 0b11111);
+    pub const fn manufacturer(&self) -> [char; 3] {
+        const fn to_char(bits: u8) -> char {
+            (bits + 64) as char
+        }
+        let m1 = to_char(((self.manufacturer >> 10) & 0b11111) as u8);
+        let m2 = to_char(((self.manufacturer >> 5) & 0b11111) as u8);
+        let m3 = to_char((self.manufacturer & 0b11111) as u8);
         [m1, m2, m3]
     }
 
