@@ -15,12 +15,12 @@ fn parse_edid_acer_ek221q_h() {
 
     // Verify extensions
     let extensions = edid.extensions();
-    assert!(extensions[0].is_some());
-    match &extensions[0].unwrap() {
+    match &extensions[0] {
         Extension::Cta(cta) => {
             assert_eq!(cta.header().rev(), 3);
         }
         Extension::Unknown(_) => panic!("expected CTA extension for Acer, got Unknown"),
+        Extension::Empty => panic!("expected CTA extension for Acer, got Empty"),
     }
 }
 
@@ -35,15 +35,13 @@ fn parse_edid_asus_rog_pg27u() {
 
     // Verify extensions (footer says 2, so we expect 2 parsed extensions even if file is longer)
     let extensions = edid.extensions();
-    assert!(extensions[0].is_some());
-    assert!(extensions[1].is_some());
-
     // Block 1: CTA
-    match &extensions[0].unwrap() {
+    match &extensions[0] {
         Extension::Cta(cta) => {
             assert_eq!(cta.header().rev(), 3);
         }
         Extension::Unknown(_) => panic!("expected CTA extension for Asus block 1, got Unknown"),
+        Extension::Empty => panic!("expected CTA extension for Asus block 1, got Empty"),
     }
 }
 

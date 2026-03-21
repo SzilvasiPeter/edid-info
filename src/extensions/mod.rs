@@ -7,6 +7,8 @@ use crate::common::BLOCK_LEN;
 /// EDID extension block types.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Extension {
+    /// No extension block available for this slot.
+    Empty,
     /// CEA-861 extension block.
     Cta(cta::Cta),
     /// Unrecognized extension type, stored as raw bytes.

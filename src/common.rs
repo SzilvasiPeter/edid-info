@@ -81,6 +81,7 @@ impl WarningKind {
 }
 
 /// Validation result with errors and warnings represented as bitfields.
+/// Error and warning enums must each fit within 64 variants.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Validation {
     /// Fatal errors bitfield.

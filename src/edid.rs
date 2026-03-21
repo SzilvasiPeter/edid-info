@@ -12,6 +12,7 @@ use crate::extensions::cta::Cta;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edid {
     raw: [u8; BLOCK_LEN * (MAX_EXT + 1)],
+    ext_len: usize,
 }
 
 /// Maximum number of extension block.
@@ -30,10 +31,12 @@ impl Edid {
     ///
     /// # Errors
     ///
-    /// Returns [`ParseError::InvalidLen`] for invalid or mismatched length.
+    /// Returns [`ParseError::InvalidLen`] for input shorter than one block.
     /// Returns [`ParseError::BadHeader`] for an invalid header pattern.
-    /// Returns [`ParseError::ExtCountTooLarge`] if the extension count exceeds the max.
+    /// Returns [`ParseError::ExtCountTooLarge`] for more than the max blocks.
     pub const fn parse(raw: &[u8]) -> Result<Self, ParseError> {
+        const MAX_LEN: usize = BLOCK_LEN * (MAX_EXT + 1);
+
         if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
             return Err(ParseError::InvalidLen);
         }
@@ -50,24 +53,20 @@ impl Edid {
             return Err(ParseError::BadHeader);
         }
 
-        let ext_num = raw[BLOCK_LEN - 2] as usize;
-        let max_len = BLOCK_LEN * (MAX_EXT + 1);
-        let min_len = BLOCK_LEN * (ext_num + 1);
-        if min_len > max_len {
+        if raw.len() > MAX_LEN {
             return Err(ParseError::ExtCountTooLarge);
         }
-        if raw.len() < min_len || raw.len() > max_len {
-            return Err(ParseError::InvalidLen);
-        }
 
-        let mut buf = [0u8; BLOCK_LEN * (MAX_EXT + 1)];
+        let mut buf = [0u8; MAX_LEN];
         let mut i = 0;
         while i < raw.len() {
             buf[i] = raw[i];
             i += 1;
         }
 
-        Ok(Self { raw: buf })
+        let blocks = raw.len() / BLOCK_LEN;
+        let ext_len = blocks - 1;
+        Ok(Self { raw: buf, ext_len })
     }
 
     /// Returns the base block.
@@ -77,23 +76,22 @@ impl Edid {
         Base::new(&base_raw)
     }
 
-    /// Returns the extensions.
+    /// Returns extensions up to the reported footer count.
     #[must_use]
-    pub const fn extensions(&self) -> [Option<Extension>; MAX_EXT] {
-        let mut extensions = [None; MAX_EXT];
-        let mut i = 0;
+    pub const fn extensions(&self) -> [Extension; MAX_EXT] {
         let ext_num = self.base().footer().extension_num() as usize;
-        let max = if ext_num < MAX_EXT { ext_num } else { MAX_EXT };
-        while i < max {
-            let offset = BLOCK_LEN + i * BLOCK_LEN;
-            let block: [u8; BLOCK_LEN] = slice(&self.raw, offset);
-            extensions[i] = match Cta::parse(&block) {
-                Some(cta) => Some(Extension::Cta(cta)),
-                None => Some(Extension::Unknown(block)),
-            };
-            i += 1;
-        }
-        extensions
+        let max = if self.ext_len < ext_num {
+            self.ext_len
+        } else {
+            ext_num
+        };
+        self.collect_extensions(max)
+    }
+
+    /// Returns extensions based on the available blocks.
+    #[must_use]
+    pub const fn extensions_all(&self) -> [Extension; MAX_EXT] {
+        self.collect_extensions(self.ext_len)
     }
 
     /// Validates the EDID data.
@@ -101,20 +99,24 @@ impl Edid {
     pub const fn validate(&self) -> Validation {
         let base = self.base();
         let base_raw: [u8; BLOCK_LEN] = slice(&self.raw, 0);
-
         let ext_num = base.footer().extension_num() as usize;
-        let extensions = self.extensions();
-        let mut ext_len = 0;
-        let mut i = 0;
-        while i < MAX_EXT {
-            if extensions[i].is_some() {
-                ext_len += 1;
-            }
-            i += 1;
-        }
-
         Validation::new()
             .then(base.validate(&base_raw))
-            .err_if(ext_num != ext_len, ErrorKind::EdidExtCountMismatch)
+            .err_if(ext_num != self.ext_len, ErrorKind::EdidExtCountMismatch)
+    }
+
+    const fn collect_extensions(&self, max: usize) -> [Extension; MAX_EXT] {
+        let mut i = 0;
+        let mut extensions = [Extension::Empty; MAX_EXT];
+        while i < max {
+            let offset = BLOCK_LEN + i * BLOCK_LEN;
+            let block: [u8; BLOCK_LEN] = slice(&self.raw, offset);
+            extensions[i] = match Cta::parse(&block) {
+                Some(cta) => Extension::Cta(cta),
+                None => Extension::Unknown(block),
+            };
+            i += 1;
+        }
+        extensions
     }
 }
