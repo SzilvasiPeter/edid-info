@@ -20,4 +20,9 @@
 
 #![forbid(unsafe_code)]
 // TODO: add #![no_std] support
+
+pub mod base;
+pub mod bit;
+pub mod common;
 pub mod edid;
+pub mod extensions;

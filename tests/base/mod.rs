@@ -1,0 +1,9 @@
+mod base;
+mod basic;
+mod chroma;
+mod descriptors;
+mod edid;
+mod established;
+mod footer;
+mod header;
+mod std1;

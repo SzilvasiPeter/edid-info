@@ -1,0 +1,54 @@
+use edid_info::base::established::Established;
+
+const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
+const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
+
+#[test]
+fn parse_established_acer_ek221q_h() {
+    let raw: [u8; 3] = std::array::from_fn(|i| ACER[35 + i]);
+    let out = Established::parse(&raw);
+
+    assert!(out.t_720_400_70());
+    assert!(!out.t_720_400_88());
+    assert!(out.t_640_480_60());
+    assert!(out.t_640_480_67());
+    assert!(out.t_640_480_72());
+    assert!(out.t_640_480_75());
+    assert!(out.t_800_600_56());
+    assert!(out.t_800_600_60());
+    assert!(out.t_800_600_72());
+    assert!(out.t_800_600_75());
+    assert!(out.t_832_624_75());
+    assert!(!out.t_1024_768_87i());
+    assert!(out.t_1024_768_60());
+    assert!(out.t_1024_768_70());
+    assert!(out.t_1024_768_75());
+    assert!(out.t_1280_1024_75());
+    assert!(out.t_1152_870_75());
+    assert_eq!(out.manufacturer_bits(), 0);
+}
+
+#[test]
+fn parse_established_asus_rog_pg27u() {
+    let raw: [u8; 3] = std::array::from_fn(|i| ASUS[35 + i]);
+    let out = Established::parse(&raw);
+
+    assert!(!out.t_720_400_70());
+    assert!(!out.t_720_400_88());
+    assert!(out.t_640_480_60());
+    assert!(!out.t_640_480_67());
+    assert!(!out.t_640_480_72());
+    assert!(!out.t_640_480_75());
+    assert!(!out.t_800_600_56());
+    assert!(out.t_800_600_60());
+    assert!(!out.t_800_600_72());
+    assert!(!out.t_800_600_75());
+    assert!(!out.t_832_624_75());
+    assert!(!out.t_1024_768_87i());
+    assert!(out.t_1024_768_60());
+    assert!(!out.t_1024_768_70());
+    assert!(!out.t_1024_768_75());
+    assert!(!out.t_1280_1024_75());
+    assert!(!out.t_1152_870_75());
+    assert_eq!(out.manufacturer_bits(), 0);
+}

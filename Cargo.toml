@@ -10,12 +10,16 @@ keywords = ["edid", "display", "monitor", "parsing", "hardware"]
 categories = ["parsing", "hardware-support", "multimedia"]
 
 [[test]]
+name = "base"
+path = "tests/base/mod.rs"
+
+[[test]]
 name = "descriptor"
-path = "tests/descriptor/mod.rs"
+path = "tests/base/descriptor/mod.rs"
 
 [[test]]
 name = "cta"
-path = "tests/cta/mod.rs"
+path = "tests/extensions/cta/mod.rs"
 
 [dependencies]
 
