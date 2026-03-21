@@ -1,4 +1,4 @@
-use edid_info::edid::Edid;
+use edid_info::edid::{Edid, ParseError};
 use edid_info::extensions::Extension;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
@@ -50,8 +50,11 @@ fn parse_edid_asus_rog_pg27u() {
 #[test]
 fn parse_edid_invalid_length() {
     let short = &ACER[..100];
-    assert!(Edid::parse(short).is_none());
+    assert!(matches!(Edid::parse(short), Err(ParseError::InvalidLen)));
 
     let unaligned = &ACER[..200];
-    assert!(Edid::parse(unaligned).is_none());
+    assert!(matches!(
+        Edid::parse(unaligned),
+        Err(ParseError::InvalidLen)
+    ));
 }

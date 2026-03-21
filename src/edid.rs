@@ -1,4 +1,4 @@
-//! EDID parsing for the 128-byte [`base::Base`] block and [`Extension`]s.
+//! EDID parsing for the 128-byte [`Base`] block and [`Extension`]s.
 //!
 //! Parse flow: validate length, parse base header + checksum, then parse
 //! extensions and keep unknown blocks as raw bytes.
@@ -19,14 +19,23 @@ pub const MAX_EXT: usize = 64;
 
 /// Unrecoverable errors that prevent parsing the EDID data at all.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ParseError {}
+pub enum ParseError {
+    InvalidLen,
+    BadHeader,
+    ExtCountTooLarge,
+}
 
 impl Edid {
     /// Parses raw EDID bytes.
-    #[must_use]
-    pub const fn parse(raw: &[u8]) -> Option<Self> {
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ParseError::InvalidLen`] for invalid or mismatched length.
+    /// Returns [`ParseError::BadHeader`] for an invalid header pattern.
+    /// Returns [`ParseError::ExtCountTooLarge`] if the extension count exceeds the max.
+    pub const fn parse(raw: &[u8]) -> Result<Self, ParseError> {
         if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
-            return None;
+            return Err(ParseError::InvalidLen);
         }
 
         if raw[0] != 0x00
@@ -38,14 +47,17 @@ impl Edid {
             || raw[6] != 0xFF
             || raw[7] != 0x00
         {
-            return None;
+            return Err(ParseError::BadHeader);
         }
 
         let ext_num = raw[BLOCK_LEN - 2] as usize;
         let max_len = BLOCK_LEN * (MAX_EXT + 1);
         let min_len = BLOCK_LEN * (ext_num + 1);
-        if raw.len() < min_len || min_len > max_len || raw.len() > max_len {
-            return None;
+        if min_len > max_len {
+            return Err(ParseError::ExtCountTooLarge);
+        }
+        if raw.len() < min_len || raw.len() > max_len {
+            return Err(ParseError::InvalidLen);
         }
 
         let mut buf = [0u8; BLOCK_LEN * (MAX_EXT + 1)];
@@ -55,7 +67,7 @@ impl Edid {
             i += 1;
         }
 
-        Some(Self { raw: buf })
+        Ok(Self { raw: buf })
     }
 
     /// Returns the base block.
