@@ -1,4 +1,5 @@
 use edid_info::base::header::Header;
+use edid_info::common::{ErrorKind, WarningKind};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
@@ -33,8 +34,11 @@ fn parse_header_acer_ek221q_h() {
 
     let validation = out.validate();
     assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
-    assert_eq!(validation.warnings, ["Deprecated EDID version"]);
+    assert_eq!(validation.errors, 0);
+    assert_eq!(
+        validation.warnings,
+        1 << (WarningKind::HeaderVersionDeprecated as u8)
+    );
 }
 
 #[test]
@@ -62,8 +66,8 @@ fn parse_header_asus_rog_pg27u() {
 
     let validation = out.validate();
     assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
-    assert!(validation.warnings.is_empty());
+    assert_eq!(validation.errors, 0);
+    assert_eq!(validation.warnings, 0);
 }
 
 #[test]
@@ -90,11 +94,14 @@ fn parse_header_cm_cm2400t() {
     assert_eq!(out.minor(), 3);
 
     let validation = out.validate();
-    assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
+    assert!(!validation.is_valid());
+    assert_eq!(
+        validation.errors,
+        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+    );
     assert_eq!(
         validation.warnings,
-        ["Invalid manufacturer ID bits", "Deprecated EDID version"]
+        (1 << (WarningKind::HeaderVersionDeprecated as u8))
     );
 }
 
@@ -122,9 +129,12 @@ fn parse_header_cs_1920x1080() {
     assert_eq!(out.minor(), 4);
 
     let validation = out.validate();
-    assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
-    assert_eq!(validation.warnings, ["Invalid manufacturer ID bits"]);
+    assert!(!validation.is_valid());
+    assert_eq!(
+        validation.errors,
+        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+    );
+    assert_eq!(validation.warnings, 0);
 }
 
 #[test]
@@ -151,15 +161,15 @@ fn parse_header_ms_hsd_1903_a00() {
     assert_eq!(out.minor(), 2);
 
     let validation = out.validate();
-    assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
+    assert!(!validation.is_valid());
+    assert_eq!(
+        validation.errors,
+        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+    );
     assert_eq!(
         validation.warnings,
-        [
-            "Invalid manufacturer ID bits",
-            "Invalid serial number",
-            "Deprecated EDID version"
-        ]
+        (1 << (WarningKind::HeaderSerialInvalid as u8))
+            | (1 << (WarningKind::HeaderVersionDeprecated as u8))
     );
 }
 
@@ -187,11 +197,14 @@ fn parse_header_tk_tianma() {
     assert_eq!(out.minor(), 4);
 
     let validation = out.validate();
-    assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
+    assert!(!validation.is_valid());
+    assert_eq!(
+        validation.errors,
+        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+    );
     assert_eq!(
         validation.warnings,
-        ["Invalid manufacturer ID bits", "Invalid serial number"]
+        (1 << (WarningKind::HeaderSerialInvalid as u8))
     );
 }
 
@@ -219,15 +232,15 @@ fn parse_header_wg_unknown() {
     assert_eq!(out.minor(), 1);
 
     let validation = out.validate();
-    assert!(validation.is_valid());
-    assert!(validation.errors.is_empty());
+    assert!(!validation.is_valid());
+    assert_eq!(
+        validation.errors,
+        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+    );
     assert_eq!(
         validation.warnings,
-        [
-            "Invalid manufacturer ID bits",
-            "Invalid product code",
-            "Invalid serial number",
-            "Deprecated EDID version"
-        ]
+        (1 << (WarningKind::HeaderProductInvalid as u8))
+            | (1 << (WarningKind::HeaderSerialInvalid as u8))
+            | (1 << (WarningKind::HeaderVersionDeprecated as u8))
     );
 }

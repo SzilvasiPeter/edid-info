@@ -17,7 +17,7 @@
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
 use crate::bit::{u6_pack, u10_lo, u12_hi, u12_lo};
-use crate::common::{DESC_LEN, Validation};
+use crate::common::{DESC_LEN, ErrorKind, Validation};
 
 const CLK_UNIT: u32 = 10_000;
 
@@ -206,8 +206,8 @@ impl DetailedTiming {
     }
 
     #[must_use]
-    pub fn validate(&self) -> Validation {
-        Validation::new().err_if(self.pixel_clock_10khz == 0, "Invalid pixel clock")
+    pub const fn validate(&self) -> Validation {
+        Validation::new().err_if(self.pixel_clock_10khz == 0, ErrorKind::TimingPixelClock)
     }
 }
 

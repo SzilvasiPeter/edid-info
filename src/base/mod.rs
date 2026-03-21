@@ -14,7 +14,7 @@ pub mod std1;
 
 pub mod descriptors;
 
-use crate::common::{BLOCK_LEN, DESC_LEN, Validation, checksum_ok, slice};
+use crate::common::{BLOCK_LEN, DESC_LEN, ErrorKind, Validation, checksum_ok, slice};
 use basic::{BASIC_LEN, BASIC_OFF};
 use chroma::{CHROMA_LEN, CHROMA_OFF};
 use descriptors::{DTD_NUM, DTD_OFF};
@@ -91,9 +91,9 @@ impl Base {
     }
 
     #[must_use]
-    pub fn validate(&self, raw: &[u8; BLOCK_LEN]) -> Validation {
+    pub const fn validate(&self, raw: &[u8; BLOCK_LEN]) -> Validation {
         Validation::new()
             .then(self.header().validate())
-            .err_if(!checksum_ok(raw), "Invalid base checksum")
+            .err_if(!checksum_ok(raw), ErrorKind::BaseChecksum)
     }
 }

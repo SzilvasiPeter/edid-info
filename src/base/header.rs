@@ -15,7 +15,7 @@
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
 
-use crate::common::Validation;
+use crate::common::{ErrorKind, Validation, WarningKind};
 
 pub const HEADER_OFF: usize = 0;
 pub const HEADER_LEN: usize = 20;
@@ -130,30 +130,34 @@ impl Header {
         self.minor
     }
 
-    // TODO: is it possible to make the `validate` constant function?
-    /// Validate header, collecting errors and warnings.
+    /// Validates the header.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub const fn validate(&self) -> Validation {
+        const fn is_letter(code: u16) -> bool {
+            code >= 1 && code <= 26
+        }
         let m1 = (self.manufacturer >> 10) & 0b11111;
         let m2 = (self.manufacturer >> 5) & 0b11111;
         let m3 = self.manufacturer & 0b11111;
-        let is_letter = |v| (1..=26).contains(&v);
         Validation::new()
+            .err_if(
+                !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
+                ErrorKind::HeaderMfrInvalidBits,
+            )
+            .err_if(
+                self.week > 54 && self.week != 0xFF,
+                ErrorKind::HeaderWeekInvalid,
+            )
+            .err_if(self.major == 0, ErrorKind::HeaderMajorInvalid)
             .warn_if(
                 self.manufacturer & 0b1000_0000_0000_0000 != 0,
-                "Manufacturer ID reserved bit (bit 15) is set",
+                WarningKind::HeaderMfrReservedSet,
             )
-            .warn_if(
-                !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
-                "Invalid manufacturer ID bits",
-            )
-            .warn_if(self.product == 0, "Invalid product code")
-            .warn_if(self.serial == 0, "Invalid serial number")
-            .warn_if(self.week > 54 && self.week != 0xFF, "Invalid week value")
-            .warn_if(self.major == 0, "Invalid EDID major version")
+            .warn_if(self.product == 0, WarningKind::HeaderProductInvalid)
+            .warn_if(self.serial == 0, WarningKind::HeaderSerialInvalid)
             .warn_if(
                 self.major != 1 || self.minor != 4,
-                "Deprecated EDID version",
+                WarningKind::HeaderVersionDeprecated,
             )
     }
 }

@@ -1,10 +1,10 @@
-//! EDID parsing for the 128-byte [`base::BaseEdid`] block and [`Extension`]s.
+//! EDID parsing for the 128-byte [`base::Base`] block and [`Extension`]s.
 //!
 //! Parse flow: validate length, parse base header + checksum, then parse
 //! extensions and keep unknown blocks as raw bytes.
 
 use crate::base::Base;
-use crate::common::{BLOCK_LEN, Validation, slice};
+use crate::common::{BLOCK_LEN, ErrorKind, Validation, slice};
 use crate::extensions::Extension;
 use crate::extensions::cta::Cta;
 
@@ -86,14 +86,23 @@ impl Edid {
 
     /// Validates the EDID data.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub const fn validate(&self) -> Validation {
         let base = self.base();
         let base_raw: [u8; BLOCK_LEN] = slice(&self.raw, 0);
+
         let ext_num = base.footer().extension_num() as usize;
-        let ext_len = self.extensions().iter().filter(|e| e.is_some()).count();
-        Validation::new().then(base.validate(&base_raw)).err_if(
-            ext_num != ext_len,
-            "Extension count does not match parsed blocks",
-        )
+        let extensions = self.extensions();
+        let mut ext_len = 0;
+        let mut i = 0;
+        while i < MAX_EXT {
+            if extensions[i].is_some() {
+                ext_len += 1;
+            }
+            i += 1;
+        }
+
+        Validation::new()
+            .then(base.validate(&base_raw))
+            .err_if(ext_num != ext_len, ErrorKind::EdidExtCountMismatch)
     }
 }

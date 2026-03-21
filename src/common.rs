@@ -9,13 +9,84 @@ pub const BLOCK_LEN: usize = 128;
 /// Length of an descriptor (detailed timing or monitor) in bytes.
 pub const DESC_LEN: usize = 18;
 
-/// Validation result with errors and warnings.
-#[derive(Clone, Debug, Default)]
+/// Error variants for EDID validation.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ErrorKind {
+    // --- Base Edid ---
+    /// Invalid checksum for the base block.
+    BaseChecksum = 0,
+    /// Extension count in header does not match parsed blocks.
+    EdidExtCountMismatch = 1,
+
+    // --- Base Header ---
+    /// Manufacturer ID contains invalid bits (not uppercase letters).
+    HeaderMfrInvalidBits = 2,
+    /// Week value is invalid (greater than 54 and not 0xFF).
+    HeaderWeekInvalid = 3,
+    /// EDID major version is zero.
+    HeaderMajorInvalid = 4,
+
+    // --- Descriptor ---
+    /// Pixel clock is zero.
+    TimingPixelClock = 5,
+
+    // --- Extension CTA ---
+    /// Invalid checksum for a CTA extension block.
+    CtaChecksum = 6,
+}
+
+impl ErrorKind {
+    /// Returns the human-readable error message.
+    #[must_use]
+    pub const fn message(&self) -> &'static str {
+        match self {
+            Self::BaseChecksum => "Invalid base checksum",
+            Self::CtaChecksum => "Invalid CTA checksum",
+            Self::EdidExtCountMismatch => "Extension count does not match parsed blocks",
+            Self::HeaderMfrInvalidBits => "Invalid manufacturer ID bits",
+            Self::HeaderWeekInvalid => "Invalid week value",
+            Self::HeaderMajorInvalid => "Invalid EDID major version",
+            Self::TimingPixelClock => "Invalid pixel clock",
+        }
+    }
+}
+
+/// Warning variants for EDID validation.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum WarningKind {
+    // --- Base Header ---
+    /// Manufacturer ID reserved bit (bit 15) is set.
+    HeaderMfrReservedSet = 0,
+    /// Product code is zero.
+    HeaderProductInvalid = 1,
+    /// Serial number is zero.
+    HeaderSerialInvalid = 2,
+    /// EDID version is not 1.4.
+    HeaderVersionDeprecated = 3,
+}
+
+impl WarningKind {
+    /// Returns the human-readable warning message.
+    #[must_use]
+    pub const fn message(&self) -> &'static str {
+        match self {
+            Self::HeaderMfrReservedSet => "Manufacturer ID reserved bit (bit 15) is set",
+            Self::HeaderProductInvalid => "Invalid product code",
+            Self::HeaderSerialInvalid => "Invalid serial number",
+            Self::HeaderVersionDeprecated => "Deprecated EDID version",
+        }
+    }
+}
+
+/// Validation result with errors and warnings represented as bitfields.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Validation {
-    /// Fatal errors that indicate invalid data.
-    pub errors: Vec<String>,
-    /// Non-fatal warnings about spec deviations.
-    pub warnings: Vec<String>,
+    /// Fatal errors bitfield.
+    pub errors: u64,
+    /// Non-fatal warnings bitfield.
+    pub warnings: u64,
 }
 
 impl Validation {
@@ -23,49 +94,42 @@ impl Validation {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            errors: Vec::new(),
-            warnings: Vec::new(),
+            errors: 0,
+            warnings: 0,
         }
     }
 
     /// Check if validation passed (no errors).
     #[must_use]
     pub const fn is_valid(&self) -> bool {
-        self.errors.is_empty()
+        self.errors == 0
     }
 
     /// Merge another validation result into this one.
     #[must_use]
-    pub fn then(self, other: Self) -> Self {
-        let mut errors = self.errors;
-        let mut warnings = self.warnings;
-        errors.extend(other.errors);
-        warnings.extend(other.warnings);
-        Self { errors, warnings }
+    pub const fn then(self, other: Self) -> Self {
+        Self {
+            errors: self.errors | other.errors,
+            warnings: self.warnings | other.warnings,
+        }
     }
 
     /// Add an error if condition is true.
     #[must_use]
-    pub fn err_if(self, cond: bool, msg: impl Into<String>) -> Self {
+    pub const fn err_if(mut self, cond: bool, kind: ErrorKind) -> Self {
         if cond {
-            let mut errors = self.errors;
-            errors.push(msg.into());
-            Self { errors, ..self }
-        } else {
-            self
+            self.errors |= 1 << (kind as u8);
         }
+        self
     }
 
     /// Add a warning if condition is true.
     #[must_use]
-    pub fn warn_if(self, cond: bool, msg: impl Into<String>) -> Self {
+    pub const fn warn_if(mut self, cond: bool, kind: WarningKind) -> Self {
         if cond {
-            let mut warnings = self.warnings;
-            warnings.push(msg.into());
-            Self { warnings, ..self }
-        } else {
-            self
+            self.warnings |= 1 << (kind as u8);
         }
+        self
     }
 }
 
