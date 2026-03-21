@@ -34,7 +34,7 @@ pub struct Header {
 }
 
 impl Header {
-    /// Parses a header from 20 raw bytes, validating the header pattern.
+    /// Parses a header from 20 raw bytes.
     ///
     /// Byte sizes and endianness:
     /// - `pattern`: 8 bytes, raw
@@ -46,19 +46,8 @@ impl Header {
     /// - `major`: 1 byte, raw
     /// - `minor`: 1 byte, raw
     #[must_use]
-    pub const fn parse(raw: &[u8; HEADER_LEN]) -> Option<Self> {
-        if raw[0] != 0x00
-            || raw[1] != 0xFF
-            || raw[2] != 0xFF
-            || raw[3] != 0xFF
-            || raw[4] != 0xFF
-            || raw[5] != 0xFF
-            || raw[6] != 0xFF
-            || raw[7] != 0x00
-        {
-            return None;
-        }
-        Some(Self {
+    pub const fn new(raw: &[u8; HEADER_LEN]) -> Self {
+        Self {
             pattern: [
                 raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
             ],
@@ -69,7 +58,7 @@ impl Header {
             year: 1990 + raw[17] as u16,
             major: raw[18],
             minor: raw[19],
-        })
+        }
     }
 
     /// Fixed header pattern: `00 FF FF FF FF FF FF 00`

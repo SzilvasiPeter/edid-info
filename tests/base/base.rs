@@ -1,5 +1,5 @@
 use edid_info::{
-    base::BaseEdid,
+    base::Base,
     base::descriptor::monitor::DescTag,
     base::descriptors::Mode,
     extensions::cta::{Cta, block::BlockTag, speaker::Speaker},
@@ -12,7 +12,7 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
 
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[i]);
-    let out = BaseEdid::parse(&raw).expect("base parse");
+    let out = Base::new(&raw);
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.basic().width_cm(), 48);
     assert_eq!(out.chroma().white().x(), 321);
@@ -47,7 +47,7 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(ASUS.len(), 768);
 
     let raw_base: [u8; 128] = std::array::from_fn(|i| ASUS[i]);
-    let base = BaseEdid::parse(&raw_base).expect("base parse");
+    let base = Base::new(&raw_base);
     assert_eq!(
         base.header().pattern(),
         [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]

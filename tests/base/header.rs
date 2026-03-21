@@ -11,7 +11,13 @@ const WG: &[u8] = include_bytes!("../data/WG@_UNKNOWN.edid");
 #[test]
 fn parse_header_acer_ek221q_h() {
     let raw: [u8; 20] = std::array::from_fn(|i| ACER[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -34,7 +40,13 @@ fn parse_header_acer_ek221q_h() {
 #[test]
 fn parse_header_asus_rog_pg27u() {
     let raw: [u8; 20] = std::array::from_fn(|i| ASUS[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -57,7 +69,13 @@ fn parse_header_asus_rog_pg27u() {
 #[test]
 fn parse_header_cm_cm2400t() {
     let raw: [u8; 20] = std::array::from_fn(|i| CM[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -83,7 +101,13 @@ fn parse_header_cm_cm2400t() {
 #[test]
 fn parse_header_cs_1920x1080() {
     let raw: [u8; 20] = std::array::from_fn(|i| CS[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -106,7 +130,13 @@ fn parse_header_cs_1920x1080() {
 #[test]
 fn parse_header_ms_hsd_1903_a00() {
     let raw: [u8; 20] = std::array::from_fn(|i| MS[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -136,7 +166,13 @@ fn parse_header_ms_hsd_1903_a00() {
 #[test]
 fn parse_header_tk_tianma() {
     let raw: [u8; 20] = std::array::from_fn(|i| TK[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),
@@ -162,7 +198,13 @@ fn parse_header_tk_tianma() {
 #[test]
 fn parse_header_wg_unknown() {
     let raw: [u8; 20] = std::array::from_fn(|i| WG[i]);
-    let out = Header::parse(&raw).expect("header parse");
+    assert_eq!(
+        [
+            raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7]
+        ],
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    let out = Header::new(&raw);
 
     assert_eq!(
         out.pattern(),

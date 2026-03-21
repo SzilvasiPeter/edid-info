@@ -72,8 +72,7 @@ impl Validation {
 /// Verifies the checksum of an EDID block.
 ///
 /// Returns `true` if the sum of all bytes in the block equals zero (with u8 wrapping).
-#[must_use]
-pub const fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
+pub(crate) const fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
     let mut sum = 0u8;
     let mut i = 0;
     while i < BLOCK_LEN {
@@ -95,10 +94,5 @@ const fn slice_unchecked<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
 
 pub(crate) const fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
     assert!(off + N <= M);
-    slice_unchecked(raw, off)
-}
-
-pub(crate) const fn slice_raw<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
-    assert!(off + N <= raw.len());
     slice_unchecked(raw, off)
 }

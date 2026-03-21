@@ -3,16 +3,15 @@
 //! Parse flow: validate length, parse base header + checksum, then parse
 //! extensions and keep unknown blocks as raw bytes.
 
-use crate::base::BaseEdid;
-use crate::common::{BLOCK_LEN, Validation, slice_raw};
+use crate::base::Base;
+use crate::common::{BLOCK_LEN, Validation, slice};
 use crate::extensions::Extension;
 use crate::extensions::cta::Cta;
 
 /// Parsed EDID data with the base block and optional extensions.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Edid {
-    base: BaseEdid,
-    extensions: [Option<Extension>; MAX_EXT],
+    raw: [u8; BLOCK_LEN * (MAX_EXT + 1)],
 }
 
 /// Maximum number of extension block.
@@ -20,66 +19,79 @@ pub const MAX_EXT: usize = 64;
 
 /// Unrecoverable errors that prevent parsing the EDID data at all.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ParseError {
-    /// The input data is too short (minimum 128 bytes).
-    TooShort,
-    /// The input data length is not a multiple of 128 bytes.
-    InvalidLength,
-}
+pub enum ParseError {}
 
 impl Edid {
     /// Parses raw EDID bytes.
     #[must_use]
     pub const fn parse(raw: &[u8]) -> Option<Self> {
-        if raw.len() < BLOCK_LEN {
+        if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
             return None;
         }
 
-        if !raw.len().is_multiple_of(BLOCK_LEN) {
+        if raw[0] != 0x00
+            || raw[1] != 0xFF
+            || raw[2] != 0xFF
+            || raw[3] != 0xFF
+            || raw[4] != 0xFF
+            || raw[5] != 0xFF
+            || raw[6] != 0xFF
+            || raw[7] != 0x00
+        {
             return None;
         }
 
-        let base_raw: [u8; BLOCK_LEN] = slice_raw(raw, 0);
-        let Some(base) = BaseEdid::parse(&base_raw) else {
+        let ext_num = raw[BLOCK_LEN - 2] as usize;
+        let max_len = BLOCK_LEN * (MAX_EXT + 1);
+        let min_len = BLOCK_LEN * (ext_num + 1);
+        if raw.len() < min_len || min_len > max_len || raw.len() > max_len {
             return None;
-        };
+        }
 
+        let mut buf = [0u8; BLOCK_LEN * (MAX_EXT + 1)];
+        let mut i = 0;
+        while i < raw.len() {
+            buf[i] = raw[i];
+            i += 1;
+        }
+
+        Some(Self { raw: buf })
+    }
+
+    /// Returns the base block.
+    #[must_use]
+    pub const fn base(&self) -> Base {
+        let base_raw: [u8; BLOCK_LEN] = slice(&self.raw, 0);
+        Base::new(&base_raw)
+    }
+
+    /// Returns the extensions.
+    #[must_use]
+    pub const fn extensions(&self) -> [Option<Extension>; MAX_EXT] {
         let mut extensions = [None; MAX_EXT];
         let mut i = 0;
-        let nblock = raw.len() / BLOCK_LEN - 1;
-        let max = if nblock < MAX_EXT { nblock } else { MAX_EXT };
+        let ext_num = self.base().footer().extension_num() as usize;
+        let max = if ext_num < MAX_EXT { ext_num } else { MAX_EXT };
         while i < max {
             let offset = BLOCK_LEN + i * BLOCK_LEN;
-            let block: [u8; BLOCK_LEN] = slice_raw(raw, offset);
+            let block: [u8; BLOCK_LEN] = slice(&self.raw, offset);
             extensions[i] = match Cta::parse(&block) {
                 Some(cta) => Some(Extension::Cta(cta)),
                 None => Some(Extension::Unknown(block)),
             };
             i += 1;
         }
-
-        Some(Self { base, extensions })
-    }
-
-    /// Returns the base block.
-    #[must_use]
-    pub const fn base(&self) -> &BaseEdid {
-        &self.base
-    }
-
-    /// Returns the extensions.
-    #[must_use]
-    pub const fn extensions(&self) -> &[Option<Extension>; MAX_EXT] {
-        &self.extensions
+        extensions
     }
 
     /// Validates the EDID data.
-    /// Requires the original raw bytes for checksum validation.
     #[must_use]
-    pub fn validate(&self, base_raw: &[u8; BLOCK_LEN]) -> Validation {
-        let ext_num = self.base.footer().extension_num() as usize;
-        let ext_len = self.extensions.iter().filter(|e| e.is_some()).count();
-        Validation::new().then(self.base.validate(base_raw)).err_if(
+    pub fn validate(&self) -> Validation {
+        let base = self.base();
+        let base_raw: [u8; BLOCK_LEN] = slice(&self.raw, 0);
+        let ext_num = base.footer().extension_num() as usize;
+        let ext_len = self.extensions().iter().filter(|e| e.is_some()).count();
+        Validation::new().then(base.validate(&base_raw)).err_if(
             ext_num != ext_len,
             "Extension count does not match parsed blocks",
         )
