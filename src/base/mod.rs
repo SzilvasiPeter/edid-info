@@ -7,12 +7,11 @@
 pub mod basic;
 pub mod chroma;
 pub mod descriptor;
+pub mod descriptors;
 pub mod established;
 pub mod footer;
 pub mod header;
 pub mod std1;
-
-pub mod descriptors;
 
 use crate::common::{BLOCK_LEN, DESC_LEN, ErrorKind, Validation, checksum_ok, slice};
 use basic::{BASIC_LEN, BASIC_OFF};

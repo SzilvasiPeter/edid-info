@@ -9,6 +9,19 @@ pub const BLOCK_LEN: usize = 128;
 /// Length of an descriptor (detailed timing or monitor) in bytes.
 pub const DESC_LEN: usize = 18;
 
+/// EDID version (major and minor).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Version {
+    pub major: u8,
+    pub minor: u8,
+}
+
+impl core::fmt::Display for Version {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}.{}", self.major, self.minor)
+    }
+}
+
 /// Error variants for EDID validation.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]

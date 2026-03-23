@@ -2,6 +2,8 @@ use edid_info::{
     base::Base,
     base::descriptor::monitor::DescTag,
     base::descriptors::Mode,
+    base::header::DateInfo,
+    common::Version,
     extensions::cta::{Cta, block::BlockTag, speaker::Speaker},
 };
 
@@ -55,10 +57,14 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(base.header().manufacturer(), ['A', 'U', 'S']);
     assert_eq!(base.header().product(), 10148);
     assert_eq!(base.header().serial(), 0x0001_b5bc);
-    assert_eq!(base.header().week(), Some(30));
-    assert_eq!(base.header().year(), 2018);
-    assert_eq!(base.header().major(), 1);
-    assert_eq!(base.header().minor(), 4);
+    assert_eq!(
+        base.header().date(),
+        DateInfo::Manufacture {
+            week: 30,
+            year: 2018
+        }
+    );
+    assert_eq!(base.header().version(), Version { major: 1, minor: 4 });
 
     assert_eq!(base.basic().width_cm(), 60);
     assert_eq!(base.basic().height_cm(), 34);

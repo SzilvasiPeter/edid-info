@@ -15,10 +15,22 @@
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
 
-use crate::common::{ErrorKind, Validation, WarningKind};
+use crate::common::{ErrorKind, Validation, Version, WarningKind, slice};
 
 pub const HEADER_OFF: usize = 0;
 pub const HEADER_LEN: usize = 20;
+
+const YEAR_OFFSET: u16 = 1990;
+const WEEK_MODEL_YEAR_FLAG: u8 = 0xFF;
+
+/// Date of manufacture or model year.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DateInfo {
+    /// Manufacture week (1–54) and year.
+    Manufacture { week: u8, year: u16 },
+    /// Model year (used when week is 0xFF).
+    ModelYear { year: u16 },
+}
 
 /// Header structure containing manufacturer ID, product code, serial, date and version info.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -48,14 +60,12 @@ impl Header {
     #[must_use]
     pub const fn new(raw: &[u8; HEADER_LEN]) -> Self {
         Self {
-            pattern: [
-                raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
-            ],
+            pattern: slice(raw, 0),
             manufacturer: u16::from_be_bytes([raw[8], raw[9]]),
             product: u16::from_le_bytes([raw[10], raw[11]]),
             serial: u32::from_le_bytes([raw[12], raw[13], raw[14], raw[15]]),
             week: raw[16],
-            year: 1990 + raw[17] as u16,
+            year: YEAR_OFFSET + raw[17] as u16,
             major: raw[18],
             minor: raw[19],
         }
@@ -70,22 +80,10 @@ impl Header {
     /// Manufacturer's 3-letter code assigned by [UEFI forum](https://uefi.org/PNP_ID_List),
     /// which is a big-endian 16-bit value made up of three 5-bit letters.
     /// EDID encodes letters as 1='A' through 26='Z', so we add 64 to get ASCII values.
-    ///
-    /// | Bits (Bytes 8-9) | Description |
-    /// |------------------|-------------|
-    /// | 15 | Reserved |
-    /// | 14–10 | First letter of manufacturer ID |
-    /// | 9–5 | Second letter of manufacturer ID |
-    /// | 4–0 | Third letter of manufacturer ID |
     #[must_use]
     pub const fn manufacturer(&self) -> [char; 3] {
-        const fn to_char(bits: u8) -> char {
-            (bits + 64) as char
-        }
-        let m1 = to_char(((self.manufacturer >> 10) & 0b11111) as u8);
-        let m2 = to_char(((self.manufacturer >> 5) & 0b11111) as u8);
-        let m3 = to_char((self.manufacturer & 0b11111) as u8);
-        [m1, m2, m3]
+        let (m1, m2, m3) = decode(self.manufacturer);
+        [(m1 + 64) as char, (m2 + 64) as char, (m3 + 64) as char]
     }
 
     /// Manufacturer product code. 16-bit hex number, little-endian.
@@ -100,52 +98,50 @@ impl Header {
         self.serial
     }
 
-    /// Week of manufacture; or `None` if model year flag (0xFF) is set.
-    /// A value of 0 means the week is unspecified.
-    /// [Week numbering](https://en.wikipedia.org/wiki/Week#Numbering) is not consistent between manufacturers.
+    /// Manufacture or model date information.
+    ///
+    /// If week is `0xFF`, it represents a model year. Week 0 is unspecified.
+    /// Year is calculated as `value + 1990`.
     #[must_use]
-    pub const fn week(&self) -> Option<u8> {
-        if self.week == 0xFF {
-            None
+    pub const fn date(&self) -> DateInfo {
+        if self.week == WEEK_MODEL_YEAR_FLAG {
+            DateInfo::ModelYear { year: self.year }
         } else {
-            Some(self.week)
+            DateInfo::Manufacture {
+                week: self.week,
+                year: self.year,
+            }
         }
     }
 
-    /// Year of manufacture, or year of model, if model year flag is set. Year = datavalue + 1990.
+    /// EDID version information.
     #[must_use]
-    pub const fn year(&self) -> u16 {
-        self.year
+    pub const fn version(&self) -> Version {
+        Version {
+            major: self.major,
+            minor: self.minor,
+        }
     }
 
-    /// EDID version, usually `01` (for 1.3 and 1.4)
-    #[must_use]
-    pub const fn major(&self) -> u8 {
-        self.major
-    }
-
-    /// EDID revision, usually `03` (for 1.3) or `04` (for 1.4)
-    #[must_use]
-    pub const fn minor(&self) -> u8 {
-        self.minor
-    }
-
-    /// Validates the header.
+    /// Validates the header fields.
+    ///
+    /// Checks for:
+    /// - **Errors**: Invalid manufacturer ID characters, invalid week number, or zero major version.
+    /// - **Warnings**: Reserved manufacturer bits set, zero product/serial codes, or non-1.4 EDID versions.
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        const fn is_letter(code: u16) -> bool {
+        const fn is_letter(code: u8) -> bool {
             code >= 1 && code <= 26
         }
-        let m1 = (self.manufacturer >> 10) & 0b11111;
-        let m2 = (self.manufacturer >> 5) & 0b11111;
-        let m3 = self.manufacturer & 0b11111;
+
+        let (m1, m2, m3) = decode(self.manufacturer);
         Validation::new()
             .err_if(
                 !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
                 ErrorKind::HeaderMfrInvalidBits,
             )
             .err_if(
-                self.week > 54 && self.week != 0xFF,
+                self.week > 54 && self.week != WEEK_MODEL_YEAR_FLAG,
                 ErrorKind::HeaderWeekInvalid,
             )
             .err_if(self.major == 0, ErrorKind::HeaderMajorInvalid)
@@ -160,4 +156,33 @@ impl Header {
                 WarningKind::HeaderVersionDeprecated,
             )
     }
+}
+
+impl core::fmt::Display for Header {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let [m1, m2, m3] = self.manufacturer();
+        write!(
+            f,
+            "Manufacturer: {m1}{m2}{m3}, Product: {:04X}, Version: {}",
+            self.product,
+            self.version()
+        )
+    }
+}
+
+/// Decodes the ID into three 5-bit values.
+///
+/// | Bits (Bytes 8-9) | Description |
+/// |------------------|-------------|
+/// | 15 | Reserved |
+/// | 14–10 | First letter of manufacturer ID |
+/// | 9–5 | Second letter of manufacturer ID |
+/// | 4–0 | Third letter of manufacturer ID |
+#[must_use]
+pub const fn decode(manufacturer: u16) -> (u8, u8, u8) {
+    (
+        ((manufacturer >> 10) & 0b11111) as u8,
+        ((manufacturer >> 5) & 0b11111) as u8,
+        (manufacturer & 0b11111) as u8,
+    )
 }
