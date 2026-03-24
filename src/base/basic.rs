@@ -1,7 +1,5 @@
 //! Basic display parameters (bytes 20–24).
 //!
-//! Contains video input definition (analog/digital), display size, gamma, and feature support flags.
-//!
 //! # Structure
 //!
 //! | Byte | Description |
@@ -12,7 +10,10 @@
 //! | 23   | Gamma (value - 1.0, scaled by 100) |
 //! | 24   | Feature support flags |
 
-use crate::bit::{get_bits, is_set};
+use crate::{
+    bit::{get_bits, is_set},
+    common::Validation,
+};
 
 pub const BASIC_OFF: usize = 20;
 pub const BASIC_LEN: usize = 5;
@@ -203,6 +204,12 @@ impl Basic {
     #[must_use]
     pub const fn features(&self) -> Features {
         self.features
+    }
+
+    /// Validates the basic fields.
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        todo!()
     }
 }
 

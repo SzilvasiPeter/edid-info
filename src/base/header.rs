@@ -1,4 +1,4 @@
-//! EDID header (bytes 0–19).
+//! Header information (bytes 0–19).
 //!
 //! Contains the EDID header pattern, manufacturer ID, product code, serial number, manufacture date and version.
 //!
@@ -17,10 +17,10 @@
 
 use crate::common::{FailureKind, Validation, Version, WarningKind, slice};
 
-/// Byte offset where the EDID header begins.
+/// Header offset in the base block.
 pub const HEADER_OFF: usize = 0;
 
-/// Length of the EDID header in bytes.
+/// Header length in bytes.
 pub const HEADER_LEN: usize = 20;
 
 const YEAR_OFFSET: u16 = 1990;

@@ -98,10 +98,9 @@ impl Edid {
     #[must_use]
     pub const fn validate(&self) -> Validation {
         let base = self.base();
-        let base_raw: [u8; BLOCK_LEN] = slice(&self.raw, 0);
         let ext_num = base.footer().extension_num() as usize;
         Validation::new()
-            .then(base.validate(&base_raw))
+            .then(base.validate())
             .fail_if(ext_num != self.ext_len, FailureKind::EdidExtCountMismatch)
     }
 

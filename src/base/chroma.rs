@@ -1,8 +1,6 @@
-//! Color chromaticity coordinates (bytes 25–34).
+//! Chromaticity coordinates (bytes 25–34).
 //!
-//! Contains CIE 1931 xy chromaticity coordinates for the red,
-//! green, blue, and white primaries. Each coordinate is encoded
-//! as a 10-bit value (0–1023) representing 0.0–1.0.
+//! 10-bit 2° [CIE 1931 xy coordinates](https://en.wikipedia.org/wiki/CIE_1931_color_space) for red, green, blue, and white point.
 //!
 //! # Structure
 //!
@@ -19,7 +17,10 @@
 //! | 33   | White-x MSBs |
 //! | 34   | White-y MSBs |
 
-use crate::bit::{u2_from_masks, u10_hi};
+use crate::{
+    bit::{u2_from_masks, u10_hi},
+    common::Validation,
+};
 
 pub const CHROMA_OFF: usize = 25;
 pub const CHROMA_LEN: usize = 10;
@@ -75,6 +76,12 @@ impl Chroma {
     #[must_use]
     pub const fn white(&self) -> Coord {
         self.white
+    }
+
+    /// Validates the chroma fields.
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        todo!()
     }
 }
 

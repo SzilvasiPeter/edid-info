@@ -1,7 +1,7 @@
-//! Standard Timing Identification (bytes 38–53).
+//! Standard Timing information (bytes 38–53).
 //!
-//! Contains 8 timing descriptors, each 2 bytes, describing common
-//! display resolutions and refresh rates.
+//! Up to 8 2-byte fields describing standard display modes.
+//! Unused fields are filled with 01 01 hex.
 //!
 //! # Structure
 //!
@@ -14,6 +14,8 @@
 //! | 38–53  | 8×2   | Standard timing descriptors |
 //!
 //! If both bytes are 0x01, the entry is unused.
+
+use crate::common::Validation;
 
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
@@ -53,6 +55,12 @@ impl Std1 {
         } else {
             None
         }
+    }
+
+    /// Validates the standard timings.
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        todo!()
     }
 }
 

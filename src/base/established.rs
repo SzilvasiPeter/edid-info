@@ -1,67 +1,128 @@
-//! Established Timings (bytes 35–37).
+//! Established timing bitmap (bytes 35–37).
 //!
-//! A bitmap of supported legacy video modes. Bytes 35–36 define
-//! standard VESA and IBM timings, while byte 37 contains
-//! manufacturer-defined reserved bits.
+//! Supported bitmap for (formerly) very common timing modes.
 //!
 //! # Structure
-//!
 //! | Byte | Description |
 //! |------|-------------|
-//! | 35   | 720×400@70, 640×480 variants |
-//! | 36   | 800×600, 1024×768, 1280×1024 variants |
-//! | 37   | 1152×870 + 7 manufacturer-reserved bits |
+//! | 35   | 720×400 - 800×600 displays |
+//! | 36   | 800×600 - 1280×1024 displays |
+//! | 37   | 1152×870 + 7 manufacturer-specific display modes |
 
+/// Established timing offset in the base block.
 pub const ESTABLISHED_OFF: usize = 35;
+
+/// Established timing length in bytes.
 pub const ESTABLISHED_LEN: usize = 3;
 
+/// Established timing values from bytes 35–37.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Established {
-    raw: [u8; ESTABLISHED_LEN],
+pub enum EstablishedTiming {
+    /// 720x400 @ 70 Hz.
+    T720x400_70,
+    /// 720x400 @ 88 Hz.
+    T720x400_88,
+    /// 640x480 @ 60 Hz.
+    T640x480_60,
+    /// 640x480 @ 67 Hz.
+    T640x480_67,
+    /// 640x480 @ 72 Hz.
+    T640x480_72,
+    /// 640x480 @ 75 Hz.
+    T640x480_75,
+    /// 800x600 @ 56 Hz.
+    T800x600_56,
+    /// 800x600 @ 60 Hz.
+    T800x600_60,
+    /// 800x600 @ 72 Hz.
+    T800x600_72,
+    /// 800x600 @ 75 Hz.
+    T800x600_75,
+    /// 832x624 @ 75 Hz.
+    T832x624_75,
+    /// 1024x768 @ 87 Hz interlaced.
+    T1024x768_87I,
+    /// 1024x768 @ 60 Hz.
+    T1024x768_60,
+    /// 1024x768 @ 70 Hz.
+    T1024x768_70,
+    /// 1024x768 @ 75 Hz.
+    T1024x768_75,
+    /// 1280x1024 @ 75 Hz.
+    T1280x1024_75,
+    /// 1152x870 @ 75 Hz.
+    T1152x870_75,
 }
 
-#[rustfmt::skip]
+/// Established timing bitmap containing supported timings and manufacturer bits.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Established {
+    supported_timings: [Option<EstablishedTiming>; 17],
+    manufacturer_bits: u8,
+}
+
 impl Established {
+    /// Parses the established timing bitmap from 3 raw byte.
+    ///
+    /// | Byte | Bit | Description |
+    /// |------|-----|-------------|
+    /// | 35   | 7   | 720×400 @ 70 Hz (VGA) |
+    /// |      | 6   | 720×400 @ 88 Hz (XGA) |
+    /// |      | 5   | 640×480 @ 60 Hz (VGA) |
+    /// |      | 4   | 640×480 @ 67 Hz (Apple Macintosh II) |
+    /// |      | 3   | 640×480 @ 72 Hz |
+    /// |      | 2   | 640×480 @ 75 Hz |
+    /// |      | 1   | 800×600 @ 56 Hz |
+    /// |      | 0   | 800×600 @ 60 Hz |
+    /// | 36   | 7   | 800×600 @ 72 Hz |
+    /// |      | 6   | 800×600 @ 75 Hz |
+    /// |      | 5   | 832×624 @ 75 Hz (Apple Macintosh II) |
+    /// |      | 4   | 1024×768 @ 87 Hz, interlaced (1024×768i) |
+    /// |      | 3   | 1024×768 @ 60 Hz |
+    /// |      | 2   | 1024×768 @ 70 Hz |
+    /// |      | 1   | 1024×768 @ 75 Hz |
+    /// |      | 0   | 1280×1024 @ 75 Hz |
+    /// | 37   | 7   | 1152×870 @ 75 Hz (Apple Macintosh II) |
+    /// |      | 6–0 | Other manufacturer-specific display modes |
     #[must_use]
-    pub const fn parse(raw: &[u8; ESTABLISHED_LEN]) -> Self {
-        Self { raw: *raw }
+    pub const fn new(raw: &[u8; ESTABLISHED_LEN]) -> Self {
+        Self {
+            supported_timings: [
+                flag(raw[0], 0x80, EstablishedTiming::T720x400_70),
+                flag(raw[0], 0x40, EstablishedTiming::T720x400_88),
+                flag(raw[0], 0x20, EstablishedTiming::T640x480_60),
+                flag(raw[0], 0x10, EstablishedTiming::T640x480_67),
+                flag(raw[0], 0x08, EstablishedTiming::T640x480_72),
+                flag(raw[0], 0x04, EstablishedTiming::T640x480_75),
+                flag(raw[0], 0x02, EstablishedTiming::T800x600_56),
+                flag(raw[0], 0x01, EstablishedTiming::T800x600_60),
+                flag(raw[1], 0x80, EstablishedTiming::T800x600_72),
+                flag(raw[1], 0x40, EstablishedTiming::T800x600_75),
+                flag(raw[1], 0x20, EstablishedTiming::T832x624_75),
+                flag(raw[1], 0x10, EstablishedTiming::T1024x768_87I),
+                flag(raw[1], 0x08, EstablishedTiming::T1024x768_60),
+                flag(raw[1], 0x04, EstablishedTiming::T1024x768_70),
+                flag(raw[1], 0x02, EstablishedTiming::T1024x768_75),
+                flag(raw[1], 0x01, EstablishedTiming::T1280x1024_75),
+                flag(raw[2], 0x80, EstablishedTiming::T1152x870_75),
+            ],
+            manufacturer_bits: raw[2] & 0x7F,
+        }
     }
 
-    // TODO: Use bitflags
+    /// Returns the supported established timings.
     #[must_use]
-    pub const fn t_720_400_70(&self) -> bool { (self.raw[0] & 0x80) != 0 }
+    pub const fn supported(&self) -> [Option<EstablishedTiming>; 17] {
+        self.supported_timings
+    }
+
+    /// Returns the reserved manufacturer bits.
     #[must_use]
-    pub const fn t_720_400_88(&self) -> bool { (self.raw[0] & 0x40) != 0 }
-    #[must_use]
-    pub const fn t_640_480_60(&self) -> bool { (self.raw[0] & 0x20) != 0 }
-    #[must_use]
-    pub const fn t_640_480_67(&self) -> bool { (self.raw[0] & 0x10) != 0 }
-    #[must_use]
-    pub const fn t_640_480_72(&self) -> bool { (self.raw[0] & 0x08) != 0 }
-    #[must_use]
-    pub const fn t_640_480_75(&self) -> bool { (self.raw[0] & 0x04) != 0 }
-    #[must_use]
-    pub const fn t_800_600_56(&self) -> bool { (self.raw[0] & 0x02) != 0 }
-    #[must_use]
-    pub const fn t_800_600_60(&self) -> bool { (self.raw[0] & 0x01) != 0 }
-    #[must_use]
-    pub const fn t_800_600_72(&self) -> bool { (self.raw[1] & 0x80) != 0 }
-    #[must_use]
-    pub const fn t_800_600_75(&self) -> bool { (self.raw[1] & 0x40) != 0 }
-    #[must_use]
-    pub const fn t_832_624_75(&self) -> bool { (self.raw[1] & 0x20) != 0 }
-    #[must_use]
-    pub const fn t_1024_768_87i(&self) -> bool { (self.raw[1] & 0x10) != 0 }
-    #[must_use]
-    pub const fn t_1024_768_60(&self) -> bool { (self.raw[1] & 0x08) != 0 }
-    #[must_use]
-    pub const fn t_1024_768_70(&self) -> bool { (self.raw[1] & 0x04) != 0 }
-    #[must_use]
-    pub const fn t_1024_768_75(&self) -> bool { (self.raw[1] & 0x02) != 0 }
-    #[must_use]
-    pub const fn t_1280_1024_75(&self) -> bool { (self.raw[1] & 0x01) != 0 }
-    #[must_use]
-    pub const fn t_1152_870_75(&self) -> bool { (self.raw[2] & 0x80) != 0 }
-    #[must_use]
-    pub const fn manufacturer_bits(&self) -> u8 { self.raw[2] & 0x7F }
+    pub const fn manufacturer_bits(&self) -> u8 {
+        self.manufacturer_bits
+    }
+}
+
+const fn flag(byte: u8, mask: u8, val: EstablishedTiming) -> Option<EstablishedTiming> {
+    if (byte & mask) != 0 { Some(val) } else { None }
 }

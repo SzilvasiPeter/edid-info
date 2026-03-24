@@ -14,7 +14,7 @@
 
 use super::descriptor::monitor::MonitorDesc;
 use super::descriptor::timing::DetailedTiming;
-use crate::common::{DESC_LEN, slice};
+use crate::common::{DESC_LEN, Validation, slice};
 
 pub const DTD_OFF: usize = 54;
 pub const DTD_NUM: usize = 4;
@@ -56,5 +56,11 @@ impl Descriptors {
     #[must_use]
     pub const fn mode(&self, i: usize) -> Option<Mode> {
         if i < DTD_NUM { self.modes[i] } else { None }
+    }
+
+    /// Validates the descriptors.
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        todo!()
     }
 }

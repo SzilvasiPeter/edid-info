@@ -2,6 +2,7 @@ use edid_info::{
     base::Base,
     base::descriptor::monitor::DescTag,
     base::descriptors::Mode,
+    base::established::EstablishedTiming,
     base::header::DateInfo,
     common::Version,
     extensions::cta::{Cta, block::BlockTag, speaker::Speaker},
@@ -18,7 +19,11 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(out.basic().width_cm(), 48);
     assert_eq!(out.chroma().white().x(), 321);
-    assert!(out.established().t_1280_1024_75());
+    assert!(
+        out.established()
+            .supported()
+            .contains(&Some(EstablishedTiming::T1280x1024_75))
+    );
     assert_eq!(
         out.timings()
             .mode(7)
