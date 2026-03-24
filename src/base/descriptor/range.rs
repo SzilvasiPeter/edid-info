@@ -26,6 +26,16 @@ pub enum Timing {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AspectPref {
+    A4_3,
+    A16_9,
+    A16_10,
+    A5_4,
+    A15_9,
+    Reserved(u8),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SecondaryGtf {
     start_khz: u16,
     c_x2: u8,
@@ -70,16 +80,6 @@ impl SecondaryGtf {
     pub const fn j_x2(&self) -> u8 {
         self.j_x2
     }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AspectPref {
-    A4_3,
-    A16_9,
-    A16_10,
-    A5_4,
-    A15_9,
-    Reserved(u8),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

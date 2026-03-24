@@ -84,25 +84,6 @@ impl MonitorDesc {
         &self.data
     }
 
-    // TODO: remove this after getting rid of the redundant tag_raw and byte4 fields
-    fn raw_desc(&self) -> [u8; DESC_LEN] {
-        let mut raw = [0; DESC_LEN];
-        raw[3] = self.tag_raw;
-        raw[4] = self.byte4;
-        raw[5..DESC_LEN].copy_from_slice(&self.data);
-        raw
-    }
-
-    fn parse_text(&self) -> Option<&str> {
-        let end = self
-            .data
-            .iter()
-            .position(|b| *b == b'\n' || *b == 0)
-            .unwrap_or(self.data.len());
-        let text = core::str::from_utf8(self.data.get(..end)?).ok()?.trim_end();
-        (!text.is_empty()).then_some(text)
-    }
-
     #[must_use]
     pub fn serial(&self) -> Option<&str> {
         if !matches!(self.tag, DescTag::SerialNumber) {
@@ -201,5 +182,24 @@ impl MonitorDesc {
     #[must_use]
     pub fn validate() -> Validation {
         todo!();
+    }
+
+    // TODO: remove this after getting rid of the redundant tag_raw and byte4 fields
+    fn raw_desc(&self) -> [u8; DESC_LEN] {
+        let mut raw = [0; DESC_LEN];
+        raw[3] = self.tag_raw;
+        raw[4] = self.byte4;
+        raw[5..DESC_LEN].copy_from_slice(&self.data);
+        raw
+    }
+
+    fn parse_text(&self) -> Option<&str> {
+        let end = self
+            .data
+            .iter()
+            .position(|b| *b == b'\n' || *b == 0)
+            .unwrap_or(self.data.len());
+        let text = core::str::from_utf8(self.data.get(..end)?).ok()?.trim_end();
+        (!text.is_empty()).then_some(text)
     }
 }

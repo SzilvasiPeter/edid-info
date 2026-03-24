@@ -17,6 +17,133 @@ use crate::bit::{get_bits, is_set};
 pub const BASIC_OFF: usize = 20;
 pub const BASIC_LEN: usize = 5;
 
+/// Bit depth (Bits 6–4 of Byte 20 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 000 | undefined |
+/// | 001 | 6 bits per color |
+/// | 010 | 8 bits per color |
+/// | 011 | 10 bits per color |
+/// | 100 | 12 bits per color |
+/// | 101 | 14 bits per color |
+/// | 110 | 16 bits per color |
+/// | 111 | reserved |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BitDepth {
+    Undef,
+    B6,
+    B8,
+    B10,
+    B12,
+    B14,
+    B16,
+    Reserved,
+}
+
+/// Video interface (Bits 3–0 of Byte 20 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 0000 | undefined |
+/// | 0001 | DVI |
+/// | 0010 | HDMIa |
+/// | 0011 | HDMIb |
+/// | 0100 | MDDI |
+/// | 0101 | DisplayPort |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Interface {
+    Undef,
+    Dvi,
+    HdmiA,
+    HdmiB,
+    Mddi,
+    DisplayPort,
+    Other(u8),
+}
+
+/// Video white and sync levels, relative to blank (Bits 6–5 of Byte 20 when Analog).
+///
+/// | Value | Voltage Levels |
+/// |-------|----------------|
+/// | 00 | +0.7/−0.3 V |
+/// | 01 | +0.714/−0.286 V |
+/// | 10 | +1.0/−0.4 V |
+/// | 11 | +0.7/0 V (EVC) |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Level {
+    V700_300,
+    V714_286,
+    V1000_400,
+    V700_000,
+}
+
+/// Video input type (Bit 7 of Byte 20).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 1 | Digital input |
+/// | 0 | Analog input |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum InputKind {
+    /// Digital input with bit depth and interface.
+    Digital { depth: BitDepth, iface: Interface },
+    /// Analog input with signal level and sync options.
+    // TODO: give better name for fields
+    Analog {
+        level: Level,
+        /// Blank-to-black setup (pedestal) expected.
+        setup: bool,
+        /// Separate sync supported.
+        sep: bool,
+        /// Composite sync (on `HSync`) supported.
+        comp: bool,
+        /// Sync on green supported.
+        sog: bool,
+        /// `VSync` pulse must be serrated when composite or sync-on-green is used.
+        serr: bool,
+    },
+}
+
+/// Analog display type (Bits 4-3 of Byte 24 when Analog).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 00 | monochrome or grayscale |
+/// | 01 | RGB color |
+/// | 10 | non-RGB color |
+/// | 11 | undefined |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AnalogType {
+    MonoGray,
+    Rgb,
+    NonRgb,
+    Undef,
+}
+
+/// Digital display type (Bits 4-3 of Byte 24 when Digital).
+///
+/// | Value | Description |
+/// |-------|-------------|
+/// | 00 | RGB 4:4:4 |
+/// | 01 | RGB 4:4:4 + YCrCb 4:4:4 |
+/// | 10 | RGB 4:4:4 + YCrCb 4:2:2 |
+/// | 11 | RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2 |
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DigitalType {
+    Rgb444,
+    Rgb444Y444,
+    Rgb444Y422,
+    Rgb444Y444Y422,
+}
+
+/// Display type (analog or digital) for features bitmap.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DisplayType {
+    Digital(DigitalType),
+    Analog(AnalogType),
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Basic {
     input: VideoInput,
@@ -79,94 +206,6 @@ impl Basic {
     }
 }
 
-/// Video input type (Bit 7 of Byte 20).
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 1 | Digital input |
-/// | 0 | Analog input |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum InputKind {
-    /// Digital input with bit depth and interface.
-    Digital { depth: BitDepth, iface: Interface },
-    /// Analog input with signal level and sync options.
-    // TODO: give better name for fields
-    Analog {
-        level: Level,
-        /// Blank-to-black setup (pedestal) expected.
-        setup: bool,
-        /// Separate sync supported.
-        sep: bool,
-        /// Composite sync (on `HSync`) supported.
-        comp: bool,
-        /// Sync on green supported.
-        sog: bool,
-        /// `VSync` pulse must be serrated when composite or sync-on-green is used.
-        serr: bool,
-    },
-}
-
-/// Bit depth (Bits 6–4 of Byte 20 when Digital).
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 000 | undefined |
-/// | 001 | 6 bits per color |
-/// | 010 | 8 bits per color |
-/// | 011 | 10 bits per color |
-/// | 100 | 12 bits per color |
-/// | 101 | 14 bits per color |
-/// | 110 | 16 bits per color |
-/// | 111 | reserved |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum BitDepth {
-    Undef,
-    B6,
-    B8,
-    B10,
-    B12,
-    B14,
-    B16,
-    Reserved,
-}
-
-/// Video interface (Bits 3–0 of Byte 20 when Digital).
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 0000 | undefined |
-/// | 0001 | DVI |
-/// | 0010 | HDMIa |
-/// | 0011 | HDMIb |
-/// | 0100 | MDDI |
-/// | 0101 | DisplayPort |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Interface {
-    Undef,
-    Dvi,
-    HdmiA,
-    HdmiB,
-    Mddi,
-    DisplayPort,
-    Other(u8),
-}
-
-/// Video white and sync levels, relative to blank (Bits 6–5 of Byte 20 when Analog).
-///
-/// | Value | Voltage Levels |
-/// |-------|----------------|
-/// | 00 | +0.7/−0.3 V |
-/// | 01 | +0.714/−0.286 V |
-/// | 10 | +1.0/−0.4 V |
-/// | 11 | +0.7/0 V (EVC) |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Level {
-    V700_300,
-    V714_286,
-    V1000_400,
-    V700_000,
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct VideoInput {
     kind: InputKind,
@@ -220,45 +259,6 @@ impl VideoInput {
     pub const fn kind(&self) -> InputKind {
         self.kind
     }
-}
-
-/// Display type (analog or digital) for features bitmap.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DisplayType {
-    Digital(DigitalType),
-    Analog(AnalogType),
-}
-
-/// Analog display type (Bits 4-3 of Byte 24 when Analog).
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 00 | monochrome or grayscale |
-/// | 01 | RGB color |
-/// | 10 | non-RGB color |
-/// | 11 | undefined |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AnalogType {
-    MonoGray,
-    Rgb,
-    NonRgb,
-    Undef,
-}
-
-/// Digital display type (Bits 4-3 of Byte 24 when Digital).
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 00 | RGB 4:4:4 |
-/// | 01 | RGB 4:4:4 + YCrCb 4:4:4 |
-/// | 10 | RGB 4:4:4 + YCrCb 4:2:2 |
-/// | 11 | RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2 |
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DigitalType {
-    Rgb444,
-    Rgb444Y444,
-    Rgb444Y422,
-    Rgb444Y444Y422,
 }
 
 /// Feature support flags (Byte 24).

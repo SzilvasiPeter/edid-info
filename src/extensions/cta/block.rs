@@ -67,14 +67,6 @@ impl DataBlock {
         self.data().get(i).copied().map(Svd::parse)
     }
 
-    fn block_iter<'a, T, F>(&'a self, tag: BlockTag, f: F) -> impl Iterator<Item = T> + 'a
-    where
-        F: Fn(u8) -> T + 'a,
-    {
-        let raw = if self.tag == tag { self.data() } else { &[] };
-        raw.iter().copied().map(f)
-    }
-
     pub fn svds(&self) -> impl Iterator<Item = Svd> + '_ {
         self.block_iter(BlockTag::Video, Svd::parse)
     }
@@ -137,6 +129,14 @@ impl DataBlock {
             return None;
         }
         RoomConfig::parse(self.data())
+    }
+
+    fn block_iter<'a, T, F>(&'a self, tag: BlockTag, f: F) -> impl Iterator<Item = T> + 'a
+    where
+        F: Fn(u8) -> T + 'a,
+    {
+        let raw = if self.tag == tag { self.data() } else { &[] };
+        raw.iter().copied().map(f)
     }
 }
 

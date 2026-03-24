@@ -28,6 +28,35 @@ pub enum Aspect {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Std1 {
+    modes: [Option<Timing>; STANDARD_NUM],
+}
+
+impl Std1 {
+    #[must_use]
+    pub const fn parse(raw: &[u8; STANDARD_LEN]) -> Self {
+        let mut modes = [None; STANDARD_NUM];
+        let mut i = 0;
+        while i < STANDARD_NUM {
+            let x_byte = raw[i * 2];
+            let y_byte = raw[i * 2 + 1];
+            modes[i] = parse_timing_bytes(x_byte, y_byte);
+            i += 1;
+        }
+        Self { modes }
+    }
+
+    #[must_use]
+    pub const fn mode(&self, i: usize) -> Option<Timing> {
+        if i < STANDARD_NUM {
+            self.modes[i]
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Timing {
     width: u16,
     height: u16,
@@ -57,37 +86,8 @@ impl Timing {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Std1 {
-    modes: [Option<Timing>; STANDARD_NUM],
-}
-
-impl Std1 {
-    #[must_use]
-    pub const fn parse(raw: &[u8; STANDARD_LEN]) -> Self {
-        let mut modes = [None; STANDARD_NUM];
-        let mut i = 0;
-        while i < STANDARD_NUM {
-            let x_byte = raw[i * 2];
-            let y_byte = raw[i * 2 + 1];
-            modes[i] = parse_timing_bytes(x_byte, y_byte);
-            i += 1;
-        }
-        Self { modes }
-    }
-
-    #[must_use]
-    pub const fn mode(&self, i: usize) -> Option<Timing> {
-        if i < STANDARD_NUM {
-            self.modes[i]
-        } else {
-            None
-        }
-    }
-}
-
 #[must_use]
-pub const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing> {
+pub(crate) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing> {
     if x_byte == 0b1 && y_byte == 0b1 {
         return None;
     }

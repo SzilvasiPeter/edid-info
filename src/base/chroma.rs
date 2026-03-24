@@ -25,24 +25,6 @@ pub const CHROMA_OFF: usize = 25;
 pub const CHROMA_LEN: usize = 10;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Coord {
-    x: u16,
-    y: u16,
-}
-
-impl Coord {
-    #[must_use]
-    pub const fn x(&self) -> u16 {
-        self.x
-    }
-
-    #[must_use]
-    pub const fn y(&self) -> u16 {
-        self.y
-    }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Chroma {
     red: Coord,
     green: Coord,
@@ -93,5 +75,23 @@ impl Chroma {
     #[must_use]
     pub const fn white(&self) -> Coord {
         self.white
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Coord {
+    x: u16,
+    y: u16,
+}
+
+impl Coord {
+    #[must_use]
+    pub const fn x(&self) -> u16 {
+        self.x
+    }
+
+    #[must_use]
+    pub const fn y(&self) -> u16 {
+        self.y
     }
 }
