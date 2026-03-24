@@ -25,7 +25,7 @@ impl core::fmt::Display for Version {
 /// Error variants for EDID validation.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
-pub enum ErrorKind {
+pub enum FailureKind {
     // --- Base Edid ---
     /// Invalid checksum for the base block.
     BaseChecksum = 0,
@@ -49,7 +49,7 @@ pub enum ErrorKind {
     CtaChecksum = 6,
 }
 
-impl ErrorKind {
+impl FailureKind {
     /// Returns the human-readable error message.
     #[must_use]
     pub const fn message(&self) -> &'static str {
@@ -128,9 +128,9 @@ impl Validation {
         }
     }
 
-    /// Add an error if condition is true.
+    /// Add a failure if condition is true.
     #[must_use]
-    pub const fn err_if(mut self, cond: bool, kind: ErrorKind) -> Self {
+    pub const fn fail_if(mut self, cond: bool, kind: FailureKind) -> Self {
         if cond {
             self.errors |= 1 << (kind as u8);
         }

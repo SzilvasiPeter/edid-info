@@ -38,7 +38,7 @@ pub mod vic;
 pub mod video;
 
 use crate::base::descriptor::timing::DetailedTiming;
-use crate::common::{BLOCK_LEN, DESC_LEN, ErrorKind, Validation, checksum_ok};
+use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok};
 
 use block::DataBlockIter;
 
@@ -97,7 +97,7 @@ impl Cta {
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        Validation::new().err_if(!checksum_ok(&self.raw), ErrorKind::CtaChecksum)
+        Validation::new().fail_if(!checksum_ok(&self.raw), FailureKind::CtaChecksum)
     }
 
     const fn data_block_end(&self) -> usize {

@@ -13,7 +13,7 @@ pub mod footer;
 pub mod header;
 pub mod std1;
 
-use crate::common::{BLOCK_LEN, DESC_LEN, ErrorKind, Validation, checksum_ok, slice};
+use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok, slice};
 use basic::{BASIC_LEN, BASIC_OFF};
 use chroma::{CHROMA_LEN, CHROMA_OFF};
 use descriptors::{DTD_NUM, DTD_OFF};
@@ -93,6 +93,6 @@ impl Base {
     pub const fn validate(&self, raw: &[u8; BLOCK_LEN]) -> Validation {
         Validation::new()
             .then(self.header().validate())
-            .err_if(!checksum_ok(raw), ErrorKind::BaseChecksum)
+            .fail_if(!checksum_ok(raw), FailureKind::BaseChecksum)
     }
 }

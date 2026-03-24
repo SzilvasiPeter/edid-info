@@ -1,15 +1,16 @@
 use edid_info::base::header::{DateInfo, Header};
-use edid_info::common::{ErrorKind, Version, WarningKind};
+use edid_info::common::{FailureKind, Version, WarningKind};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 const CM: &[u8] = include_bytes!("../data/CM__CM2400T.edid");
 const CS: &[u8] = include_bytes!("../data/CS__1920x1080.edid");
+const LPL: &[u8] = include_bytes!("../data/LPL_LP154W01.edid");
 const MS: &[u8] = include_bytes!("../data/MS__HSD_1903-A00.edid");
 const TK: &[u8] = include_bytes!("../data/TK@_tianma.edid");
 const WG: &[u8] = include_bytes!("../data/WG@_UNKNOWN.edid");
-const PHL_BAD_DATE: &[u8] = include_bytes!("../data/PHL_221V8_bad_date.edid");
-const TSB_MODEL_YEAR: &[u8] = include_bytes!("../data/TSB_TV_model_year.edid");
+const PHL_BAD_DATE: &[u8] = include_bytes!("../data/PHL_221V8.edid");
+const TSB_MODEL_YEAR: &[u8] = include_bytes!("../data/TSB_TV.edid");
 
 #[test]
 fn parse_header_acer_ek221q_h() {
@@ -90,7 +91,7 @@ fn parse_header_cm_cm2400t() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+        1 << (FailureKind::HeaderMfrInvalidBits as u8)
     );
     assert_eq!(
         validation.warnings,
@@ -122,9 +123,39 @@ fn parse_header_cs_1920x1080() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+        1 << (FailureKind::HeaderMfrInvalidBits as u8)
     );
     assert_eq!(validation.warnings, 0);
+}
+
+#[test]
+fn parse_header_lpl_lp154w01_zeroweek() {
+    let raw: [u8; 20] = std::array::from_fn(|i| LPL[i]);
+    let out = Header::new(&raw);
+    assert_eq!(
+        out.pattern(),
+        [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+    );
+    assert_eq!(out.manufacturer(), ['L', 'P', 'L']);
+    assert_eq!(out.product(), 51200);
+    assert_eq!(out.serial(), 0);
+    assert_eq!(
+        out.date(),
+        DateInfo::Manufacture {
+            week: 0,
+            year: 2006
+        }
+    );
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
+
+    let validation = out.validate();
+    assert!(validation.is_valid());
+    assert_eq!(validation.errors, 0);
+    assert_eq!(
+        validation.warnings,
+        (1 << (WarningKind::HeaderSerialInvalid as u8))
+            | (1 << (WarningKind::HeaderVersionDeprecated as u8))
+    );
 }
 
 #[test]
@@ -151,7 +182,7 @@ fn parse_header_ms_hsd_1903_a00() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+        1 << (FailureKind::HeaderMfrInvalidBits as u8)
     );
     assert_eq!(
         validation.warnings,
@@ -184,7 +215,7 @@ fn parse_header_tk_tianma() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+        1 << (FailureKind::HeaderMfrInvalidBits as u8)
     );
     assert_eq!(
         validation.warnings,
@@ -216,7 +247,7 @@ fn parse_header_wg_unknown() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (ErrorKind::HeaderMfrInvalidBits as u8)
+        1 << (FailureKind::HeaderMfrInvalidBits as u8)
     );
     assert_eq!(
         validation.warnings,
@@ -248,7 +279,10 @@ fn parse_header_phl_bad_date() {
 
     let validation = out.validate();
     assert!(!validation.is_valid());
-    assert_eq!(validation.errors, 1 << (ErrorKind::HeaderWeekInvalid as u8));
+    assert_eq!(
+        validation.errors,
+        1 << (FailureKind::HeaderWeekInvalid as u8)
+    );
     assert_eq!(
         validation.warnings,
         1 << (WarningKind::HeaderVersionDeprecated as u8)

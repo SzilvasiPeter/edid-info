@@ -4,7 +4,7 @@
 //! extensions and keep unknown blocks as raw bytes.
 
 use crate::base::Base;
-use crate::common::{BLOCK_LEN, ErrorKind, Validation, slice};
+use crate::common::{BLOCK_LEN, FailureKind, Validation, slice};
 use crate::extensions::Extension;
 use crate::extensions::cta::Cta;
 
@@ -102,7 +102,7 @@ impl Edid {
         let ext_num = base.footer().extension_num() as usize;
         Validation::new()
             .then(base.validate(&base_raw))
-            .err_if(ext_num != self.ext_len, ErrorKind::EdidExtCountMismatch)
+            .fail_if(ext_num != self.ext_len, FailureKind::EdidExtCountMismatch)
     }
 
     const fn collect_extensions(&self, max: usize) -> [Extension; MAX_EXT] {

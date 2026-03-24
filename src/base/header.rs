@@ -15,9 +15,12 @@
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
 
-use crate::common::{ErrorKind, Validation, Version, WarningKind, slice};
+use crate::common::{FailureKind, Validation, Version, WarningKind, slice};
 
+/// Byte offset where the EDID header begins.
 pub const HEADER_OFF: usize = 0;
+
+/// Length of the EDID header in bytes.
 pub const HEADER_LEN: usize = 20;
 
 const YEAR_OFFSET: u16 = 1990;
@@ -126,7 +129,7 @@ impl Header {
     /// Validates the header fields.
     ///
     /// Checks for:
-    /// - **Errors**: Invalid manufacturer ID characters, invalid week number, or zero major version.
+    /// - **Failures**: Invalid manufacturer ID characters, invalid week number, or zero major version.
     /// - **Warnings**: Reserved manufacturer bits set, zero product/serial codes, or non-1.4 EDID versions.
     #[must_use]
     pub const fn validate(&self) -> Validation {
@@ -136,15 +139,15 @@ impl Header {
 
         let (m1, m2, m3) = decode(self.manufacturer);
         Validation::new()
-            .err_if(
+            .fail_if(
                 !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
-                ErrorKind::HeaderMfrInvalidBits,
+                FailureKind::HeaderMfrInvalidBits,
             )
-            .err_if(
+            .fail_if(
                 self.week > 54 && self.week != WEEK_MODEL_YEAR_FLAG,
-                ErrorKind::HeaderWeekInvalid,
+                FailureKind::HeaderWeekInvalid,
             )
-            .err_if(self.major == 0, ErrorKind::HeaderMajorInvalid)
+            .fail_if(self.major == 0, FailureKind::HeaderMajorInvalid)
             .warn_if(
                 self.manufacturer & 0b1000_0000_0000_0000 != 0,
                 WarningKind::HeaderMfrReservedSet,
@@ -179,7 +182,7 @@ impl core::fmt::Display for Header {
 /// | 9–5 | Second letter of manufacturer ID |
 /// | 4–0 | Third letter of manufacturer ID |
 #[must_use]
-pub const fn decode(manufacturer: u16) -> (u8, u8, u8) {
+const fn decode(manufacturer: u16) -> (u8, u8, u8) {
     (
         ((manufacturer >> 10) & 0b11111) as u8,
         ((manufacturer >> 5) & 0b11111) as u8,
