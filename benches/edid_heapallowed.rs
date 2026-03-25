@@ -1,19 +1,13 @@
 //! EDID parsing for the 128-byte [`Base`] block and [`Extension`]s.
-//!
-//! Parse flow: validate length, parse base header + checksum, then parse
-//! extensions and keep unknown blocks as raw bytes.
 
-use crate::base::Base;
-use crate::common::{BLOCK_LEN, FailureKind, Validation};
-use crate::extensions::Extension;
-use crate::extensions::cta::Cta;
+extern crate alloc;
 
-/// Parsed EDID data with the base block and optional extensions.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Edid<'a> {
-    raw: &'a [u8],
-    ext_len: usize,
-}
+use alloc::vec::Vec;
+
+use edid_info::base::Base;
+use edid_info::common::{BLOCK_LEN, FailureKind, Validation};
+use edid_info::extensions::Extension;
+use edid_info::extensions::cta::Cta;
 
 /// Maximum number of extension block.
 pub const MAX_EXT: usize = 64;
@@ -26,7 +20,15 @@ pub enum ParseError {
     ExtCountTooLarge,
 }
 
-impl<'a> Edid<'a> {
+/// Parsed EDID data with the base block and optional extensions.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Edid {
+    raw: Vec<u8>,
+    ext_len: usize,
+}
+
+#[allow(dead_code)]
+impl Edid {
     /// Parses raw EDID bytes.
     ///
     /// # Errors
@@ -34,7 +36,7 @@ impl<'a> Edid<'a> {
     /// Returns [`ParseError::InvalidLen`] for input shorter than one block.
     /// Returns [`ParseError::BadHeader`] for an invalid header pattern.
     /// Returns [`ParseError::ExtCountTooLarge`] for more than the max blocks.
-    pub fn parse(raw: &'a [u8]) -> Result<Self, ParseError> {
+    pub fn parse(raw: &[u8]) -> Result<Self, ParseError> {
         const MAX_LEN: usize = BLOCK_LEN * (MAX_EXT + 1);
 
         if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
@@ -59,7 +61,10 @@ impl<'a> Edid<'a> {
 
         let blocks = raw.len() / BLOCK_LEN;
         let ext_len = blocks - 1;
-        Ok(Self { raw, ext_len })
+        Ok(Self {
+            raw: Vec::from(raw),
+            ext_len,
+        })
     }
 
     /// Returns the base block.
@@ -76,19 +81,15 @@ impl<'a> Edid<'a> {
 
     /// Returns extensions up to the reported footer count.
     #[must_use]
-    pub fn extensions(&self) -> [Extension; MAX_EXT] {
+    pub fn extensions(&self) -> Vec<Extension> {
         let ext_num = self.base().footer().extension_num() as usize;
-        let max = if self.ext_len < ext_num {
-            self.ext_len
-        } else {
-            ext_num
-        };
+        let max = core::cmp::min(self.ext_len, ext_num);
         self.collect_extensions(max)
     }
 
     /// Returns extensions based on the available blocks.
     #[must_use]
-    pub fn extensions_all(&self) -> [Extension; MAX_EXT] {
+    pub fn extensions_all(&self) -> Vec<Extension> {
         self.collect_extensions(self.ext_len)
     }
 
@@ -102,12 +103,21 @@ impl<'a> Edid<'a> {
             .fail_if(ext_num != self.ext_len, FailureKind::EdidExtCountMismatch)
     }
 
-    fn collect_extensions(&self, max: usize) -> [Extension; MAX_EXT] {
-        let mut out = [Extension::Empty; MAX_EXT];
-        for (i, ext) in out.iter_mut().enumerate().take(max) {
-            let off = BLOCK_LEN * (i + 1);
-            let block: [u8; BLOCK_LEN] = self.raw[off..off + BLOCK_LEN].try_into().unwrap();
-            *ext = Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta);
+    fn block_at(&self, idx: usize) -> [u8; BLOCK_LEN] {
+        let off = idx * BLOCK_LEN;
+        let mut out = [0u8; BLOCK_LEN];
+        out.copy_from_slice(&self.raw[off..off + BLOCK_LEN]);
+        out
+    }
+
+    fn collect_extensions(&self, max: usize) -> Vec<Extension> {
+        let mut out = Vec::with_capacity(max);
+        let mut i = 0;
+        while i < max {
+            let block = self.block_at(i + 1);
+            let ext = Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta);
+            out.push(ext);
+            i += 1;
         }
         out
     }

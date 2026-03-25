@@ -1,5 +1,5 @@
 use edid_info::base::descriptor::monitor::{DescTag, MonitorDesc};
-use edid_info::base::descriptor::range::{AspectPref, Range, Timing};
+use edid_info::base::descriptor::range::{AspectPref, Timing};
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -16,7 +16,7 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
     assert_eq!(range.name(), None);
     assert_eq!(range.text(), None);
 
-    let range = Range::parse(&range_raw).expect("range limits parse");
+    let range = range.range().expect("range limits parse");
     assert_eq!(range.v_min_hz(), 48);
     assert_eq!(range.v_max_hz(), 100);
     assert_eq!(range.h_min_khz(), 24);
@@ -34,7 +34,7 @@ fn parse_range_limit_descriptor_asus_rog_pg27u() {
     assert_eq!(range.name(), None);
     assert_eq!(range.text(), None);
 
-    let range = Range::parse(&range_raw).expect("range limits parse");
+    let range = range.range().expect("range limits parse");
     assert_eq!(range.v_min_hz(), 24);
     assert_eq!(range.v_max_hz(), 144);
     assert_eq!(range.h_min_khz(), 52);
@@ -49,7 +49,7 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
     let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
 
-    let range = Range::parse(&range_raw).expect("range limits parse");
+    let range = range.range().expect("range limits parse");
     assert_eq!(range.v_min_hz(), 55);
     assert_eq!(range.v_max_hz(), 76);
     assert_eq!(range.h_min_khz(), 15);
@@ -74,7 +74,7 @@ fn parse_range_cvt_sdc_123yl01() {
     let range = MonitorDesc::parse(&range_raw).expect("range descriptor parse");
     assert_eq!(range.tag(), DescTag::RangeLimits);
 
-    let range = Range::parse(&range_raw).expect("range limits parse");
+    let range = range.range().expect("range limits parse");
     assert_eq!(range.v_min_hz(), 48);
     assert_eq!(range.v_max_hz(), 60);
     assert_eq!(range.h_min_khz(), 0);

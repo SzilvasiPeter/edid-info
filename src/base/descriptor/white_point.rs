@@ -72,14 +72,11 @@ pub struct WhitePoint {
 
 impl WhitePoint {
     #[must_use]
-    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xFB || raw[4] != 0 {
-            return None;
-        }
+    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Self {
         let first = Point::parse([raw[5], raw[6], raw[7], raw[8], raw[9]]);
         let second = Point::parse([raw[10], raw[11], raw[12], raw[13], raw[14]]);
         let pad = [raw[15], raw[16], raw[17]];
-        Some(Self { first, second, pad })
+        Self { first, second, pad }
     }
 
     #[must_use]

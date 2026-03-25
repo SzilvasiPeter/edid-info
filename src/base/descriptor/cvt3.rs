@@ -132,7 +132,7 @@ pub struct Cvt3 {
 
 impl Cvt3 {
     #[must_use]
-    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xF8 || raw[4] != 0 {
             return None;
         }

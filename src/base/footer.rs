@@ -9,6 +9,8 @@
 //! | 126  | Number of Extension blocks |
 //! | 127  | Checksum |
 
+use crate::common::BLOCK_LEN;
+
 /// Footer offset in the base block.
 pub const FOOTER_OFF: usize = 126;
 
@@ -25,10 +27,11 @@ pub struct Footer {
 impl Footer {
     /// Parses a footer from 2 raw bytes.
     #[must_use]
-    pub const fn new(raw: &[u8; FOOTER_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
+        let footer = &raw[FOOTER_OFF..];
         Self {
-            extension_num: raw[0],
-            checksum: raw[1],
+            extension_num: footer[0],
+            checksum: footer[1],
         }
     }
 

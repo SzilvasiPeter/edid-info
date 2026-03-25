@@ -15,7 +15,7 @@
 //!
 //! If both bytes are 0x01, the entry is unused.
 
-use crate::common::Validation;
+use crate::common::{BLOCK_LEN, Validation};
 
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
@@ -35,13 +35,15 @@ pub struct Std1 {
 }
 
 impl Std1 {
+    /// Parses the standard timings from base block bytes.
     #[must_use]
-    pub const fn parse(raw: &[u8; STANDARD_LEN]) -> Self {
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let std1 = &raw[STANDARD_OFF..];
         let mut modes = [None; STANDARD_NUM];
         let mut i = 0;
         while i < STANDARD_NUM {
-            let x_byte = raw[i * 2];
-            let y_byte = raw[i * 2 + 1];
+            let x_byte = std1[i * 2];
+            let y_byte = std1[i * 2 + 1];
             modes[i] = parse_timing_bytes(x_byte, y_byte);
             i += 1;
         }

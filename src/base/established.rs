@@ -62,7 +62,7 @@ pub struct Established {
 }
 
 impl Established {
-    /// Parses the established timing bitmap from 3 raw byte.
+    /// Parses the established timing bitmap from base block bytes.
     ///
     /// | Byte | Bit | Description |
     /// |------|-----|-------------|
@@ -85,28 +85,29 @@ impl Established {
     /// | 37   | 7   | 1152×870 @ 75 Hz (Apple Macintosh II) |
     /// |      | 6–0 | Other manufacturer-specific display modes |
     #[must_use]
-    pub const fn new(raw: &[u8; ESTABLISHED_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
+        let est = &raw[ESTABLISHED_OFF..];
         Self {
             supported_timings: [
-                flag(raw[0], 0x80, EstablishedTiming::T720x400_70),
-                flag(raw[0], 0x40, EstablishedTiming::T720x400_88),
-                flag(raw[0], 0x20, EstablishedTiming::T640x480_60),
-                flag(raw[0], 0x10, EstablishedTiming::T640x480_67),
-                flag(raw[0], 0x08, EstablishedTiming::T640x480_72),
-                flag(raw[0], 0x04, EstablishedTiming::T640x480_75),
-                flag(raw[0], 0x02, EstablishedTiming::T800x600_56),
-                flag(raw[0], 0x01, EstablishedTiming::T800x600_60),
-                flag(raw[1], 0x80, EstablishedTiming::T800x600_72),
-                flag(raw[1], 0x40, EstablishedTiming::T800x600_75),
-                flag(raw[1], 0x20, EstablishedTiming::T832x624_75),
-                flag(raw[1], 0x10, EstablishedTiming::T1024x768_87I),
-                flag(raw[1], 0x08, EstablishedTiming::T1024x768_60),
-                flag(raw[1], 0x04, EstablishedTiming::T1024x768_70),
-                flag(raw[1], 0x02, EstablishedTiming::T1024x768_75),
-                flag(raw[1], 0x01, EstablishedTiming::T1280x1024_75),
-                flag(raw[2], 0x80, EstablishedTiming::T1152x870_75),
+                flag(est[0], 0x80, EstablishedTiming::T720x400_70),
+                flag(est[0], 0x40, EstablishedTiming::T720x400_88),
+                flag(est[0], 0x20, EstablishedTiming::T640x480_60),
+                flag(est[0], 0x10, EstablishedTiming::T640x480_67),
+                flag(est[0], 0x08, EstablishedTiming::T640x480_72),
+                flag(est[0], 0x04, EstablishedTiming::T640x480_75),
+                flag(est[0], 0x02, EstablishedTiming::T800x600_56),
+                flag(est[0], 0x01, EstablishedTiming::T800x600_60),
+                flag(est[1], 0x80, EstablishedTiming::T800x600_72),
+                flag(est[1], 0x40, EstablishedTiming::T800x600_75),
+                flag(est[1], 0x20, EstablishedTiming::T832x624_75),
+                flag(est[1], 0x10, EstablishedTiming::T1024x768_87I),
+                flag(est[1], 0x08, EstablishedTiming::T1024x768_60),
+                flag(est[1], 0x04, EstablishedTiming::T1024x768_70),
+                flag(est[1], 0x02, EstablishedTiming::T1024x768_75),
+                flag(est[1], 0x01, EstablishedTiming::T1280x1024_75),
+                flag(est[2], 0x80, EstablishedTiming::T1152x870_75),
             ],
-            manufacturer_bits: raw[2] & 0x7F,
+            manufacturer_bits: est[2] & 0x7F,
         }
     }
 
@@ -126,3 +127,4 @@ impl Established {
 const fn flag(byte: u8, mask: u8, val: EstablishedTiming) -> Option<EstablishedTiming> {
     if (byte & mask) != 0 { Some(val) } else { None }
 }
+use crate::common::BLOCK_LEN;

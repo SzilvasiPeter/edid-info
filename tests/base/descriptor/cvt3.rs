@@ -1,4 +1,5 @@
-use edid_info::base::descriptor::cvt3::{Aspect, Cvt3, PrefRate};
+use edid_info::base::descriptor::cvt3::{Aspect, PrefRate};
+use edid_info::base::descriptor::monitor::MonitorDesc;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -6,13 +7,15 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 #[test]
 fn parse_cvt3_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    assert!(Cvt3::parse(&raw).is_none());
+    let cvt3 = MonitorDesc::parse(&raw).and_then(|desc| desc.cvt3());
+    assert!(cvt3.is_none());
 }
 
 #[test]
 fn parse_cvt3_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    assert!(Cvt3::parse(&raw).is_none());
+    let cvt3 = MonitorDesc::parse(&raw).and_then(|desc| desc.cvt3());
+    assert!(cvt3.is_none());
 }
 
 #[test]
@@ -33,7 +36,8 @@ fn parse_cvt3_synthetic() {
     raw[16] = 0x0C;
     raw[17] = 0b0111_0000;
 
-    let cvt3 = Cvt3::parse(&raw).expect("cvt3 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let cvt3 = desc.cvt3().expect("cvt3 parse");
 
     let mode1 = cvt3.mode1();
     assert_eq!(mode1.addr_lines(), 0);
@@ -67,7 +71,8 @@ fn parse_cvt3_wrong_version() {
     raw[3] = 0xF8;
     raw[5] = 0x02;
 
-    assert!(Cvt3::parse(&raw).is_none());
+    let cvt3 = MonitorDesc::parse(&raw).and_then(|desc| desc.cvt3());
+    assert!(cvt3.is_none());
 }
 
 #[test]
@@ -79,7 +84,8 @@ fn parse_mode_v_lines() {
     raw[7] = 0x00;
     raw[8] = 0b0000_0000;
 
-    let cvt3 = Cvt3::parse(&raw).expect("cvt3 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let cvt3 = desc.cvt3().expect("cvt3 parse");
     let mode1 = cvt3.mode1();
     assert_eq!(mode1.addr_lines(), 9);
     assert_eq!(mode1.v_lines(), 20);
@@ -94,7 +100,8 @@ fn parse_mode_h_pixels() {
     raw[7] = 0x00;
     raw[8] = 0b0000_0000;
 
-    let cvt3 = Cvt3::parse(&raw).expect("cvt3 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let cvt3 = desc.cvt3().expect("cvt3 parse");
     let mode1 = cvt3.mode1();
     assert_eq!(mode1.h_pixels(), 24);
 }

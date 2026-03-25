@@ -12,7 +12,7 @@
 
 use crate::{
     bit::{get_bits, is_set},
-    common::Validation,
+    common::{BLOCK_LEN, Validation},
 };
 
 pub const BASIC_OFF: usize = 20;
@@ -156,16 +156,16 @@ pub struct Basic {
 
 impl Basic {
     #[must_use]
-    pub const fn parse(raw: &[u8; BASIC_LEN]) -> Self {
-        let input = VideoInput::parse(raw[0]);
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let basic = &raw[BASIC_OFF..];
+        let input = VideoInput::parse(basic[0]);
         let is_digital = matches!(input.kind(), InputKind::Digital { .. });
         Self {
             input,
-            width_cm: raw[1],
-            height_cm: raw[2],
-            gamma: raw[3],
-            // TODO: store raw bytes, parse in getters
-            features: Features::parse(raw[4], is_digital),
+            width_cm: basic[1],
+            height_cm: basic[2],
+            gamma: basic[3],
+            features: Features::parse(basic[4], is_digital),
         }
     }
 

@@ -14,7 +14,7 @@
 
 use super::descriptor::monitor::MonitorDesc;
 use super::descriptor::timing::DetailedTiming;
-use crate::common::{DESC_LEN, Validation, slice};
+use crate::common::{BLOCK_LEN, DESC_LEN, Validation};
 
 pub const DTD_OFF: usize = 54;
 pub const DTD_NUM: usize = 4;
@@ -31,20 +31,24 @@ pub struct Descriptors {
 }
 
 impl Descriptors {
+    /// Parses descriptors from base block bytes.
     #[must_use]
-    pub const fn parse(raw: &[u8; DTD_NUM * DESC_LEN]) -> Self {
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut modes = [None; DTD_NUM];
         let mut i = 0;
+        let desc = &raw[DTD_OFF..];
 
         while i < DTD_NUM {
             let offset = i * DESC_LEN;
-            let chunk: [u8; DESC_LEN] = slice(raw, offset);
-
+            let Ok(chunk): Result<&[u8; DESC_LEN], _> = desc[offset..offset + DESC_LEN].try_into()
+            else {
+                break;
+            };
             if chunk[0] == 0 && chunk[1] == 0 {
-                if let Some(display) = MonitorDesc::parse(&chunk) {
+                if let Some(display) = MonitorDesc::parse(chunk) {
                     modes[i] = Some(Mode::Display(display));
                 }
-            } else if let Some(timing) = DetailedTiming::parse(&chunk) {
+            } else if let Some(timing) = DetailedTiming::parse(chunk) {
                 modes[i] = Some(Mode::Timing(timing));
             }
             i += 1;

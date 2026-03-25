@@ -245,8 +245,9 @@ pub struct Range {
 
 impl Range {
     #[must_use]
-    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xFD || (raw[4] & 0xF0) != 0 {
+    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+        // TODO: the reserved byte not fatal, move to the `monitor::validate` method.
+        if (raw[4] & 0xF0) != 0 {
             return None;
         }
         let (v_min_hz, v_max_hz) = adjust(raw[5], raw[6], raw[4] & 0b11)?;

@@ -12,6 +12,7 @@ use super::std3::Std3;
 use super::white_point::WhitePoint;
 use crate::common::{DESC_LEN, Validation, slice};
 
+// TODO: Add documentation
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DescTag {
     SerialNumber,
@@ -40,7 +41,7 @@ pub struct MonitorDesc {
 
 impl MonitorDesc {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         // TODO: move this to `validate` function
         if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 {
             return None;
@@ -86,6 +87,10 @@ impl MonitorDesc {
 
     #[must_use]
     pub fn serial(&self) -> Option<&str> {
+        // TODO: we should considilate the function into a single call
+        // where we match then return with the proper type
+        // problem: how can we return with multiple variant?
+        // Maybe updating the enum to hold the struct?
         if !matches!(self.tag, DescTag::SerialNumber) {
             return None;
         }
@@ -121,7 +126,7 @@ impl MonitorDesc {
         if !matches!(self.tag, DescTag::WhitePoint) {
             return None;
         }
-        WhitePoint::parse(&self.raw_desc())
+        Some(WhitePoint::parse(&self.raw_desc()))
     }
 
     #[must_use]
@@ -145,7 +150,7 @@ impl MonitorDesc {
         if !matches!(self.tag, DescTag::StdTimings2) {
             return None;
         }
-        Std2::parse(&self.raw_desc())
+        Some(Std2::parse(&self.raw_desc()))
     }
 
     #[must_use]

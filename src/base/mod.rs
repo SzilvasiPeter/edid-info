@@ -29,86 +29,72 @@ pub mod footer;
 pub mod header;
 pub mod std1;
 
-use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok, slice};
-use basic::{BASIC_LEN, BASIC_OFF};
-use chroma::{CHROMA_LEN, CHROMA_OFF};
-use descriptors::{DTD_NUM, DTD_OFF};
-use established::{ESTABLISHED_LEN, ESTABLISHED_OFF};
-use footer::{FOOTER_LEN, FOOTER_OFF};
-use header::{HEADER_LEN, HEADER_OFF};
-use std1::{STANDARD_LEN, STANDARD_OFF};
+use crate::common::{BLOCK_LEN, FailureKind, Validation, checksum_ok};
 
 /// Base block structure containing header, display parameters, chroma, timings and descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Base {
-    raw: [u8; BLOCK_LEN],
+pub struct Base<'a> {
+    raw: &'a [u8; BLOCK_LEN],
 }
 
-impl Base {
+impl<'a> Base<'a> {
     /// Creates a new base block from 128 raw bytes.
     #[must_use]
-    pub const fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        Self { raw: *raw }
+    pub const fn new(raw: &'a [u8; BLOCK_LEN]) -> Self {
+        Self { raw }
     }
 
     /// Returns the header information (manufacturer ID, version, etc.).
     #[must_use]
-    pub const fn header(&self) -> header::Header {
-        let header: [u8; HEADER_LEN] = slice(&self.raw, HEADER_OFF);
-        header::Header::new(&header)
+    pub fn header(&self) -> header::Header {
+        header::Header::new(self.raw)
     }
 
     /// Returns basic display parameters (video input, screen size, etc.).
     #[must_use]
-    pub const fn basic(&self) -> basic::Basic {
-        let basic: [u8; BASIC_LEN] = slice(&self.raw, BASIC_OFF);
-        basic::Basic::parse(&basic)
+    pub fn basic(&self) -> basic::Basic {
+        basic::Basic::parse(self.raw)
     }
 
     /// Returns chromaticity coordinates (color characteristics).
     #[must_use]
-    pub const fn chroma(&self) -> chroma::Chroma {
-        let chroma: [u8; CHROMA_LEN] = slice(&self.raw, CHROMA_OFF);
-        chroma::Chroma::parse(&chroma)
+    pub fn chroma(&self) -> chroma::Chroma {
+        chroma::Chroma::parse(self.raw)
     }
 
     /// Returns the established timing bitmap (common legacy video timings).
     #[must_use]
-    pub const fn established(&self) -> established::Established {
-        let established: [u8; ESTABLISHED_LEN] = slice(&self.raw, ESTABLISHED_OFF);
-        established::Established::new(&established)
+    pub fn established(&self) -> established::Established {
+        established::Established::new(self.raw)
     }
 
     /// Returns the standard timing information.
     #[must_use]
-    pub const fn timings(&self) -> std1::Std1 {
-        let std1: [u8; STANDARD_LEN] = slice(&self.raw, STANDARD_OFF);
-        std1::Std1::parse(&std1)
+    pub fn timings(&self) -> std1::Std1 {
+        std1::Std1::parse(self.raw)
     }
 
     /// Returns the display timing and monitor descriptors.
     #[must_use]
-    pub const fn descriptors(&self) -> descriptors::Descriptors {
-        let descriptors: [u8; DTD_NUM * DESC_LEN] = slice(&self.raw, DTD_OFF);
-        descriptors::Descriptors::parse(&descriptors)
+    pub fn descriptors(&self) -> descriptors::Descriptors {
+        descriptors::Descriptors::parse(self.raw)
     }
 
     /// Returns the extension flag and checksum.
     #[must_use]
-    pub const fn footer(&self) -> footer::Footer {
-        let footer: [u8; FOOTER_LEN] = slice(&self.raw, FOOTER_OFF);
-        footer::Footer::new(&footer)
+    pub fn footer(&self) -> footer::Footer {
+        footer::Footer::new(self.raw)
     }
 
     /// Validates the base block, including the header and checksum.
     #[must_use]
-    pub const fn validate(&self) -> Validation {
+    pub fn validate(&self) -> Validation {
         Validation::new()
             .then(self.header().validate())
             .then(self.basic().validate())
             .then(self.chroma().validate())
             .then(self.timings().validate())
             .then(self.descriptors().validate())
-            .fail_if(!checksum_ok(&self.raw), FailureKind::BaseChecksum)
+            .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)
     }
 }

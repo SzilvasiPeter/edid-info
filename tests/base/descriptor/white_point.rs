@@ -1,20 +1,6 @@
-use edid_info::base::descriptor::white_point::WhitePoint;
+use edid_info::base::descriptor::monitor::MonitorDesc;
 
-const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
-const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
-
-#[test]
-fn parse_white_point_not_present_acer_ek221q_h() {
-    let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    assert!(WhitePoint::parse(&raw).is_none());
-}
-
-#[test]
-fn parse_white_point_not_present_asus_rog_pg27u() {
-    let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    assert!(WhitePoint::parse(&raw).is_none());
-}
-
+// TODO: use real world example instead of synthetic
 #[test]
 fn parse_white_point_synthetic() {
     let mut raw = [0u8; 18];
@@ -33,7 +19,8 @@ fn parse_white_point_synthetic() {
     raw[16] = 0x00;
     raw[17] = 0x00;
 
-    let wp = WhitePoint::parse(&raw).expect("white point parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let wp = desc.white_point().expect("white point parse");
 
     let first = wp.first().expect("first point");
     assert_eq!(first.index(), 1);
@@ -62,7 +49,8 @@ fn parse_white_point_single_point() {
     raw[8] = 0x00;
     raw[9] = 0x40;
 
-    let wp = WhitePoint::parse(&raw).expect("white point parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let wp = desc.white_point().expect("white point parse");
 
     assert!(wp.first().is_some());
     assert!(wp.second().is_none());
@@ -78,7 +66,8 @@ fn parse_white_point_gamma() {
     raw[8] = 0x00;
     raw[9] = 0x64;
 
-    let wp = WhitePoint::parse(&raw).expect("white point parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let wp = desc.white_point().expect("white point parse");
     let first = wp.first().expect("first point");
     assert_eq!(first.gamma_raw(), 0x64);
     assert!((first.gamma() - 2.0).abs() < 0.01);

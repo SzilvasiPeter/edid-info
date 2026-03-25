@@ -3,9 +3,13 @@ use edid_info::base::std1::{Aspect, Std1};
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
+fn base(raw: &[u8]) -> [u8; 128] {
+    core::array::from_fn(|i| raw[i])
+}
+
 #[test]
 fn parse_standard_acer_ek221q_h() {
-    let raw: [u8; 16] = std::array::from_fn(|i| ACER[38 + i]);
+    let raw = base(ACER);
     let mode = |i| {
         Std1::parse(&raw)
             .mode(i)
@@ -25,7 +29,7 @@ fn parse_standard_acer_ek221q_h() {
 
 #[test]
 fn parse_standard_asus_rog_pg27u() {
-    let raw: [u8; 16] = std::array::from_fn(|i| ASUS[38 + i]);
+    let raw = base(ASUS);
     let mode = |i| {
         Std1::parse(&raw)
             .mode(i)

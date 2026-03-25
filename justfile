@@ -5,12 +5,13 @@ run:
 
 lint:
     cargo fmt --all -- --check
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo +nightly clippy --all-targets --all-features -- -D warnings
     cargo doc
 
 test:
     cargo test --doc
-    cargo test --all-targets --all-features
+    cargo +nightly test --all-targets --all-features
+    cargo +nightly bench
 
 cov:
     cargo llvm-cov --all-features --html --output-dir target/coverage

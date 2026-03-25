@@ -17,10 +17,7 @@ pub struct Std2 {
 
 impl Std2 {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xFA || raw[4] != 0 {
-            return None;
-        }
+    pub(crate) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
         let mut modes = [None; MODE_NUM];
         let mut i = 0;
         while i < MODE_NUM {
@@ -29,10 +26,10 @@ impl Std2 {
             modes[i] = parse_timing_bytes(x_byte, y_byte);
             i += 1;
         }
-        Some(Self {
+        Self {
             modes,
             pad: raw[17],
-        })
+        }
     }
 
     #[must_use]

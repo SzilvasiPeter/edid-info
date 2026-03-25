@@ -19,7 +19,7 @@
 
 use crate::{
     bit::{u2_from_masks, u10_hi},
-    common::Validation,
+    common::{BLOCK_LEN, Validation},
 };
 
 pub const CHROMA_OFF: usize = 25;
@@ -35,25 +35,26 @@ pub struct Chroma {
 
 impl Chroma {
     #[must_use]
-    pub const fn parse(raw: &[u8; CHROMA_LEN]) -> Self {
-        let rg = raw[0];
-        let bw = raw[1];
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let chroma = &raw[CHROMA_OFF..];
+        let rg = chroma[0];
+        let bw = chroma[1];
         Self {
             red: Coord {
-                x: u10_hi(raw[2], u2_from_masks(rg, 0b1000_0000, 0b0100_0000)),
-                y: u10_hi(raw[3], u2_from_masks(rg, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(chroma[2], u2_from_masks(rg, 0b1000_0000, 0b0100_0000)),
+                y: u10_hi(chroma[3], u2_from_masks(rg, 0b0010_0000, 0b0001_0000)),
             },
             green: Coord {
-                x: u10_hi(raw[4], u2_from_masks(rg, 0b0000_1000, 0b0000_0100)),
-                y: u10_hi(raw[5], u2_from_masks(rg, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(chroma[4], u2_from_masks(rg, 0b0000_1000, 0b0000_0100)),
+                y: u10_hi(chroma[5], u2_from_masks(rg, 0b0000_0010, 0b0000_0001)),
             },
             blue: Coord {
-                x: u10_hi(raw[6], u2_from_masks(bw, 0b1000_0000, 0b0100_0000)),
-                y: u10_hi(raw[7], u2_from_masks(bw, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(chroma[6], u2_from_masks(bw, 0b1000_0000, 0b0100_0000)),
+                y: u10_hi(chroma[7], u2_from_masks(bw, 0b0010_0000, 0b0001_0000)),
             },
             white: Coord {
-                x: u10_hi(raw[8], u2_from_masks(bw, 0b0000_1000, 0b0000_0100)),
-                y: u10_hi(raw[9], u2_from_masks(bw, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(chroma[8], u2_from_masks(bw, 0b0000_1000, 0b0000_0100)),
+                y: u10_hi(chroma[9], u2_from_masks(bw, 0b0000_0010, 0b0000_0001)),
             },
         }
     }

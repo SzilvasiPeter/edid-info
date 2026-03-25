@@ -1,4 +1,4 @@
-use edid_info::base::descriptors::{DTD_NUM, DTD_OFF, Descriptors, Mode};
+use edid_info::base::descriptors::{DTD_OFF, Descriptors, Mode};
 use edid_info::common::DESC_LEN;
 
 #[test]
@@ -8,8 +8,7 @@ fn parse_dtd_synthetic() {
     raw[off] = 1;
     raw[off + 1] = 29;
 
-    let dtd_bytes: [u8; DTD_NUM * DESC_LEN] = std::array::from_fn(|i| raw[DTD_OFF + i]);
-    let out = Descriptors::parse(&dtd_bytes);
+    let out = Descriptors::parse(&raw);
     match out.mode(1) {
         Some(Mode::Timing(timing)) => assert_eq!(timing.pixel_clock_hz(), 74_250_000),
         _ => panic!("slot 1 should parse as timing"),

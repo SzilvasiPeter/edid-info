@@ -21,6 +21,10 @@ path = "tests/base/descriptor/mod.rs"
 name = "cta"
 path = "tests/extensions/cta/mod.rs"
 
+[[bench]]
+name = "parse"
+path = "benches/parse.rs"
+
 [dependencies]
 
 [lints.rust]

@@ -3,10 +3,14 @@ use edid_info::base::basic::{Basic, BitDepth, DigitalType, DisplayType, InputKin
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
+fn base(raw: &[u8]) -> [u8; 128] {
+    core::array::from_fn(|i| raw[i])
+}
+
 #[test]
 fn parse_basic_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
-    let raw: [u8; 5] = std::array::from_fn(|i| ACER[20 + i]);
+    let raw = base(ACER);
     let out = Basic::parse(&raw);
 
     assert_eq!(
@@ -33,7 +37,7 @@ fn parse_basic_acer_ek221q_h() {
 
 #[test]
 fn parse_basic_asus_rog_pg27u() {
-    let raw: [u8; 5] = std::array::from_fn(|i| ASUS[20 + i]);
+    let raw = base(ASUS);
     let out = Basic::parse(&raw);
 
     assert_eq!(

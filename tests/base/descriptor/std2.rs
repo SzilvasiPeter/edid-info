@@ -1,20 +1,6 @@
-use edid_info::base::descriptor::std2::Std2;
+use edid_info::base::descriptor::monitor::MonitorDesc;
 
-const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
-const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
-
-#[test]
-fn parse_std2_not_present_acer_ek221q_h() {
-    let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    assert!(Std2::parse(&raw).is_none());
-}
-
-#[test]
-fn parse_std2_not_present_asus_rog_pg27u() {
-    let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    assert!(Std2::parse(&raw).is_none());
-}
-
+// TODO: use real world example instead of synthetic
 #[test]
 fn parse_std2_synthetic() {
     let mut raw = [0u8; 18];
@@ -33,7 +19,8 @@ fn parse_std2_synthetic() {
     raw[16] = 0x06;
     raw[17] = 0xFF;
 
-    let std2 = Std2::parse(&raw).expect("std2 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let std2 = desc.std2().expect("std2 parse");
 
     assert!(std2.mode(0).is_some());
     assert!(std2.mode(1).is_some());
@@ -53,7 +40,8 @@ fn parse_std2_empty_modes() {
     raw[5] = 0x01;
     raw[6] = 0x01;
 
-    let std2 = Std2::parse(&raw).expect("std2 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let std2 = desc.std2().expect("std2 parse");
 
     assert!(std2.mode(0).is_none());
     assert!(std2.mode(1).is_some());

@@ -3,9 +3,13 @@ use edid_info::base::established::{Established, EstablishedTiming};
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
+fn base(raw: &[u8]) -> [u8; 128] {
+    core::array::from_fn(|i| raw[i])
+}
+
 #[test]
 fn parse_established_acer_ek221q_h() {
-    let raw: [u8; 3] = std::array::from_fn(|i| ACER[35 + i]);
+    let raw = base(ACER);
     let out = Established::new(&raw);
     let list = out.supported();
 
@@ -31,7 +35,7 @@ fn parse_established_acer_ek221q_h() {
 
 #[test]
 fn parse_established_asus_rog_pg27u() {
-    let raw: [u8; 3] = std::array::from_fn(|i| ASUS[35 + i]);
+    let raw = base(ASUS);
     let out = Established::new(&raw);
     let list = out.supported();
 

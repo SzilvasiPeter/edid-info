@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::std3::Std3;
+use edid_info::base::descriptor::monitor::MonitorDesc;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -6,13 +6,15 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 #[test]
 fn parse_std3_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    assert!(Std3::parse(&raw).is_none());
+    let std3 = MonitorDesc::parse(&raw).and_then(|desc| desc.std3());
+    assert!(std3.is_none());
 }
 
 #[test]
 fn parse_std3_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    assert!(Std3::parse(&raw).is_none());
+    let std3 = MonitorDesc::parse(&raw).and_then(|desc| desc.std3());
+    assert!(std3.is_none());
 }
 
 #[test]
@@ -27,7 +29,8 @@ fn parse_std3_synthetic() {
     raw[10] = 0x10;
     raw[11] = 0x20;
 
-    let std3 = Std3::parse(&raw).expect("std3 parse");
+    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let std3 = desc.std3().expect("std3 parse");
 
     assert_eq!(std3.map(), [0x01, 0x02, 0x04, 0x08, 0x10, 0x20]);
     assert_eq!(std3.byte(0), Some(0x01));
@@ -53,7 +56,8 @@ fn parse_std3_wrong_version() {
     raw[3] = 0xF7;
     raw[5] = 0x09;
 
-    assert!(Std3::parse(&raw).is_none());
+    let std3 = MonitorDesc::parse(&raw).and_then(|desc| desc.std3());
+    assert!(std3.is_none());
 }
 
 #[test]
@@ -63,5 +67,6 @@ fn parse_std3_non_zero_padding() {
     raw[5] = 0x10;
     raw[12] = 0x01;
 
-    assert!(Std3::parse(&raw).is_none());
+    let std3 = MonitorDesc::parse(&raw).and_then(|desc| desc.std3());
+    assert!(std3.is_none());
 }

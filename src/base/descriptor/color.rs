@@ -19,10 +19,8 @@ pub struct Color {
 
 impl Color {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xF9 || raw[4] != 0 {
-            return None;
-        }
+    pub(crate) const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+        // TODO: move to the `monitor::validate` function
         if raw[5] != VERSION {
             return None;
         }

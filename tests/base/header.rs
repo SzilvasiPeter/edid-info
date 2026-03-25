@@ -12,9 +12,13 @@ const WG: &[u8] = include_bytes!("../data/WG@_UNKNOWN.edid");
 const PHL_BAD_DATE: &[u8] = include_bytes!("../data/PHL_221V8.edid");
 const TSB_MODEL_YEAR: &[u8] = include_bytes!("../data/TSB_TV.edid");
 
+fn base(raw: &[u8]) -> [u8; 128] {
+    core::array::from_fn(|i| raw[i])
+}
+
 #[test]
 fn parse_header_acer_ek221q_h() {
-    let raw: [u8; 20] = std::array::from_fn(|i| ACER[i]);
+    let raw = base(ACER);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -43,7 +47,7 @@ fn parse_header_acer_ek221q_h() {
 
 #[test]
 fn parse_header_asus_rog_pg27u() {
-    let raw: [u8; 20] = std::array::from_fn(|i| ASUS[i]);
+    let raw = base(ASUS);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -69,7 +73,7 @@ fn parse_header_asus_rog_pg27u() {
 
 #[test]
 fn parse_header_cm_cm2400t() {
-    let raw: [u8; 20] = std::array::from_fn(|i| CM[i]);
+    let raw = base(CM);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -101,7 +105,7 @@ fn parse_header_cm_cm2400t() {
 
 #[test]
 fn parse_header_cs_1920x1080() {
-    let raw: [u8; 20] = std::array::from_fn(|i| CS[i]);
+    let raw = base(CS);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -130,7 +134,7 @@ fn parse_header_cs_1920x1080() {
 
 #[test]
 fn parse_header_lpl_lp154w01_zeroweek() {
-    let raw: [u8; 20] = std::array::from_fn(|i| LPL[i]);
+    let raw = base(LPL);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -160,7 +164,7 @@ fn parse_header_lpl_lp154w01_zeroweek() {
 
 #[test]
 fn parse_header_ms_hsd_1903_a00() {
-    let raw: [u8; 20] = std::array::from_fn(|i| MS[i]);
+    let raw = base(MS);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -193,7 +197,7 @@ fn parse_header_ms_hsd_1903_a00() {
 
 #[test]
 fn parse_header_tk_tianma() {
-    let raw: [u8; 20] = std::array::from_fn(|i| TK[i]);
+    let raw = base(TK);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -225,7 +229,7 @@ fn parse_header_tk_tianma() {
 
 #[test]
 fn parse_header_wg_unknown() {
-    let raw: [u8; 20] = std::array::from_fn(|i| WG[i]);
+    let raw = base(WG);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -259,7 +263,7 @@ fn parse_header_wg_unknown() {
 
 #[test]
 fn parse_header_phl_bad_date() {
-    let raw: [u8; 20] = std::array::from_fn(|i| PHL_BAD_DATE[i]);
+    let raw = base(PHL_BAD_DATE);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),
@@ -291,7 +295,7 @@ fn parse_header_phl_bad_date() {
 
 #[test]
 fn parse_header_tsb_model_year() {
-    let raw: [u8; 20] = std::array::from_fn(|i| TSB_MODEL_YEAR[i]);
+    let raw = base(TSB_MODEL_YEAR);
     let out = Header::new(&raw);
     assert_eq!(
         out.pattern(),

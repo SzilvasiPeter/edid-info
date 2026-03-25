@@ -15,7 +15,7 @@
 //! | 18     | 1    | EDID version major |
 //! | 19     | 1    | EDID version minor |
 
-use crate::common::{FailureKind, Validation, Version, WarningKind, slice};
+use crate::common::{BLOCK_LEN, FailureKind, Validation, Version, WarningKind};
 
 /// Header offset in the base block.
 pub const HEADER_OFF: usize = 0;
@@ -49,7 +49,7 @@ pub struct Header {
 }
 
 impl Header {
-    /// Parses a header from 20 raw bytes.
+    /// Parses a header from base block bytes.
     ///
     /// Byte sizes and endianness:
     /// - `pattern`: 8 bytes, raw
@@ -61,16 +61,20 @@ impl Header {
     /// - `major`: 1 byte, raw
     /// - `minor`: 1 byte, raw
     #[must_use]
-    pub const fn new(raw: &[u8; HEADER_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
+        let header = &raw[HEADER_OFF..];
         Self {
-            pattern: slice(raw, 0),
-            manufacturer: u16::from_be_bytes([raw[8], raw[9]]),
-            product: u16::from_le_bytes([raw[10], raw[11]]),
-            serial: u32::from_le_bytes([raw[12], raw[13], raw[14], raw[15]]),
-            week: raw[16],
-            year: YEAR_OFFSET + raw[17] as u16,
-            major: raw[18],
-            minor: raw[19],
+            pattern: [
+                header[0], header[1], header[2], header[3], header[4], header[5], header[6],
+                header[7],
+            ],
+            manufacturer: u16::from_be_bytes([header[8], header[9]]),
+            product: u16::from_le_bytes([header[10], header[11]]),
+            serial: u32::from_le_bytes([header[12], header[13], header[14], header[15]]),
+            week: header[16],
+            year: YEAR_OFFSET + u16::from(header[17]),
+            major: header[18],
+            minor: header[19],
         }
     }
 

@@ -160,17 +160,21 @@ pub(crate) const fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
     sum == 0
 }
 
-const fn slice_unchecked<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
-    let mut out = [0u8; N];
-    let mut i = 0;
-    while i < N {
-        out[i] = raw[off + i];
-        i += 1;
-    }
-    out
-}
+// const fn slice_unchecked<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
+//     let mut out = [0u8; N];
+//     let mut i = 0;
+//     while i < N {
+//         out[i] = raw[off + i];
+//         i += 1;
+//     }
+//     out
+// }
 
-pub(crate) const fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
-    assert!(off + N <= M);
-    slice_unchecked(raw, off)
+// TODO: Check wheter making the slicing const makes any speed difference
+pub(crate) fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
+    // assert!(off + N <= M);
+    // slice_unchecked(raw, off);
+    let mut out = [0u8; N];
+    out.copy_from_slice(&raw[off..off + N]);
+    out
 }
