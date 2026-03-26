@@ -26,27 +26,93 @@ impl core::fmt::Display for Version {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum FailureKind {
-    // --- Base Edid ---
+    // --- Base & Footer ---
     /// Invalid checksum for the base block.
     BaseChecksum = 0,
-    /// Extension count in header does not match parsed blocks.
-    EdidExtCountMismatch = 1,
+    /// Extension count in footer does not match parsed blocks.
+    BaseExtCountMismatch = 1,
 
-    // --- Base Header ---
-    /// Manufacturer ID contains invalid bits (not uppercase letters).
-    HeaderMfrInvalidBits = 2,
+    // --- Header ---
+    /// Manufacturer ID contains invalid bits.
+    HeaderMfrInvalidBits = 4,
     /// Week value is invalid (greater than 54 and not 0xFF).
-    HeaderWeekInvalid = 3,
-    /// EDID major version is zero.
-    HeaderMajorInvalid = 4,
+    HeaderWeekInvalid = 5,
+    /// Major version is zero.
+    HeaderMajorInvalid = 6,
 
-    // --- Descriptor ---
+    // --- Basic Parameters ---
+    /// Color Bit Depth set to reserved value.
+    BasicColorDepthReserved = 7,
+    /// Digital Video Interface Standard set to reserved value.
+    BasicInterfaceReserved = 8,
+    /// sRGB is signaled, but chromaticities do not match.
+    BasicSrgbChromaMismatch = 32,
+    /// Chromaticities match sRGB, but sRGB is not signaled.
+    BasicSrgbNotSignaled = 33,
+
+    // --- Descriptors ---
+    /// Missing Display Product Name (mandatory in 1.4).
+    DescriptorMissingDisplayName = 2,
+    /// Missing Display Range Limits Descriptor (mandatory in 1.4).
+    DescriptorMissingRangeLimits = 3,
+    /// Invalid detailed timing descriptor ordering.
+    DescriptorOrdering = 9,
+    /// Monitor descriptor block has byte 2 nonzero.
+    DescriptorMonitorByte2NonZero = 10,
+    /// Monitor descriptor block has byte 4 nonzero.
+    DescriptorMonitorByte4NonZero = 11,
+    /// Descriptor is all zeroes (Dummy Descriptor should be used).
+    DescriptorAllZeroes = 12,
+
+    // --- Detailed Timing (DTD) ---
     /// Pixel clock is zero.
-    TimingPixelClock = 5,
+    TimingPixelClockIsZero = 13,
+    /// Missing preferred timing.
+    TimingMissingPreferred = 14,
+
+    // --- Range Limits ---
+    /// GTF is supported, but continuous frequencies are not.
+    RangeGtfNotContinuous = 15,
+    /// CVT is supported, but continuous frequencies are not.
+    RangeCvtNotContinuous = 16,
+    /// Range limits descriptor missing max dotclock.
+    RangeMaxClockNotSet = 17,
+    /// CVT descriptor byte 14 reserved bits are non-zero.
+    RangeCvtReservedByte14 = 18,
+    /// CVT descriptor invalid preferred aspect ratio.
+    RangeCvtPrefAspectRatioInvalid = 19,
+    /// CVT descriptor byte 15 reserved bits are non-zero.
+    RangeCvtReservedByte15 = 20,
+    /// CVT descriptor byte 16 reserved bits are non-zero.
+    RangeCvtReservedByte16 = 21,
+
+    // --- CVT 3-Byte ---
+    /// CVT 3-byte timing descriptor has invalid version.
+    Cvt3ByteInvalidVersion = 22,
+    /// CVT 3-byte timing byte 0 is zero (reserved).
+    Cvt3ByteByte0Zero = 23,
+    /// CVT 3-byte timing byte 1 reserved bits are non-zero.
+    Cvt3ByteByte1Reserved = 24,
+    /// CVT 3-byte timing byte 2 reserved bit is non-zero.
+    Cvt3ByteByte2Reserved = 25,
+    /// CVT 3-byte timing byte 2 supports no vertical rates.
+    Cvt3ByteNoVerticalRates = 26,
+    /// CVT 3-byte timing preferred rate not supported.
+    Cvt3BytePrefRateNotSupported = 27,
+
+    // --- Standard Timing 3 ---
+    /// Standard Timing 3 descriptor has invalid version.
+    Std3ByteInvalidVersion = 28,
+    /// Standard Timing 3 descriptor has non-zero trailing bytes.
+    Std3ByteNonZeroTrailing = 29,
+
+    // --- DCM ---
+    /// DCM descriptor has invalid version.
+    DcmInvalidVersion = 30,
 
     // --- Extension CTA ---
     /// Invalid checksum for a CTA extension block.
-    CtaChecksum = 6,
+    CtaChecksum = 31,
 }
 
 impl FailureKind {
@@ -55,12 +121,39 @@ impl FailureKind {
     pub const fn message(&self) -> &'static str {
         match self {
             Self::BaseChecksum => "Invalid base checksum",
-            Self::CtaChecksum => "Invalid CTA checksum",
-            Self::EdidExtCountMismatch => "Extension count does not match parsed blocks",
+            Self::BaseExtCountMismatch => "Extension count does not match parsed blocks",
             Self::HeaderMfrInvalidBits => "Invalid manufacturer ID bits",
             Self::HeaderWeekInvalid => "Invalid week value",
-            Self::HeaderMajorInvalid => "Invalid EDID major version",
-            Self::TimingPixelClock => "Invalid pixel clock",
+            Self::HeaderMajorInvalid => "Invalid major version",
+            Self::BasicColorDepthReserved => "Color bit depth is set to a reserved value",
+            Self::BasicInterfaceReserved => "Digital video interface is set to a reserved value",
+            Self::BasicSrgbChromaMismatch => "sRGB signaled, but chromaticities do not match",
+            Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
+            Self::DescriptorMissingDisplayName => "Missing Display Product Name",
+            Self::DescriptorMissingRangeLimits => "Missing Display Range Limits Descriptor",
+            Self::DescriptorOrdering => "Invalid descriptor ordering",
+            Self::DescriptorMonitorByte2NonZero => "Monitor descriptor has non-zero byte 2",
+            Self::DescriptorMonitorByte4NonZero => "Monitor descriptor has non-zero byte 4",
+            Self::DescriptorAllZeroes => "Descriptor is all zeroes (use dummy instead)",
+            Self::TimingPixelClockIsZero => "Pixel clock is zero",
+            Self::TimingMissingPreferred => "Missing preferred timing",
+            Self::RangeGtfNotContinuous => "GTF supported but continuous frequencies not supported",
+            Self::RangeCvtNotContinuous => "CVT supported but continuous frequencies not supported",
+            Self::RangeMaxClockNotSet => "Range limits missing max dotclock",
+            Self::RangeCvtReservedByte14 => "CVT descriptor byte 14 reserved bits are non-zero",
+            Self::RangeCvtPrefAspectRatioInvalid => "CVT descriptor invalid preferred aspect ratio",
+            Self::RangeCvtReservedByte15 => "CVT descriptor byte 15 reserved bits are non-zero",
+            Self::RangeCvtReservedByte16 => "CVT descriptor byte 16 reserved bits are non-zero",
+            Self::Cvt3ByteInvalidVersion => "CVT 3-byte timing descriptor has invalid version",
+            Self::Cvt3ByteByte0Zero => "CVT 3-byte timing byte 0 is zero (reserved)",
+            Self::Cvt3ByteByte1Reserved => "CVT 3-byte timing byte 1 reserved bits are non-zero",
+            Self::Cvt3ByteByte2Reserved => "CVT 3-byte timing byte 2 reserved bit is non-zero",
+            Self::Cvt3ByteNoVerticalRates => "CVT 3-byte timing byte 2 supports no vertical rates",
+            Self::Cvt3BytePrefRateNotSupported => "CVT 3-byte timing preferred rate not supported",
+            Self::Std3ByteInvalidVersion => "Standard Timing 3 has invalid version",
+            Self::Std3ByteNonZeroTrailing => "Standard Timing 3 has non-zero trailing bytes",
+            Self::DcmInvalidVersion => "DCM descriptor has invalid version",
+            Self::CtaChecksum => "Invalid CTA checksum",
         }
     }
 }
@@ -69,15 +162,33 @@ impl FailureKind {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum WarningKind {
-    // --- Base Header ---
+    // --- Header ---
     /// Manufacturer ID reserved bit (bit 15) is set.
     HeaderMfrReservedSet = 0,
     /// Product code is zero.
     HeaderProductInvalid = 1,
     /// Serial number is zero.
     HeaderSerialInvalid = 2,
-    /// EDID version is not 1.4.
+    /// Version is deprecated.
     HeaderVersionDeprecated = 3,
+
+    // --- Standard Timing ---
+    /// Standard Timing has a dubious odd vertical resolution.
+    StandardTimingOddVertical = 4,
+
+    // --- Range Limits ---
+    /// GTF support is deprecated.
+    RangeGtfDeprecated = 5,
+    /// CVT block corrects dotclock by more than 9.75 MHz.
+    RangeCvtDotClockLargeCorrection = 6,
+    /// CVT block does not set preferred refresh rate.
+    RangeCvtNoPreferredRefresh = 7,
+
+    // --- Basic Parameters ---
+    /// Dubious maximum image size (smaller than 10x10 cm).
+    BasicImageSizeDubious = 8,
+    /// sRGB is signaled, but the gamma is not 2.2.
+    BasicSrgbGammaInvalid = 9,
 }
 
 impl WarningKind {
@@ -85,10 +196,16 @@ impl WarningKind {
     #[must_use]
     pub const fn message(&self) -> &'static str {
         match self {
-            Self::HeaderMfrReservedSet => "Manufacturer ID reserved bit (bit 15) is set",
+            Self::HeaderMfrReservedSet => "Manufacturer ID reserved bit is set",
             Self::HeaderProductInvalid => "Invalid product code",
             Self::HeaderSerialInvalid => "Invalid serial number",
-            Self::HeaderVersionDeprecated => "Deprecated EDID version",
+            Self::HeaderVersionDeprecated => "Deprecated version",
+            Self::StandardTimingOddVertical => "Standard timing has odd vertical resolution",
+            Self::RangeGtfDeprecated => "GTF support is deprecated",
+            Self::RangeCvtDotClockLargeCorrection => "CVT dotclock correction exceeds 9.75 MHz",
+            Self::RangeCvtNoPreferredRefresh => "CVT block missing preferred refresh rate",
+            Self::BasicImageSizeDubious => "Dubious maximum image size",
+            Self::BasicSrgbGammaInvalid => "sRGB signaled, but gamma is not 2.2",
         }
     }
 }
@@ -160,20 +277,8 @@ pub(crate) const fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
     sum == 0
 }
 
-// const fn slice_unchecked<const N: usize>(raw: &[u8], off: usize) -> [u8; N] {
-//     let mut out = [0u8; N];
-//     let mut i = 0;
-//     while i < N {
-//         out[i] = raw[off + i];
-//         i += 1;
-//     }
-//     out
-// }
-
-// TODO: Check wheter making the slicing const makes any speed difference
+/// Copy `N` bytes from `raw` starting at `off`.
 pub(crate) fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
-    // assert!(off + N <= M);
-    // slice_unchecked(raw, off);
     let mut out = [0u8; N];
     out.copy_from_slice(&raw[off..off + N]);
     out

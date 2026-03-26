@@ -6,7 +6,7 @@ license = "MIT"
 description = "Lightweight Rust library for reading EDID data"
 repository = "https://github.com/SzilvasiPeter/edid-info"
 readme = "README.md"
-keywords = ["edid", "display", "monitor", "parsing", "hardware"]
+keywords = ["edid", "display", "monitor", "parsing", "hardware", "no-std"]
 categories = ["parsing", "hardware-support", "multimedia"]
 
 [[test]]

@@ -49,7 +49,7 @@ pub struct Header {
 }
 
 impl Header {
-    /// Parses a header from base block bytes.
+    /// Parses the header from base block bytes.
     ///
     /// Byte sizes and endianness:
     /// - `pattern`: 8 bytes, raw
@@ -130,7 +130,7 @@ impl Header {
         }
     }
 
-    /// Validates the header fields.
+    /// Validates the header blocks.
     ///
     /// Checks for:
     /// - **Failures**: Invalid manufacturer ID characters, invalid week number, or zero major version.

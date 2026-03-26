@@ -1,6 +1,6 @@
 //! EDID parsing for the 128-byte [`Base`] block and [`Extension`]s.
 //!
-//! Parse flow: validate length, parse base header + checksum, then parse
+//! Parse flow: validate length, parse base block, then parse
 //! extensions and keep unknown blocks as raw bytes.
 
 use crate::base::Base;
@@ -35,30 +35,19 @@ impl<'a> Edid<'a> {
     /// Returns [`ParseError::BadHeader`] for an invalid header pattern.
     /// Returns [`ParseError::ExtCountTooLarge`] for more than the max blocks.
     pub fn parse(raw: &'a [u8]) -> Result<Self, ParseError> {
-        const MAX_LEN: usize = BLOCK_LEN * (MAX_EXT + 1);
-
         if raw.len() < BLOCK_LEN || !raw.len().is_multiple_of(BLOCK_LEN) {
             return Err(ParseError::InvalidLen);
         }
 
-        if raw[0] != 0x00
-            || raw[1] != 0xFF
-            || raw[2] != 0xFF
-            || raw[3] != 0xFF
-            || raw[4] != 0xFF
-            || raw[5] != 0xFF
-            || raw[6] != 0xFF
-            || raw[7] != 0x00
-        {
-            return Err(ParseError::BadHeader);
-        }
-
-        if raw.len() > MAX_LEN {
+        if raw.len() > BLOCK_LEN * (MAX_EXT + 1) {
             return Err(ParseError::ExtCountTooLarge);
         }
 
-        let blocks = raw.len() / BLOCK_LEN;
-        let ext_len = blocks - 1;
+        if raw[0..8] != [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00] {
+            return Err(ParseError::BadHeader);
+        }
+
+        let ext_len = (raw.len() / BLOCK_LEN) - 1;
         Ok(Self { raw, ext_len })
     }
 
@@ -92,14 +81,14 @@ impl<'a> Edid<'a> {
         self.collect_extensions(self.ext_len)
     }
 
-    /// Validates the EDID data.
+    /// Validates the full (base and extension(s) blocks) EDID data.
     #[must_use]
     pub fn validate(&self) -> Validation {
         let base = self.base();
         let ext_num = base.footer().extension_num() as usize;
         Validation::new()
             .then(base.validate())
-            .fail_if(ext_num != self.ext_len, FailureKind::EdidExtCountMismatch)
+            .fail_if(ext_num != self.ext_len, FailureKind::BaseExtCountMismatch)
     }
 
     fn collect_extensions(&self, max: usize) -> [Extension; MAX_EXT] {

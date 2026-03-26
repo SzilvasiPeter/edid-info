@@ -25,13 +25,16 @@ pub struct Footer {
 }
 
 impl Footer {
-    /// Parses a footer from 2 raw bytes.
+    /// Parses a footer from base block bytes.
+    ///
+    /// Byte sizes:
+    /// - `extension_num`: 1 byte
+    /// - `checksum`: 1 byte
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        let footer = &raw[FOOTER_OFF..];
+    pub const fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         Self {
-            extension_num: footer[0],
-            checksum: footer[1],
+            extension_num: raw[FOOTER_OFF],
+            checksum: raw[FOOTER_OFF + 1],
         }
     }
 

@@ -207,7 +207,10 @@ impl DetailedTiming {
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        Validation::new().fail_if(self.pixel_clock_10khz == 0, FailureKind::TimingPixelClock)
+        Validation::new().fail_if(
+            self.pixel_clock_10khz == 0,
+            FailureKind::TimingPixelClockIsZero,
+        )
     }
 }
 

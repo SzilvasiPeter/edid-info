@@ -4,8 +4,8 @@
 //! name, range limits, and color characteristics. Identified by
 //! bytes 0–2 being zero.
 
-use super::color::Color;
 use super::cvt3::Cvt3;
+use super::dcm::Color;
 use super::range::Range;
 use super::std2::Std2;
 use super::std3::Std3;

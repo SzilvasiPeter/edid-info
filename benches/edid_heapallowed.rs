@@ -100,7 +100,7 @@ impl Edid {
         let ext_num = base.footer().extension_num() as usize;
         Validation::new()
             .then(base.validate())
-            .fail_if(ext_num != self.ext_len, FailureKind::EdidExtCountMismatch)
+            .fail_if(ext_num != self.ext_len, FailureKind::BaseExtCountMismatch)
     }
 
     fn block_at(&self, idx: usize) -> [u8; BLOCK_LEN] {
