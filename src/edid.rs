@@ -81,7 +81,7 @@ impl<'a> Edid<'a> {
         self.collect_extensions(self.ext_len)
     }
 
-    /// Validates the full (base and extension(s) blocks) EDID data.
+    /// Validates the all (base and extension(s) blocks) EDID data.
     #[must_use]
     pub fn validate(&self) -> Validation {
         let base = self.base();

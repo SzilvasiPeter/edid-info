@@ -181,6 +181,7 @@ impl Basic {
         VideoInput::parse(self.input)
     }
 
+    // TODO: Add field for landscape aspect ratio when height is zero
     /// Horizontal screen size, in centimetres (range 1–255).
     /// If vertical screen size is 0, landscape aspect ratio (range 1.00–3.54),
     /// datavalue = (AR×100) − 99 (example: 16:9, 79; 4:3, 34.)
@@ -189,6 +190,7 @@ impl Basic {
         self.width_cm
     }
 
+    // TODO: Add field for portrait aspect ratio when width is zero
     /// Vertical screen size, in centimetres.
     /// If horizontal screen size is 0, portrait aspect ratio (range 0.28–0.99),
     /// datavalue = (100/AR) − 99 (example: 9:16, 79; 3:4, 34.)
