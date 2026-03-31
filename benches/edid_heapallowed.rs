@@ -59,38 +59,39 @@ impl Edid {
             return Err(ParseError::ExtCountTooLarge);
         }
 
-        let blocks = raw.len() / BLOCK_LEN;
-        let ext_len = blocks - 1;
-        Ok(Self {
-            raw: Vec::from(raw),
-            ext_len,
-        })
+        let ext_len = (raw.len() / BLOCK_LEN) - 1;
+        let raw = Vec::from(raw);
+        Ok(Self { raw, ext_len })
     }
 
     /// Returns the base block.
     ///
     /// # Panics
     ///
-    /// Panics if the internal buffer is shorter than 128 bytes. This should
-    /// never happen because `Edid::parse` validates the length.
+    /// Panics if the internal buffer is shorter than 128 bytes.
+    /// This should never happen because `Edid::parse` validates the length.
     #[must_use]
     pub fn base(&self) -> Base<'_> {
         let base_raw: &[u8; BLOCK_LEN] = self.raw[..BLOCK_LEN].try_into().unwrap();
         Base::new(base_raw)
     }
 
-    /// Returns extensions up to the reported footer count.
+    /// Returns all available extension blocks.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal buffer is shorter than expected.
+    /// This should never happen because `Edid::parse` validates the length.
     #[must_use]
     pub fn extensions(&self) -> Vec<Extension> {
-        let ext_num = self.base().footer().extension_num() as usize;
-        let max = core::cmp::min(self.ext_len, ext_num);
-        self.collect_extensions(max)
-    }
-
-    /// Returns extensions based on the available blocks.
-    #[must_use]
-    pub fn extensions_all(&self) -> Vec<Extension> {
-        self.collect_extensions(self.ext_len)
+        let mut out = Vec::with_capacity(self.ext_len);
+        for i in 0..self.ext_len {
+            let off = BLOCK_LEN * (i + 1);
+            let block: [u8; BLOCK_LEN] = self.raw[off..off + BLOCK_LEN].try_into().unwrap();
+            let item = Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta);
+            out.push(item);
+        }
+        out
     }
 
     /// Validates the EDID data.
@@ -101,24 +102,5 @@ impl Edid {
         Validation::new()
             .then(base.validate())
             .fail_if(ext_num != self.ext_len, FailureKind::BaseExtCountMismatch)
-    }
-
-    fn block_at(&self, idx: usize) -> [u8; BLOCK_LEN] {
-        let off = idx * BLOCK_LEN;
-        let mut out = [0u8; BLOCK_LEN];
-        out.copy_from_slice(&self.raw[off..off + BLOCK_LEN]);
-        out
-    }
-
-    fn collect_extensions(&self, max: usize) -> Vec<Extension> {
-        let mut out = Vec::with_capacity(max);
-        let mut i = 0;
-        while i < max {
-            let block = self.block_at(i + 1);
-            let ext = Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta);
-            out.push(ext);
-            i += 1;
-        }
-        out
     }
 }

@@ -10,7 +10,7 @@ lint:
 
 test:
     cargo test --doc
-    cargo +nightly test --all-targets --all-features
+    cargo test --all-targets --all-features
     cargo +nightly bench
 
 cov:
