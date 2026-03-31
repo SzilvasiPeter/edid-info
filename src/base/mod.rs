@@ -52,7 +52,7 @@ impl<'a> Base<'a> {
 
     /// Returns basic display parameters (video input, screen size, etc.).
     #[must_use]
-    pub const fn basic(&self) -> basic::Basic {
+    pub fn basic(&self) -> basic::Basic {
         basic::Basic::parse(self.raw)
     }
 
@@ -82,7 +82,7 @@ impl<'a> Base<'a> {
 
     /// Returns the extension flag and checksum.
     #[must_use]
-    pub const fn footer(&self) -> footer::Footer {
+    pub fn footer(&self) -> footer::Footer {
         footer::Footer::new(self.raw)
     }
 

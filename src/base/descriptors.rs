@@ -34,10 +34,11 @@ impl Descriptors {
     /// Parses descriptors from base block bytes.
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
-        let mut modes = [None; DTD_NUM];
-        let mut i = 0;
-        let desc = &raw[DTD_OFF..];
+        let desc = &raw[DTD_OFF..DTD_OFF + (DESC_LEN * DTD_NUM)];
 
+        // TODO: Make this more concise, no need to please const anymore.
+        let mut i = 0;
+        let mut modes = [None; DTD_NUM];
         while i < DTD_NUM {
             let offset = i * DESC_LEN;
             let Ok(chunk): Result<&[u8; DESC_LEN], _> = desc[offset..offset + DESC_LEN].try_into()
@@ -57,6 +58,7 @@ impl Descriptors {
         Self { modes }
     }
 
+    // TODO: Just return with the array (it is only 4 elements), then the caller can index to its heart content.
     #[must_use]
     pub const fn mode(&self, i: usize) -> Option<Mode> {
         if i < DTD_NUM { self.modes[i] } else { None }

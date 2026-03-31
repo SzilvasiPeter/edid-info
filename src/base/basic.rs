@@ -148,7 +148,7 @@ pub enum DisplayType {
 /// Basic display parameters containing video input parameters, screen information, and supported features.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Basic {
-    input: u8,
+    video_input: u8,
     width_cm: u8,
     height_cm: u8,
     gamma: u8,
@@ -159,26 +159,27 @@ impl Basic {
     /// Parses the basic information from base block bytes.
     ///
     /// Byte sizes:
-    /// - `input`: 1 byte
+    /// - `video_input`: 1 byte
     /// - `width_cm`: 1 byte
     /// - `height_cm`: 1 byte
     /// - `gamma`: 1 byte
     /// - `features`: 1 byte
     #[must_use]
-    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+        let basic = &raw[BASIC_OFF..BASIC_OFF + BASIC_LEN];
         Self {
-            input: raw[BASIC_OFF],
-            width_cm: raw[BASIC_OFF + 1],
-            height_cm: raw[BASIC_OFF + 2],
-            gamma: raw[BASIC_OFF + 3],
-            features: raw[BASIC_OFF + 4],
+            video_input: basic[0],
+            width_cm: basic[1],
+            height_cm: basic[2],
+            gamma: basic[3],
+            features: basic[4],
         }
     }
 
     /// Video input parameters bitmap.
     #[must_use]
-    pub const fn input(&self) -> VideoInput {
-        VideoInput::parse(self.input)
+    pub const fn video_input(&self) -> VideoInput {
+        VideoInput::parse(self.video_input)
     }
 
     // TODO: Add field for landscape aspect ratio when height is zero
@@ -214,7 +215,7 @@ impl Basic {
     /// Supported features bitmap.
     #[must_use]
     pub const fn features(&self) -> Features {
-        let is_digital = matches!(self.input().kind(), InputKind::Digital { .. });
+        let is_digital = matches!(self.video_input().kind(), InputKind::Digital { .. });
         Features::parse(self.features, is_digital)
     }
 
@@ -222,7 +223,7 @@ impl Basic {
     #[must_use]
     pub const fn validate(&self) -> Validation {
         let mut validation = Validation::new();
-        if let InputKind::Digital { depth, iface } = self.input().kind() {
+        if let InputKind::Digital { depth, iface } = self.video_input().kind() {
             validation = validation.fail_if(
                 matches!(depth, BitDepth::Reserved),
                 FailureKind::BasicColorDepthReserved,
@@ -279,9 +280,9 @@ impl VideoInput {
     /// - `bit 1`: Sync on green
     /// - `bit 0`: Serrated sync
     #[must_use]
-    pub const fn parse(raw: u8) -> Self {
-        let kind = if is_set(raw, 7) {
-            let depth = match get_bits(raw, 0b0111_0000, 4) {
+    pub const fn parse(video_input: u8) -> Self {
+        let kind = if is_set(video_input, 7) {
+            let depth = match get_bits(video_input, 0b0111_0000, 4) {
                 0b000 => BitDepth::Undef,
                 0b001 => BitDepth::B6,
                 0b010 => BitDepth::B8,
@@ -291,7 +292,7 @@ impl VideoInput {
                 0b110 => BitDepth::B16,
                 _ => BitDepth::Reserved,
             };
-            let iface = match get_bits(raw, 0b0000_1111, 0) {
+            let iface = match get_bits(video_input, 0b0000_1111, 0) {
                 0 => Interface::Undef,
                 1 => Interface::Dvi,
                 2 => Interface::HdmiA,
@@ -302,7 +303,7 @@ impl VideoInput {
             };
             InputKind::Digital { depth, iface }
         } else {
-            let level = match get_bits(raw, 0b0110_0000, 5) {
+            let level = match get_bits(video_input, 0b0110_0000, 5) {
                 0b00 => Level::V700_300,
                 0b01 => Level::V714_286,
                 0b10 => Level::V1000_400,
@@ -310,11 +311,11 @@ impl VideoInput {
             };
             InputKind::Analog {
                 level,
-                blank_to_black: is_set(raw, 4),
-                separate_sync: is_set(raw, 3),
-                composite_sync: is_set(raw, 2),
-                sync_on_green: is_set(raw, 1),
-                serrated_sync: is_set(raw, 0),
+                blank_to_black: is_set(video_input, 4),
+                separate_sync: is_set(video_input, 3),
+                composite_sync: is_set(video_input, 2),
+                sync_on_green: is_set(video_input, 1),
+                serrated_sync: is_set(video_input, 0),
             }
         };
         Self { kind }
@@ -367,16 +368,16 @@ impl Features {
     /// - `timing_mode`: bit 1, preferred timing mode
     /// - `timing_continuous`: bit 0, continuous timings with GTF or CVT
     #[must_use]
-    pub const fn parse(raw: u8, is_digital: bool) -> Self {
+    pub const fn parse(features: u8, is_digital: bool) -> Self {
         let display = if is_digital {
-            DisplayType::Digital(match get_bits(raw, 0b0001_1000, 3) {
+            DisplayType::Digital(match get_bits(features, 0b0001_1000, 3) {
                 0b00 => DigitalType::Rgb444,
                 0b01 => DigitalType::Rgb444Y444,
                 0b10 => DigitalType::Rgb444Y422,
                 _ => DigitalType::Rgb444Y444Y422,
             })
         } else {
-            DisplayType::Analog(match get_bits(raw, 0b0001_1000, 3) {
+            DisplayType::Analog(match get_bits(features, 0b0001_1000, 3) {
                 0b00 => AnalogType::MonoGray,
                 0b01 => AnalogType::Rgb,
                 0b10 => AnalogType::NonRgb,
@@ -384,13 +385,13 @@ impl Features {
             })
         };
         Self {
-            standby: is_set(raw, 7),
-            suspend: is_set(raw, 6),
-            active_off: is_set(raw, 5),
+            standby: is_set(features, 7),
+            suspend: is_set(features, 6),
+            active_off: is_set(features, 5),
             display,
-            standard_rgb: is_set(raw, 2),
-            timing_mode: is_set(raw, 1),
-            timing_continuous: is_set(raw, 0),
+            standard_rgb: is_set(features, 2),
+            timing_mode: is_set(features, 1),
+            timing_continuous: is_set(features, 0),
         }
     }
 

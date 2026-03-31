@@ -34,9 +34,15 @@ pub struct Chroma {
 }
 
 impl Chroma {
+    // TODO: Add byte size and byte packing info in docstring.
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
-        let chroma = &raw[CHROMA_OFF..];
+        let chroma = &raw[CHROMA_OFF..CHROMA_OFF + CHROMA_LEN];
+        // TODO: Make the bit packing more readable.
+        // For example, first gather the LSBs and MSBs, then combine them
+        // Use packing LSBs + MSBs so the indexing is easier to follow.
+        // Mask the LSBs before packing.
+        // Use better name for the bit packing.
         let rg = chroma[0];
         let bw = chroma[1];
         Self {

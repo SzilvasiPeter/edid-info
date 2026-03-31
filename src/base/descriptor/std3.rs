@@ -15,7 +15,7 @@ pub struct Std3 {
 
 impl Std3 {
     #[must_use]
-    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         // TODO: Move this to the `monitor::validate` function
         if raw[5] != VERSION {
             return None;

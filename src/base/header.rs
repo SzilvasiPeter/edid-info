@@ -62,7 +62,7 @@ impl Header {
     /// - `minor`: 1 byte, raw
     #[must_use]
     pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        let header = &raw[HEADER_OFF..];
+        let header = &raw[HEADER_OFF..HEADER_OFF + HEADER_LEN];
         Self {
             pattern: [
                 header[0], header[1], header[2], header[3], header[4], header[5], header[6],

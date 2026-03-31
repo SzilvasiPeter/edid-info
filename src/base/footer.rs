@@ -31,10 +31,11 @@ impl Footer {
     /// - `extension_num`: 1 byte
     /// - `checksum`: 1 byte
     #[must_use]
-    pub const fn new(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
+        let footer = &raw[FOOTER_OFF..FOOTER_OFF + FOOTER_LEN];
         Self {
-            extension_num: raw[FOOTER_OFF],
-            checksum: raw[FOOTER_OFF + 1],
+            extension_num: footer[0],
+            checksum: footer[1],
         }
     }
 

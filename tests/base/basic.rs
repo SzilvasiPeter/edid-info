@@ -21,7 +21,7 @@ fn parse_basic_acer_ek221q_h() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Digital {
             depth: BitDepth::Undef,
             iface: Interface::Undef,
@@ -53,7 +53,7 @@ fn parse_basic_asus_rog_pg27u() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Digital {
             depth: BitDepth::B10,
             iface: Interface::DisplayPort,
@@ -85,7 +85,7 @@ fn parse_basic_phl_221v8() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Analog {
             level: Level::V700_000,
             blank_to_black: false,
@@ -121,7 +121,7 @@ fn parse_basic_rol_rolsen_c707n() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Analog {
             level: Level::V700_300,
             blank_to_black: false,
@@ -157,7 +157,7 @@ fn parse_basic_tsb_tv() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Analog {
             level: Level::V700_300,
             blank_to_black: false,
@@ -193,7 +193,7 @@ fn parse_basic_vit_vt988() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Analog {
             level: Level::V700_300,
             blank_to_black: false,
@@ -229,7 +229,7 @@ fn parse_basic_wg_unknown() {
     let out = Basic::parse(&raw);
 
     assert_eq!(
-        out.input().kind(),
+        out.video_input().kind(),
         InputKind::Analog {
             level: Level::V700_300,
             blank_to_black: false,

@@ -72,7 +72,7 @@ pub struct WhitePoint {
 
 impl WhitePoint {
     #[must_use]
-    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Self {
+    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
         let first = Point::parse([raw[5], raw[6], raw[7], raw[8], raw[9]]);
         let second = Point::parse([raw[10], raw[11], raw[12], raw[13], raw[14]]);
         let pad = [raw[15], raw[16], raw[17]];

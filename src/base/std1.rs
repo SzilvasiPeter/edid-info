@@ -35,10 +35,12 @@ pub struct Std1 {
 }
 
 impl Std1 {
+    // TODO: add byte structure explaination in the docstring
     /// Parses the standard timings from base block bytes.
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
-        let std1 = &raw[STANDARD_OFF..];
+        let std1 = &raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN];
+        // TODO: Make this more concise, no need to please const anymore.
         let mut modes = [None; STANDARD_NUM];
         let mut i = 0;
         while i < STANDARD_NUM {
@@ -96,8 +98,9 @@ impl Timing {
     }
 }
 
+// TODO: add docstring
 #[must_use]
-pub(crate) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing> {
+pub(super) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing> {
     if x_byte == 0b1 && y_byte == 0b1 {
         return None;
     }

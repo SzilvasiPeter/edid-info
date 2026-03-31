@@ -245,7 +245,7 @@ pub struct Range {
 
 impl Range {
     #[must_use]
-    pub(crate) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         // TODO: the reserved byte not fatal, move to the `monitor::validate` method.
         if (raw[4] & 0xF0) != 0 {
             return None;

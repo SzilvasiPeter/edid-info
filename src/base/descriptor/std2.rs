@@ -17,7 +17,8 @@ pub struct Std2 {
 
 impl Std2 {
     #[must_use]
-    pub(crate) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
+    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
+        // TODO: Make this more concise, no need to please const anymore.
         let mut modes = [None; MODE_NUM];
         let mut i = 0;
         while i < MODE_NUM {
