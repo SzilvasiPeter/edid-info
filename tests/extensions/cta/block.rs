@@ -1,4 +1,4 @@
-use edid_info::extensions::cta::{Cta, block::BlockTag};
+use edid_info::extensions::cta::block::BlockTag;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -6,14 +6,14 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 #[test]
 fn parse_cta_acer_ek221q_h() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
-    let header = out.header();
-    assert_eq!(header.rev(), 3);
-    assert_eq!(header.native_dtd_num(), 1);
-    assert!(header.underscan());
-    assert!(header.basic_audio());
-    assert!(header.ycbcr_444());
-    assert!(header.ycbcr_422());
+    let out = super::parse_cta(&raw);
+
+    assert_eq!(out.revision(), 3);
+    assert_eq!(out.native_dtd_num(), 1);
+    assert!(out.underscan());
+    assert!(out.basic_audio());
+    assert!(out.ycbcr_444());
+    assert!(out.ycbcr_422());
 
     let blocks: Vec<_> = out.data_blocks().collect();
     assert_eq!(blocks.len(), 5);
@@ -40,14 +40,14 @@ fn parse_cta_acer_ek221q_h() {
 #[test]
 fn parse_cta_asus_rog_pg27u() {
     let raw: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
-    let header = out.header();
-    assert_eq!(header.rev(), 3);
-    assert_eq!(header.native_dtd_num(), 1);
-    assert!(header.underscan());
-    assert!(header.basic_audio());
-    assert!(header.ycbcr_444());
-    assert!(header.ycbcr_422());
+    let out = super::parse_cta(&raw);
+
+    assert_eq!(out.revision(), 3);
+    assert_eq!(out.native_dtd_num(), 1);
+    assert!(out.underscan());
+    assert!(out.basic_audio());
+    assert!(out.ycbcr_444());
+    assert!(out.ycbcr_422());
 
     let blocks: Vec<_> = out.data_blocks().collect();
     assert_eq!(blocks.len(), 6);

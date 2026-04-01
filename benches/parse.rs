@@ -47,8 +47,9 @@ fn base_edid_zerocopy(b: &mut test::Bencher) {
 fn extensions_edid_heap(b: &mut test::Bencher) {
     let edid = HeapEdid::parse(HUGE).expect("parse");
     b.iter(|| {
-        let ext = edid.extensions();
-        test::black_box(ext);
+        for ext in edid.extensions() {
+            test::black_box(ext);
+        }
     });
 }
 

@@ -1,5 +1,5 @@
+use edid_info::extensions::cta::block::BlockTag;
 use edid_info::extensions::cta::speaker::Speaker;
-use edid_info::extensions::cta::{Cta, block::BlockTag};
 
 #[test]
 fn parse_cta_room_config() {
@@ -24,7 +24,7 @@ fn parse_cta_room_config() {
     let chk = (256u16 - (sum % 256)) % 256;
     raw[127] = u8::try_from(chk).expect("checksum byte");
 
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
     let block = out.data_blocks().next().expect("block");
     assert_eq!(block.tag(), BlockTag::Extended);
     assert_eq!(block.ext_tag(), Some(13));

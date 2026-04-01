@@ -1,5 +1,5 @@
 use edid_info::base::basic::{
-    AnalogType, Basic, BitDepth, DigitalType, DisplayType, InputKind, Interface, Level,
+    AnalogType, Basic, BitDepth, DigitalType, DisplayType, InputKind, Interface, Level, ScreenSize,
 };
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
@@ -27,8 +27,13 @@ fn parse_basic_acer_ek221q_h() {
             iface: Interface::Undef,
         }
     );
-    assert_eq!(out.width_cm(), 48);
-    assert_eq!(out.height_cm(), 26);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 48,
+            height_cm: 26
+        }
+    );
     assert_eq!(out.gamma(), Some(220));
     assert!(out.features().standby());
     assert!(out.features().suspend());
@@ -59,8 +64,13 @@ fn parse_basic_asus_rog_pg27u() {
             iface: Interface::DisplayPort,
         }
     );
-    assert_eq!(out.width_cm(), 60);
-    assert_eq!(out.height_cm(), 34);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 60,
+            height_cm: 34
+        }
+    );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().standby());
     assert!(!out.features().suspend());
@@ -95,8 +105,13 @@ fn parse_basic_phl_221v8() {
             serrated_sync: false,
         }
     );
-    assert_eq!(out.width_cm(), 48);
-    assert_eq!(out.height_cm(), 27);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 48,
+            height_cm: 27
+        }
+    );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().standby());
     assert!(!out.features().suspend());
@@ -131,8 +146,13 @@ fn parse_basic_rol_rolsen_c707n() {
             serrated_sync: false,
         }
     );
-    assert_eq!(out.width_cm(), 30);
-    assert_eq!(out.height_cm(), 22);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 30,
+            height_cm: 22
+        }
+    );
     assert_eq!(out.gamma(), Some(280));
     assert!(out.features().standby());
     assert!(out.features().suspend());
@@ -167,8 +187,13 @@ fn parse_basic_tsb_tv() {
             serrated_sync: false,
         }
     );
-    assert_eq!(out.width_cm(), 89);
-    assert_eq!(out.height_cm(), 50);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 89,
+            height_cm: 50
+        }
+    );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().standby());
     assert!(!out.features().suspend());
@@ -203,8 +228,13 @@ fn parse_basic_vit_vt988() {
             serrated_sync: false,
         }
     );
-    assert_eq!(out.width_cm(), 34);
-    assert_eq!(out.height_cm(), 27);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 34,
+            height_cm: 27
+        }
+    );
     assert_eq!(out.gamma(), None);
     assert!(out.features().standby());
     assert!(out.features().suspend());
@@ -239,8 +269,13 @@ fn parse_basic_wg_unknown() {
             serrated_sync: false,
         }
     );
-    assert_eq!(out.width_cm(), 38);
-    assert_eq!(out.height_cm(), 30);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 38,
+            height_cm: 30
+        }
+    );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().standby());
     assert!(!out.features().suspend());

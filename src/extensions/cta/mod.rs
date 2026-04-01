@@ -24,13 +24,11 @@
 //! - **Speaker (tag 4)**: Speaker allocation map
 //!
 //! # References
-//!
 //! - [Wikipedia: CTA Extension Block](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#CTA_EDID_Timing_Extension_Block)
-//! - CTA-861-G Specification
+//! - [CTA-861-G Standard](https://ia800707.us.archive.org/27/items/CTA-861-G/CTA-861-G.pdf)
 
 pub mod audio;
 pub mod block;
-pub mod header;
 pub mod room;
 pub mod speaker;
 pub mod vendor;
@@ -38,37 +36,67 @@ pub mod vic;
 pub mod video;
 
 use crate::base::descriptor::timing::DetailedTiming;
+use crate::bit::is_set;
 use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok};
 
 use block::DataBlockIter;
 
-// TODO: Refactor to contain the header information (rev, dtd_num, etc.) explicitely, then remove the `header`
-// TODO: store the checksum here
 /// CTA Extension Block.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Cta {
-    header: header::Header,
-    raw: [u8; BLOCK_LEN],
+pub struct Cta<'a> {
+    raw: &'a [u8; BLOCK_LEN],
 }
 
-impl Cta {
+impl<'a> Cta<'a> {
     #[must_use]
-    pub const fn parse(raw: &[u8; BLOCK_LEN]) -> Option<Self> {
-        match header::Header::parse(raw) {
-            Some(header) => Some(Self { header, raw: *raw }),
-            None => None,
-        }
+    pub(crate) const fn parse(raw: &'a [u8; BLOCK_LEN]) -> Self {
+        Self { raw }
     }
 
     #[must_use]
-    pub const fn header(&self) -> header::Header {
-        self.header
+    pub const fn raw(&self) -> &[u8; BLOCK_LEN] {
+        self.raw
+    }
+
+    #[must_use]
+    pub const fn revision(&self) -> u8 {
+        self.raw[1]
+    }
+
+    #[must_use]
+    pub const fn dtd_offset(&self) -> u8 {
+        self.raw[2]
+    }
+
+    #[must_use]
+    pub const fn underscan(&self) -> bool {
+        is_set(self.raw[3], 7)
+    }
+
+    #[must_use]
+    pub const fn basic_audio(&self) -> bool {
+        is_set(self.raw[3], 6)
+    }
+
+    #[must_use]
+    pub const fn ycbcr_444(&self) -> bool {
+        is_set(self.raw[3], 5)
+    }
+
+    #[must_use]
+    pub const fn ycbcr_422(&self) -> bool {
+        is_set(self.raw[3], 4)
+    }
+
+    #[must_use]
+    pub const fn native_dtd_num(&self) -> u8 {
+        self.raw[3] & 0b0000_1111
     }
 
     #[must_use]
     pub const fn data_blocks(&self) -> DataBlockIter<'_> {
         DataBlockIter {
-            raw: &self.raw,
+            raw: self.raw,
             at: 4,
             end: self.data_block_end(),
         }
@@ -97,11 +125,17 @@ impl Cta {
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        Validation::new().fail_if(!checksum_ok(&self.raw), FailureKind::CtaChecksum)
+        Validation::new().fail_if(!checksum_ok(self.raw), FailureKind::CtaChecksum)
     }
 
-    const fn data_block_end(&self) -> usize {
-        let dtd_off = self.header.dtd_off() as usize;
+    /// Returns the end of the Data Block Collection (DBC).
+    ///
+    /// Per CTA-861 (v3+):
+    /// - `dtd_off` is `0x00`: no DTDs, DBC spans bytes 4–126.
+    /// - `dtd_off` is `0x04`: DBC is zero-length (no data blocks).
+    /// - Otherwise: DBC spans bytes 4..`dtd_off`.
+    const fn data_block_end(self) -> usize {
+        let dtd_off = self.raw[2] as usize;
         if dtd_off == 0 || dtd_off > 127 {
             127
         } else if dtd_off >= 4 {
@@ -111,8 +145,8 @@ impl Cta {
         }
     }
 
-    const fn dtd_start(&self) -> Option<usize> {
-        let dtd_off = self.header.dtd_off() as usize;
+    const fn dtd_start(self) -> Option<usize> {
+        let dtd_off = self.raw[2] as usize;
         let last_start = BLOCK_LEN - DESC_LEN;
         if dtd_off >= 4 && dtd_off <= last_start {
             Some(dtd_off)

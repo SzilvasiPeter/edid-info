@@ -1,26 +1,10 @@
 //! Common helpers for EDID parsing.
-//!
-//! This module provides checksum verification, slice helpers,
-//! and validation result types.
 
 /// Length of an EDID block (base or extension) in bytes.
 pub const BLOCK_LEN: usize = 128;
 
 /// Length of an descriptor (detailed timing or monitor) in bytes.
 pub const DESC_LEN: usize = 18;
-
-/// EDID version (major and minor).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Version {
-    pub major: u8,
-    pub minor: u8,
-}
-
-impl core::fmt::Display for Version {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}.{}", self.major, self.minor)
-    }
-}
 
 /// Error variants for EDID validation.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -262,6 +246,28 @@ impl Validation {
         }
         self
     }
+}
+
+/// EDID version (major and minor).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Version {
+    pub major: u8,
+    pub minor: u8,
+}
+
+impl core::fmt::Display for Version {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}.{}", self.major, self.minor)
+    }
+}
+
+/// Aspect ratio represented as a width:height ratio.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AspectRatio {
+    /// Width component of the ratio.
+    pub width: u16,
+    /// Height component of the ratio.
+    pub height: u16,
 }
 
 /// Verifies the checksum of an EDID block.

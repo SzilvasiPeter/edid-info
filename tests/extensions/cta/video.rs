@@ -1,4 +1,4 @@
-use edid_info::extensions::cta::{Cta, block::BlockTag};
+use edid_info::extensions::cta::block::BlockTag;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ACR_XG270HU: &[u8] = include_bytes!("../../data/ACR_XG270HU.edid");
@@ -7,7 +7,7 @@ const GSM_LG_TV: &[u8] = include_bytes!("../../data/GSM_LG_TV_SSCR2.edid");
 #[test]
 fn parse_video_block_acer_ek221q_h() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let blocks: Vec<_> = out.data_blocks().collect();
     let video_block = blocks
@@ -37,7 +37,7 @@ fn parse_video_block_acer_ek221q_h() {
 #[test]
 fn parse_video_block_acr_xg270hu() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACR_XG270HU[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let video_block = out
         .data_blocks()
@@ -76,7 +76,7 @@ fn parse_video_block_acr_xg270hu() {
 #[test]
 fn parse_video_block_gsm_lg_tv_sscr2() {
     let raw: [u8; 128] = std::array::from_fn(|i| GSM_LG_TV[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let video_block = out
         .data_blocks()

@@ -1,5 +1,5 @@
+use edid_info::extensions::cta::block::BlockTag;
 use edid_info::extensions::cta::vic::Vic;
-use edid_info::extensions::cta::{Cta, block::BlockTag};
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -9,7 +9,7 @@ const GSM_LG_TV: &[u8] = include_bytes!("../../data/GSM_LG_TV_SSCR2.edid");
 #[test]
 fn parse_vics_acer_ek221q_h() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let video_block = out
         .data_blocks()
@@ -38,18 +38,18 @@ fn parse_vics_acer_ek221q_h() {
 #[test]
 fn parse_vics_asus_rog_pg27u() {
     let raw1: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
-    let cta1 = Cta::parse(&raw1).expect("cta parse block 1");
+    let cta1 = super::parse_cta(&raw1);
     assert!(cta1.data_blocks().all(|b| b.tag() != BlockTag::Video));
 
     let raw4: [u8; 128] = std::array::from_fn(|i| ASUS[512 + i]);
-    let cta4 = Cta::parse(&raw4).expect("cta parse block 4");
+    let cta4 = super::parse_cta(&raw4);
     assert!(cta4.data_blocks().all(|b| b.tag() != BlockTag::Video));
 }
 
 #[test]
 fn parse_vics_acr_xg270hu() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACR_XG270HU[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let video_block = out
         .data_blocks()
@@ -67,7 +67,7 @@ fn parse_vics_acr_xg270hu() {
 #[test]
 fn parse_vics_gsm_lg_tv_sscr2() {
     let raw: [u8; 128] = std::array::from_fn(|i| GSM_LG_TV[128 + i]);
-    let out = Cta::parse(&raw).expect("cta parse");
+    let out = super::parse_cta(&raw);
 
     let video_block = out
         .data_blocks()

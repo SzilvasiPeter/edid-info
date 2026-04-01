@@ -15,6 +15,7 @@ use crate::common::DESC_LEN;
 
 const VERSION: u8 = 0x01;
 
+// TODO: Centralize the Aspect since it is used across the project.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Aspect {
     A4_3,

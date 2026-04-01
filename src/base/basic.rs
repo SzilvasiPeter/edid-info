@@ -12,7 +12,7 @@
 
 use crate::{
     bit::{get_bits, is_set},
-    common::{BLOCK_LEN, FailureKind, Validation, WarningKind},
+    common::{AspectRatio, BLOCK_LEN, FailureKind, Validation, WarningKind},
 };
 
 pub const BASIC_OFF: usize = 20;
@@ -145,6 +145,27 @@ pub enum DisplayType {
     Analog(AnalogType),
 }
 
+/// Screen size interpretation according to EDID spec.
+///
+/// The `width_cm` and `height_cm` raw bytes can represent:
+/// - Physical dimensions when both are non-zero
+/// - Landscape aspect ratio when height is zero
+/// - Portrait aspect ratio when width is zero
+/// - Undefined when both are zero (e.g. projector)
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ScreenSize {
+    /// Physical screen dimensions in centimetres.
+    Dimensions { width_cm: u8, height_cm: u8 },
+    /// Landscape aspect ratio:
+    /// `width = raw_byte + 99`, `height = 100`.
+    Landscape(AspectRatio),
+    /// Portrait aspect ratio:
+    /// `width = 100`, `height = raw_byte + 99`.
+    Portrait(AspectRatio),
+    /// Both bytes are zero - screen size undefined (e.g. projector).
+    Undefined,
+}
+
 /// Basic display parameters containing video input parameters, screen information, and supported features.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Basic {
@@ -182,27 +203,34 @@ impl Basic {
         VideoInput::parse(self.video_input)
     }
 
-    // TODO: Add field for landscape aspect ratio when height is zero
-    /// Horizontal screen size, in centimetres (range 1–255).
-    /// If vertical screen size is 0, landscape aspect ratio (range 1.00–3.54),
-    /// datavalue = (AR×100) − 99 (example: 16:9, 79; 4:3, 34.)
+    /// Screen size interpretation according to EDID spec.
+    ///
+    /// Returns physical dimensions, aspect ratio, or undefined based on raw byte values:
+    /// - Both non-zero: [`ScreenSize::Dimensions`]
+    /// - Height zero: [`ScreenSize::Landscape`] with `width = width_cm + 99`, `height = 100`
+    /// - Width zero: [`ScreenSize::Portrait`] with `width = 100`, `height = height_cm + 99`
+    /// - Both zero: [`ScreenSize::Undefined`]
     #[must_use]
-    pub const fn width_cm(&self) -> u8 {
-        self.width_cm
-    }
-
-    // TODO: Add field for portrait aspect ratio when width is zero
-    /// Vertical screen size, in centimetres.
-    /// If horizontal screen size is 0, portrait aspect ratio (range 0.28–0.99),
-    /// datavalue = (100/AR) − 99 (example: 9:16, 79; 3:4, 34.)
-    /// If both bytes are 0, screen size and aspect ratio are undefined (e.g. projector)
-    #[must_use]
-    pub const fn height_cm(&self) -> u8 {
-        self.height_cm
+    pub const fn screen_size(&self) -> ScreenSize {
+        match (self.width_cm, self.height_cm) {
+            (0, 0) => ScreenSize::Undefined,
+            (w, 0) => ScreenSize::Landscape(AspectRatio {
+                width: w as u16 + 99,
+                height: 100,
+            }),
+            (0, h) => ScreenSize::Portrait(AspectRatio {
+                width: 100,
+                height: h as u16 + 99,
+            }),
+            (w, h) => ScreenSize::Dimensions {
+                width_cm: w,
+                height_cm: h,
+            },
+        }
     }
 
     /// Display gamma, factory default (range 1.00–3.54), as gamma × 100.
-    /// If 255, gamma is defined by DI-EXT block.
+    /// If 255, gamma is defined by an extension block (e.g. DI-EXT)
     #[must_use]
     pub const fn gamma(&self) -> Option<u16> {
         if self.gamma == 255 {

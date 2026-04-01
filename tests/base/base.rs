@@ -1,14 +1,19 @@
 use edid_info::{
     base::Base,
+    base::basic::ScreenSize,
     base::descriptor::monitor::DescTag,
     base::descriptors::Mode,
     base::established::EstablishedTiming,
     base::header::DateInfo,
     common::Version,
-    extensions::cta::{Cta, block::BlockTag, speaker::Speaker},
+    extensions::{
+        Extension,
+        cta::{block::BlockTag, speaker::Speaker},
+    },
 };
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
+const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
 #[test]
 fn parse_base_acer_ek221q_h() {
@@ -17,7 +22,13 @@ fn parse_base_acer_ek221q_h() {
     let raw: [u8; 128] = std::array::from_fn(|i| ACER[i]);
     let out = Base::new(&raw);
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
-    assert_eq!(out.basic().width_cm(), 48);
+    assert_eq!(
+        out.basic().screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 48,
+            height_cm: 26
+        }
+    );
     assert_eq!(out.chroma().white().x(), 321);
     assert!(
         out.established()
@@ -47,8 +58,6 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.footer().checksum(), 0x18);
 }
 
-const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
-
 #[test]
 fn parse_base_asus_rog_pg27u() {
     assert_eq!(ASUS.len(), 768);
@@ -71,23 +80,29 @@ fn parse_base_asus_rog_pg27u() {
     );
     assert_eq!(base.header().version(), Version { major: 1, minor: 4 });
 
-    assert_eq!(base.basic().width_cm(), 60);
-    assert_eq!(base.basic().height_cm(), 34);
+    assert_eq!(
+        base.basic().screen_size(),
+        ScreenSize::Dimensions {
+            width_cm: 60,
+            height_cm: 34
+        }
+    );
     assert_eq!(base.basic().gamma(), Some(220));
 
     assert_eq!(base.footer().extension_num(), 2);
     assert_eq!(base.footer().checksum(), 0x72);
 
     let raw_cta: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);
-    let cta = Cta::parse(&raw_cta).expect("cta parse");
-    let header = cta.header();
+    let Extension::Cta(cta) = Extension::parse(&raw_cta) else {
+        panic!("expected CTA extension")
+    };
 
-    assert_eq!(header.rev(), 3);
-    assert_eq!(header.native_dtd_num(), 1);
-    assert!(header.underscan());
-    assert!(header.basic_audio());
-    assert!(header.ycbcr_444());
-    assert!(header.ycbcr_422());
+    assert_eq!(cta.revision(), 3);
+    assert_eq!(cta.native_dtd_num(), 1);
+    assert!(cta.underscan());
+    assert!(cta.basic_audio());
+    assert!(cta.ycbcr_444());
+    assert!(cta.ycbcr_422());
     assert_eq!(cta.checksum(), 0x46);
 
     let blocks: Vec<_> = cta.data_blocks().collect();

@@ -7,7 +7,6 @@ use alloc::vec::Vec;
 use edid_info::base::Base;
 use edid_info::common::{BLOCK_LEN, FailureKind, Validation};
 use edid_info::extensions::Extension;
-use edid_info::extensions::cta::Cta;
 
 /// Maximum number of extension block.
 pub const MAX_EXT: usize = 64;
@@ -76,22 +75,20 @@ impl Edid {
         Base::new(base_raw)
     }
 
-    /// Returns all available extension blocks.
+    /// Returns an iterator over all available extension blocks.
     ///
     /// # Panics
     ///
     /// Panics if the internal buffer is shorter than expected.
     /// This should never happen because `Edid::parse` validates the length.
-    #[must_use]
-    pub fn extensions(&self) -> Vec<Extension> {
-        let mut out = Vec::with_capacity(self.ext_len);
-        for i in 0..self.ext_len {
+    pub fn extensions(&self) -> impl Iterator<Item = Extension<'_>> + '_ {
+        let raw = &self.raw;
+        let ext_len = self.ext_len;
+        (0..ext_len).map(move |i| {
             let off = BLOCK_LEN * (i + 1);
-            let block: [u8; BLOCK_LEN] = self.raw[off..off + BLOCK_LEN].try_into().unwrap();
-            let item = Cta::parse(&block).map_or(Extension::Unknown(block), Extension::Cta);
-            out.push(item);
-        }
-        out
+            let block: &[u8; BLOCK_LEN] = raw[off..off + BLOCK_LEN].try_into().unwrap();
+            Extension::parse(block)
+        })
     }
 
     /// Validates the EDID data.
