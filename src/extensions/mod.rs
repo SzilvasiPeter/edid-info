@@ -21,8 +21,6 @@ use crate::common::BLOCK_LEN;
 /// EDID extension block types.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Extension<'a> {
-    /// No extension block available for this slot.
-    Empty,
     /// Additional Timing Data (CTA) block.
     Cta(cta::Cta<'a>),
     /// Display Information Extension (DI-EXT) block.
