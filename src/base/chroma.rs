@@ -22,8 +22,27 @@ use crate::{
     common::{BLOCK_LEN, Validation},
 };
 
+/// Chromaticity coordinates offset in the base block.
 pub const CHROMA_OFF: usize = 25;
+
+/// Chromaticity coordinates length in bytes.
 pub const CHROMA_LEN: usize = 10;
+
+/// The [sRGB primaries](https://en.wikipedia.org/wiki/SRGB#Primaries) as EDID bytes 25–34.
+///
+/// Raw byte components:
+/// - Red:   LSB `0xee`, MSB `0xa3` (x), `0x54` (y)
+/// - Green: LSB `0xee`, MSB `0x4c` (x), `0x99` (y)
+/// - Blue:  LSB `0x91`, MSB `0x26` (x), `0x0f` (y)
+/// - White: LSB `0x91`, MSB `0x50` (x), `0x54` (y)
+///
+/// Decoded 10-bit values (value / 1024) with rounded primaries (x, y):
+/// - red:   (655, 338) -> (0.639648, 0.330078) ~ (0.6400, 0.3300)
+/// - green: (307, 614) -> (0.299805, 0.599609) ~ (0.3000, 0.6000)
+/// - blue:  (154, 61)  -> (0.150391, 0.059570) ~ (0.1500, 0.0600)
+/// - white: (320, 337) -> (0.312500, 0.329102) ~ (0.3127, 0.3290)
+// TODO: Add a unit test to assert the decoded and the primaries (calculated or rounded)
+pub const SRGB_PRIMARIES: [u8; 10] = [0xee, 0x91, 0xa3, 0x54, 0x4c, 0x99, 0x26, 0x0f, 0x50, 0x54];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Chroma {
@@ -43,24 +62,48 @@ impl Chroma {
         // Use packing LSBs + MSBs so the indexing is easier to follow.
         // Mask the LSBs before packing.
         // Use better name for the bit packing.
-        let rg = chroma[0];
-        let bw = chroma[1];
+        let red_green_lsb = chroma[0];
+        let blue_white_lsb = chroma[1];
         Self {
             red: Coord {
-                x: u10_hi(chroma[2], u2_from_masks(rg, 0b1000_0000, 0b0100_0000)),
-                y: u10_hi(chroma[3], u2_from_masks(rg, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(
+                    chroma[2],
+                    u2_from_masks(red_green_lsb, 0b1000_0000, 0b0100_0000),
+                ),
+                y: u10_hi(
+                    chroma[3],
+                    u2_from_masks(red_green_lsb, 0b0010_0000, 0b0001_0000),
+                ),
             },
             green: Coord {
-                x: u10_hi(chroma[4], u2_from_masks(rg, 0b0000_1000, 0b0000_0100)),
-                y: u10_hi(chroma[5], u2_from_masks(rg, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(
+                    chroma[4],
+                    u2_from_masks(red_green_lsb, 0b0000_1000, 0b0000_0100),
+                ),
+                y: u10_hi(
+                    chroma[5],
+                    u2_from_masks(red_green_lsb, 0b0000_0010, 0b0000_0001),
+                ),
             },
             blue: Coord {
-                x: u10_hi(chroma[6], u2_from_masks(bw, 0b1000_0000, 0b0100_0000)),
-                y: u10_hi(chroma[7], u2_from_masks(bw, 0b0010_0000, 0b0001_0000)),
+                x: u10_hi(
+                    chroma[6],
+                    u2_from_masks(blue_white_lsb, 0b1000_0000, 0b0100_0000),
+                ),
+                y: u10_hi(
+                    chroma[7],
+                    u2_from_masks(blue_white_lsb, 0b0010_0000, 0b0001_0000),
+                ),
             },
             white: Coord {
-                x: u10_hi(chroma[8], u2_from_masks(bw, 0b0000_1000, 0b0000_0100)),
-                y: u10_hi(chroma[9], u2_from_masks(bw, 0b0000_0010, 0b0000_0001)),
+                x: u10_hi(
+                    chroma[8],
+                    u2_from_masks(blue_white_lsb, 0b0000_1000, 0b0000_0100),
+                ),
+                y: u10_hi(
+                    chroma[9],
+                    u2_from_masks(blue_white_lsb, 0b0000_0010, 0b0000_0001),
+                ),
             },
         }
     }

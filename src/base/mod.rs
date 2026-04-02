@@ -1,8 +1,8 @@
 //! EDID 1.4 base block (bytes 0–127).
 //!
-//! The base block is the first 128 bytes of an EDID blob and contains
-//! all essential display information including manufacturer data, display
-//! parameters, color characteristics, and timing descriptors.
+//! The base block is the first 128 bytes of an EDID blob and
+//! contains all essential display information including:
+//! manufacturer data, display parameters, color characteristics, and timing descriptors.
 //!
 //! # Structure
 //!
@@ -82,13 +82,18 @@ impl<'a> Base<'a> {
 
     /// Returns the extension flag and checksum.
     #[must_use]
-    pub fn footer(&self) -> footer::Footer {
+    pub const fn footer(&self) -> footer::Footer {
         footer::Footer::new(self.raw)
     }
 
     /// Validates the base block.
     #[must_use]
     pub fn validate(&self) -> Validation {
+        // TODO: Validate the standard sRGB color space.
+        // `self.chroma()` must contain sRGB standard values if `self.basic().standard_rgb()` is set:
+        // - BasicSrgbChromaMismatch
+        // - BasicSrgbNotSignaled
+        // Use the `SRGB_PRIMARIES` to check the bytes directly.
         Validation::new()
             .then(self.header().validate())
             .then(self.basic().validate())

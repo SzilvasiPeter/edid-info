@@ -6,16 +6,21 @@
 
 /// Checks if a specific bit is set in a byte.
 #[must_use]
-pub const fn is_set(val: u8, bit: u8) -> bool {
-    (val & (1 << bit)) != 0
+pub const fn is_set(byte: u8, bit: u8) -> bool {
+    debug_assert!(bit < 8, "bit has to be less than 8");
+    (byte >> bit) & 0b0000_0001 != 0
 }
 
-/// Extracts bits from a byte using a mask and shifting right.
+/// Extracts bits from a byte given a start bit (inclusive) and end bit (inclusive).
+/// Bits are numbered from 0 (LSB) to 7 (MSB).
 #[must_use]
-pub const fn get_bits(val: u8, mask: u8, shift: u8) -> u8 {
-    (val & mask) >> shift
+pub const fn get_bits(byte: u8, start: u8, end: u8) -> u8 {
+    debug_assert!(start <= end && end <= 7, "invalid bit range");
+    let width = end - start;
+    (byte >> start) & 0b1111_1111 >> (7 - width)
 }
 
+// TODO: Make better names for bit packing
 /// Packs a 12-bit value where the lower 8 bits are in one byte and the upper 4 bits
 /// are in the high nibble of another byte.
 #[must_use]

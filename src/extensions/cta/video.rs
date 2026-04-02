@@ -13,7 +13,7 @@
 //!
 //! For VIC 1-64: bit 7 is the native flag (0 for non-native, 1 for native)
 //! For VIC 65-127: bit 7 must be 0 (7-bit VIC)
-//! For 8-bit VICs: bit 7 is MSB, VIC = 128 + (bits 6-0)
+//! For 8-bit VICs: bit 7 is MSB, VIC = 128 + (bits 0-6)
 //! Only a subset of 8-bit VICs are defined (e.g. 193-219)
 
 use super::vic::Vic;

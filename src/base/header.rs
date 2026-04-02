@@ -84,12 +84,12 @@ impl Header {
         self.pattern
     }
 
-    /// Manufacturer's 3-letter code assigned by [UEFI forum](https://uefi.org/PNP_ID_List),
-    /// which is a big-endian 16-bit value made up of three 5-bit letters.
-    /// EDID encodes letters as 1='A' through 26='Z', so we add 64 to get ASCII values.
+    /// Manufacturer's 3-letter code assigned by [UEFI forum](https://uefi.org/PNP_ID_List).
     #[must_use]
     pub const fn manufacturer(&self) -> [char; 3] {
         let (m1, m2, m3) = decode(self.manufacturer);
+
+        // EDID encodes letters as 1='A' through 26='Z', adding 64 to get ASCII values.
         [(m1 + 64) as char, (m2 + 64) as char, (m3 + 64) as char]
     }
 
@@ -177,14 +177,14 @@ impl core::fmt::Display for Header {
     }
 }
 
-/// Decodes the ID into three 5-bit values.
+/// Decodes the 16 bits into three 5-bit IDs.
 ///
-/// | Bits (Bytes 8-9) | Description |
-/// |------------------|-------------|
-/// | 15 | Reserved |
+/// | Bits  | Description |
+/// |-------|-------------|
+/// | 15    | Reserved |
 /// | 14–10 | First letter of manufacturer ID |
-/// | 9–5 | Second letter of manufacturer ID |
-/// | 4–0 | Third letter of manufacturer ID |
+/// | 9–5   | Second letter of manufacturer ID |
+/// | 4–0   | Third letter of manufacturer ID |
 #[must_use]
 const fn decode(manufacturer: u16) -> (u8, u8, u8) {
     (

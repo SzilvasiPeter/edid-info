@@ -94,6 +94,7 @@ impl DetailedTiming {
     #[must_use]
     pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         Some(Self {
+            // TODO: Simplify the bit packing
             pixel_clock_10khz: u16::from_le_bytes([raw[0], raw[1]]),
             h_active: u12_hi(raw[2], raw[4]),
             h_blank: u12_lo(raw[3], raw[4]),

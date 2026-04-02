@@ -22,7 +22,8 @@
 #![no_std]
 
 pub mod base;
-pub mod bit;
 pub mod common;
 pub mod edid;
 pub mod extensions;
+
+mod bit;

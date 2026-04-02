@@ -54,7 +54,7 @@ fn parse_base_acer_ek221q_h() {
         }
     }
 
-    assert_eq!(out.footer().extension_num(), 1);
+    assert_eq!(out.footer().extension_count(), 1);
     assert_eq!(out.footer().checksum(), 0x18);
 }
 
@@ -89,7 +89,7 @@ fn parse_base_asus_rog_pg27u() {
     );
     assert_eq!(base.basic().gamma(), Some(220));
 
-    assert_eq!(base.footer().extension_num(), 2);
+    assert_eq!(base.footer().extension_count(), 2);
     assert_eq!(base.footer().checksum(), 0x72);
 
     let raw_cta: [u8; 128] = std::array::from_fn(|i| ASUS[128 + i]);

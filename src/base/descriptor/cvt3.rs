@@ -37,7 +37,10 @@ pub enum PrefRate {
 pub struct Mode {
     addr_lines: u16,
     aspect: Aspect,
+    // TODO: Use a single Frequency enum for the bitmaps
+    // VerticalRate or RefreshRate or VerticalFrequency
     pref: PrefRate,
+    // [Option<VerticalRate>; 5]
     hz50: bool,
     hz60: bool,
     hz75: bool,

@@ -85,7 +85,7 @@ impl<'a> Edid<'a> {
     #[must_use]
     pub fn validate(&self) -> Validation {
         let base = self.base();
-        let ext_num = base.footer().extension_num() as usize;
+        let ext_num = base.footer().extension_count() as usize;
         Validation::new()
             .then(base.validate())
             .fail_if(ext_num != self.ext_len, FailureKind::BaseExtCountMismatch)

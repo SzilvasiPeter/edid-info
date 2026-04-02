@@ -35,9 +35,9 @@ fn parse_basic_acer_ek221q_h() {
         }
     );
     assert_eq!(out.gamma(), Some(220));
-    assert!(out.features().standby());
-    assert!(out.features().suspend());
-    assert!(out.features().active_off());
+    assert!(out.features().dpms().standby);
+    assert!(out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Digital(DigitalType::Rgb444Y444)
@@ -72,9 +72,9 @@ fn parse_basic_asus_rog_pg27u() {
         }
     );
     assert_eq!(out.gamma(), Some(220));
-    assert!(!out.features().standby());
-    assert!(!out.features().suspend());
-    assert!(out.features().active_off());
+    assert!(!out.features().dpms().standby);
+    assert!(!out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Digital(DigitalType::Rgb444Y444Y422)
@@ -113,9 +113,9 @@ fn parse_basic_phl_221v8() {
         }
     );
     assert_eq!(out.gamma(), Some(220));
-    assert!(!out.features().standby());
-    assert!(!out.features().suspend());
-    assert!(out.features().active_off());
+    assert!(!out.features().dpms().standby);
+    assert!(!out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Analog(AnalogType::Rgb)
@@ -154,9 +154,9 @@ fn parse_basic_rol_rolsen_c707n() {
         }
     );
     assert_eq!(out.gamma(), Some(280));
-    assert!(out.features().standby());
-    assert!(out.features().suspend());
-    assert!(!out.features().active_off());
+    assert!(out.features().dpms().standby);
+    assert!(out.features().dpms().suspend);
+    assert!(!out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Analog(AnalogType::Rgb)
@@ -195,9 +195,9 @@ fn parse_basic_tsb_tv() {
         }
     );
     assert_eq!(out.gamma(), Some(220));
-    assert!(!out.features().standby());
-    assert!(!out.features().suspend());
-    assert!(!out.features().active_off());
+    assert!(!out.features().dpms().standby);
+    assert!(!out.features().dpms().suspend);
+    assert!(!out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Analog(AnalogType::Rgb)
@@ -236,9 +236,9 @@ fn parse_basic_vit_vt988() {
         }
     );
     assert_eq!(out.gamma(), None);
-    assert!(out.features().standby());
-    assert!(out.features().suspend());
-    assert!(out.features().active_off());
+    assert!(out.features().dpms().standby);
+    assert!(out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Analog(AnalogType::Rgb)
@@ -277,9 +277,9 @@ fn parse_basic_wg_unknown() {
         }
     );
     assert_eq!(out.gamma(), Some(220));
-    assert!(!out.features().standby());
-    assert!(!out.features().suspend());
-    assert!(!out.features().active_off());
+    assert!(!out.features().dpms().standby);
+    assert!(!out.features().dpms().suspend);
+    assert!(!out.features().dpms().active_off);
     assert_eq!(
         out.features().display(),
         DisplayType::Analog(AnalogType::Rgb)

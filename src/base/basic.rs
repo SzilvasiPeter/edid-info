@@ -15,21 +15,24 @@ use crate::{
     common::{AspectRatio, BLOCK_LEN, FailureKind, Validation, WarningKind},
 };
 
+/// Basic display information offset in the base block.
 pub const BASIC_OFF: usize = 20;
+
+/// Basic display information length in bytes.
 pub const BASIC_LEN: usize = 5;
 
-/// Bit depth (Bits 6–4 of Byte 20 when Digital).
+/// Bit depth (Byte 20).
 ///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 000 | undefined |
-/// | 001 | 6 bits per color |
-/// | 010 | 8 bits per color |
-/// | 011 | 10 bits per color |
-/// | 100 | 12 bits per color |
-/// | 101 | 14 bits per color |
-/// | 110 | 16 bits per color |
-/// | 111 | reserved |
+/// | Bits (6-4) | Description |
+/// |------------|-------------|
+/// | 000        | undefined |
+/// | 001        | 6 bits per color |
+/// | 010        | 8 bits per color |
+/// | 011        | 10 bits per color |
+/// | 100        | 12 bits per color |
+/// | 101        | 14 bits per color |
+/// | 110        | 16 bits per color |
+/// | 111        | reserved |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BitDepth {
     Undef,
@@ -42,16 +45,16 @@ pub enum BitDepth {
     Reserved,
 }
 
-/// Video interface (Bits 3–0 of Byte 20 when Digital).
+/// Video interface (Byte 20).
 ///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 0000 | undefined |
-/// | 0001 | DVI |
-/// | 0010 | HDMIa |
-/// | 0011 | HDMIb |
-/// | 0100 | MDDI |
-/// | 0101 | DisplayPort |
+/// | Bits 0-3 | Description |
+/// |----------|-------------|
+/// | 0000     | undefined |
+/// | 0001     | DVI |
+/// | 0010     | HDMIa |
+/// | 0011     | HDMIb |
+/// | 0100     | MDDI |
+/// | 0101     | DisplayPort |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Interface {
     Undef,
@@ -63,14 +66,14 @@ pub enum Interface {
     Other(u8),
 }
 
-/// Video white and sync levels, relative to blank (Bits 6–5 of Byte 20 when Analog).
+/// Video white and sync levels, relative to blank (Byte 20).
 ///
-/// | Value | Voltage Levels |
-/// |-------|----------------|
-/// | 00 | +0.7/−0.3 V |
-/// | 01 | +0.714/−0.286 V |
-/// | 10 | +1.0/−0.4 V |
-/// | 11 | +0.7/0 V (EVC) |
+/// | Bits 5-6 | Voltage Levels |
+/// |----------|----------------|
+/// | 00       | +0.7/−0.3 V |
+/// | 01       | +0.714/−0.286 V |
+/// | 10       | +1.0/−0.4 V |
+/// | 11       | +0.7/0 V (EVC) |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Level {
     V700_300,
@@ -81,39 +84,35 @@ pub enum Level {
 
 /// Video input type (Byte 20).
 ///
-/// | Value | Description |
+/// | Bit 7 | Description |
 /// |-------|-------------|
-/// | 1 | Digital input |
-/// | 0 | Analog input |
+/// | 1     | Digital input |
+/// | 0     | Analog input |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InputKind {
     /// Digital input with bit depth and interface.
     Digital { depth: BitDepth, iface: Interface },
     /// Analog input with signal level and sync options.
     Analog {
-        /// Video white and sync levels, relative to blank (Bits 6–5 of Byte 20).
+        /// Video white and sync levels, relative to blank.
         level: Level,
-        /// Blank-to-black setup (pedestal) expected (Bits 4 of Byte 20).
+        /// Blank-to-black setup (pedestal) expected.
         blank_to_black: bool,
-        /// Separate sync supported (Bits 3 of Byte 20).
+        /// Separate sync supported: `HSync` and `VSync` on dedicated wires.
         separate_sync: bool,
-        /// Composite sync (on `HSync`) supported (Bits 2 of Byte 20).
+        /// Composite sync supported: `HSync` and `VSync` combined on one wire.
         composite_sync: bool,
-        /// Sync on green supported (Bits 1 of Byte 20).
+        /// Sync-on-Green supported: sync signals modulated onto the green video channel.
         sync_on_green: bool,
-        /// `VSync` pulse must be serrated when composite or sync-on-green is used (Bits 0 of Byte 20).
+        /// Serrated `VSync` supported: required when using composite or sync-on-green.
+        ///
+        /// Serration adds notches to the `VSync` pulse so the display can distinguish it
+        /// from a long `HSync` pulse when both signals share a single wire or channel.
         serrated_sync: bool,
     },
 }
 
 /// Analog display type.
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 00 | monochrome or grayscale |
-/// | 01 | RGB color |
-/// | 10 | non-RGB color |
-/// | 11 | undefined |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AnalogType {
     MonoGray,
@@ -123,13 +122,6 @@ pub enum AnalogType {
 }
 
 /// Digital display type.
-///
-/// | Value | Description |
-/// |-------|-------------|
-/// | 00 | RGB 4:4:4 |
-/// | 01 | RGB 4:4:4 + YCrCb 4:4:4 |
-/// | 10 | RGB 4:4:4 + YCrCb 4:2:2 |
-/// | 11 | RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2 |
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DigitalType {
     Rgb444,
@@ -138,11 +130,49 @@ pub enum DigitalType {
     Rgb444Y444Y422,
 }
 
-/// Display type (analog or digital) for features bitmap (Bits 4-3 of Byte 24).
+/// Display type (analog or digital) for features bitmap.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DisplayType {
     Digital(DigitalType),
     Analog(AnalogType),
+}
+
+impl DisplayType {
+    /// Parses display type from bits 3-4 of Byte 24.
+    ///
+    /// Analog mapping:
+    /// | Bits 3-4 | Description |
+    /// |----------|-------------|
+    /// | 00       | monochrome or grayscale |
+    /// | 01       | RGB color |
+    /// | 10       | non-RGB color |
+    /// | 11       | undefined |
+    ///
+    /// Digital mapping:
+    /// | Bits 3-4 | Description |
+    /// |----------|-------------|
+    /// | 00       | RGB 4:4:4 |
+    /// | 01       | RGB 4:4:4 + YCrCb 4:4:4 |
+    /// | 10       | RGB 4:4:4 + YCrCb 4:2:2 |
+    /// | 11       | RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2 |
+    #[must_use]
+    pub const fn parse(bits: u8, is_digital: bool) -> Self {
+        if is_digital {
+            match bits {
+                0b00 => Self::Digital(DigitalType::Rgb444),
+                0b01 => Self::Digital(DigitalType::Rgb444Y444),
+                0b10 => Self::Digital(DigitalType::Rgb444Y422),
+                _ => Self::Digital(DigitalType::Rgb444Y444Y422),
+            }
+        } else {
+            match bits {
+                0b00 => Self::Analog(AnalogType::MonoGray),
+                0b01 => Self::Analog(AnalogType::Rgb),
+                0b10 => Self::Analog(AnalogType::NonRgb),
+                _ => Self::Analog(AnalogType::Undefined),
+            }
+        }
+    }
 }
 
 /// Screen size interpretation according to EDID spec.
@@ -162,7 +192,7 @@ pub enum ScreenSize {
     /// Portrait aspect ratio:
     /// `width = 100`, `height = raw_byte + 99`.
     Portrait(AspectRatio),
-    /// Both bytes are zero - screen size undefined (e.g. projector).
+    /// Both bytes are zero, screen size is undefined (e.g. projector).
     Undefined,
 }
 
@@ -203,9 +233,7 @@ impl Basic {
         VideoInput::parse(self.video_input)
     }
 
-    /// Screen size interpretation according to EDID spec.
-    ///
-    /// Returns physical dimensions, aspect ratio, or undefined based on raw byte values:
+    /// Returns [`ScreenSize`] interpretation based on the width and height:
     /// - Both non-zero: [`ScreenSize::Dimensions`]
     /// - Height zero: [`ScreenSize::Landscape`] with `width = width_cm + 99`, `height = 100`
     /// - Width zero: [`ScreenSize::Portrait`] with `width = 100`, `height = height_cm + 99`
@@ -229,8 +257,8 @@ impl Basic {
         }
     }
 
-    /// Display gamma, factory default (range 1.00–3.54), as gamma × 100.
-    /// If 255, gamma is defined by an extension block (e.g. DI-EXT)
+    /// Display gamma as gamma × 100 (factory default, 1.00–3.54).
+    /// Returns `None` when the raw value is `0xFF` (defined by an extension block).
     #[must_use]
     pub const fn gamma(&self) -> Option<u16> {
         if self.gamma == 255 {
@@ -281,7 +309,43 @@ impl Basic {
     }
 }
 
-// TODO: Implement the Display trait for `Basic`
+impl core::fmt::Display for Basic {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let input = self.video_input();
+        let size = self.screen_size();
+        let features = self.features();
+        write!(f, "Input: {input}, ")?;
+        match size {
+            ScreenSize::Dimensions {
+                width_cm,
+                height_cm,
+            } => {
+                write!(f, "Size: {width_cm}x{height_cm} cm")?;
+            }
+            ScreenSize::Landscape(ratio) => {
+                write!(f, "Aspect: {}:{} landscape", ratio.width, ratio.height)?;
+            }
+            ScreenSize::Portrait(ratio) => {
+                write!(f, "Aspect: {}:{} portrait", ratio.width, ratio.height)?;
+            }
+            ScreenSize::Undefined => {
+                write!(f, "Size: undefined")?;
+            }
+        }
+        write!(f, ", ")?;
+        match self.gamma() {
+            Some(value) => {
+                let major = value / 100;
+                let minor = value % 100;
+                write!(f, "Gamma: {major}.{minor:02}")?;
+            }
+            None => {
+                write!(f, "Gamma is defined by an extension")?;
+            }
+        }
+        write!(f, ", Features: {features}")
+    }
+}
 
 /// Video input parameters.
 /// If Bit 7 (of Byte 20) is set, then digital, else analog.
@@ -294,23 +358,23 @@ impl VideoInput {
     /// Parses video input parameters from Byte 20.
     ///
     /// Bit fields:
-    /// - `bit 7`: 0=Analog, 1=Digital
+    /// - bit 7: Digital flag
     ///
     /// If **Digital**:
-    /// - `bits 6–4`: Color bit depth
-    /// - `bits 3–0`: Video interface
+    /// - bits 4-6: Color bit depth
+    /// - bits 0-3: Video interface
     ///
     /// If **Analog**:
-    /// - `bits 6–5`: Video white and sync levels
-    /// - `bit 4`: Blank-to-black setup (pedestal)
-    /// - `bit 3`: Separate sync
-    /// - `bit 2`: Composite sync
-    /// - `bit 1`: Sync on green
-    /// - `bit 0`: Serrated sync
+    /// - bits 5-6: Video white and sync levels
+    /// - bit 4: Blank-to-black setup (pedestal) expected
+    /// - bit 3: Separate sync supported
+    /// - bit 2: Composite sync supported
+    /// - bit 1: Sync on green supported
+    /// - bit 0: Serrated sync supported
     #[must_use]
     pub const fn parse(video_input: u8) -> Self {
         let kind = if is_set(video_input, 7) {
-            let depth = match get_bits(video_input, 0b0111_0000, 4) {
+            let depth = match get_bits(video_input, 4, 6) {
                 0b000 => BitDepth::Undef,
                 0b001 => BitDepth::B6,
                 0b010 => BitDepth::B8,
@@ -320,7 +384,7 @@ impl VideoInput {
                 0b110 => BitDepth::B16,
                 _ => BitDepth::Reserved,
             };
-            let iface = match get_bits(video_input, 0b0000_1111, 0) {
+            let iface = match get_bits(video_input, 0, 3) {
                 0 => Interface::Undef,
                 1 => Interface::Dvi,
                 2 => Interface::HdmiA,
@@ -331,7 +395,7 @@ impl VideoInput {
             };
             InputKind::Digital { depth, iface }
         } else {
-            let level = match get_bits(video_input, 0b0110_0000, 5) {
+            let level = match get_bits(video_input, 5, 6) {
                 0b00 => Level::V700_300,
                 0b01 => Level::V714_286,
                 0b10 => Level::V1000_400,
@@ -356,7 +420,73 @@ impl VideoInput {
     }
 }
 
-// TODO: Implement the Display trait for `VideoInput`
+impl core::fmt::Display for VideoInput {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self.kind() {
+            InputKind::Digital { depth, iface } => {
+                let depth = match depth {
+                    BitDepth::Undef => "undefined",
+                    BitDepth::B6 => "6 bit per color",
+                    BitDepth::B8 => "8 bit per color",
+                    BitDepth::B10 => "10 bit per color",
+                    BitDepth::B12 => "12 bit per color",
+                    BitDepth::B14 => "14 bit per color",
+                    BitDepth::B16 => "16 bit per color",
+                    BitDepth::Reserved => "reserved",
+                };
+                match iface {
+                    Interface::Undef => write!(f, "Digital (depth: {depth}, iface: undefined)"),
+                    Interface::Dvi => write!(f, "Digital (depth: {depth}, iface: DVI)"),
+                    Interface::HdmiA => write!(f, "Digital (depth: {depth}, iface: HDMIa)"),
+                    Interface::HdmiB => write!(f, "Digital (depth: {depth}, iface: HDMIb)"),
+                    Interface::Mddi => write!(f, "Digital (depth: {depth}, iface: MDDI)"),
+                    Interface::DisplayPort => {
+                        write!(f, "Digital (depth: {depth}, iface: DisplayPort)")
+                    }
+                    Interface::Other(value) => {
+                        write!(f, "Digital (depth: {depth}, iface: 0x{value:01X})")
+                    }
+                }
+            }
+            InputKind::Analog {
+                level,
+                blank_to_black,
+                separate_sync,
+                composite_sync,
+                sync_on_green,
+                serrated_sync,
+            } => {
+                let level = match level {
+                    Level::V700_300 => "+0.7/-0.3 V",
+                    Level::V714_286 => "+0.714/-0.286 V",
+                    Level::V1000_400 => "+1.0/-0.4 V",
+                    Level::V700_000 => "+0.7/0 V",
+                };
+                write!(
+                    f,
+                    "Analog (level: {level}, blank: {blank_to_black}, separate: {separate_sync}, composite: {composite_sync}, green: {sync_on_green}, serrated: {serrated_sync})"
+                )
+            }
+        }
+    }
+}
+
+/// DPMS support flags.
+///
+/// | Bit | Description |
+/// |-----|-------------|
+/// | 7 | DPMS standby supported |
+/// | 6 | DPMS suspend supported |
+/// | 5 | DPMS active-off supported |
+///
+/// # References
+/// - [DPMS](https://en.wikipedia.org/wiki/VESA_Display_Power_Management_Signaling) (Display Power Management Signaling)
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Dpms {
+    pub standby: bool,
+    pub suspend: bool,
+    pub active_off: bool,
+}
 
 /// Feature support flags (Byte 24).
 ///
@@ -369,15 +499,9 @@ impl VideoInput {
 /// | 2 | Standard sRGB colour space |
 /// | 1 | Preferred timing mode |
 /// | 0 | Continuous timings with GTF or CVT |
-///
-/// # References
-/// - [DPMS](https://en.wikipedia.org/wiki/VESA_Display_Power_Management_Signaling) (Display Power Management Signaling)
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[expect(clippy::struct_excessive_bools, reason = "Spec-aligned EDID bitfields")]
 pub struct Features {
-    standby: bool,
-    suspend: bool,
-    active_off: bool,
+    dpms: Dpms,
     display: DisplayType,
     standard_rgb: bool,
     timing_mode: bool,
@@ -388,57 +512,30 @@ impl Features {
     /// Parses feature flags from the features byte.
     ///
     /// Fields (Byte 24):
-    /// - `standby`: bit 7, DPMS standby support
-    /// - `suspend`: bit 6, DPMS suspend support
-    /// - `active_off`: bit 5, DPMS active-off support
+    /// - `dpms`: bits 7–5, DPMS support flags
     /// - `display`: bits 4–3, analog or digital display type
     /// - `standard_rgb`: bit 2, standard sRGB colour space
     /// - `timing_mode`: bit 1, preferred timing mode
     /// - `timing_continuous`: bit 0, continuous timings with GTF or CVT
     #[must_use]
-    pub const fn parse(features: u8, is_digital: bool) -> Self {
-        let display = if is_digital {
-            DisplayType::Digital(match get_bits(features, 0b0001_1000, 3) {
-                0b00 => DigitalType::Rgb444,
-                0b01 => DigitalType::Rgb444Y444,
-                0b10 => DigitalType::Rgb444Y422,
-                _ => DigitalType::Rgb444Y444Y422,
-            })
-        } else {
-            DisplayType::Analog(match get_bits(features, 0b0001_1000, 3) {
-                0b00 => AnalogType::MonoGray,
-                0b01 => AnalogType::Rgb,
-                0b10 => AnalogType::NonRgb,
-                _ => AnalogType::Undefined,
-            })
-        };
+    pub const fn parse(features: u8, digital: bool) -> Self {
         Self {
-            standby: is_set(features, 7),
-            suspend: is_set(features, 6),
-            active_off: is_set(features, 5),
-            display,
+            dpms: Dpms {
+                standby: is_set(features, 7),
+                suspend: is_set(features, 6),
+                active_off: is_set(features, 5),
+            },
+            display: DisplayType::parse(get_bits(features, 3, 4), digital),
             standard_rgb: is_set(features, 2),
             timing_mode: is_set(features, 1),
             timing_continuous: is_set(features, 0),
         }
     }
 
-    /// DPMS standby supported.
+    /// DPMS support flags (standby, suspend and active-off).
     #[must_use]
-    pub const fn standby(&self) -> bool {
-        self.standby
-    }
-
-    /// DPMS suspend supported.
-    #[must_use]
-    pub const fn suspend(&self) -> bool {
-        self.suspend
-    }
-
-    /// DPMS active-off supported.
-    #[must_use]
-    pub const fn active_off(&self) -> bool {
-        self.active_off
+    pub const fn dpms(&self) -> Dpms {
+        self.dpms
     }
 
     /// Display type.
@@ -447,7 +544,7 @@ impl Features {
         self.display
     }
 
-    /// Standard sRGB colour space. Bytes 25–34 must contain sRGB standard values.
+    /// [Standard RGB](https://en.wikipedia.org/wiki/SRGB) colour space.
     #[must_use]
     pub const fn standard_rgb(&self) -> bool {
         self.standard_rgb
@@ -468,4 +565,39 @@ impl Features {
     }
 }
 
-// TODO: Implement the Display trait for `Features`
+impl core::fmt::Display for Features {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let display = match self.display {
+            DisplayType::Digital(kind) => {
+                let label = match kind {
+                    DigitalType::Rgb444 => "RGB 4:4:4",
+                    DigitalType::Rgb444Y444 => "RGB 4:4:4 + YCrCb 4:4:4",
+                    DigitalType::Rgb444Y422 => "RGB 4:4:4 + YCrCb 4:2:2",
+                    DigitalType::Rgb444Y444Y422 => "RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2",
+                };
+                ("Digital", label)
+            }
+            DisplayType::Analog(kind) => {
+                let label = match kind {
+                    AnalogType::MonoGray => "monochrome/gray",
+                    AnalogType::Rgb => "RGB",
+                    AnalogType::NonRgb => "non-RGB",
+                    AnalogType::Undefined => "undefined",
+                };
+                ("Analog", label)
+            }
+        };
+        write!(
+            f,
+            "DPMS: standby={}, suspend={}, off={}, Display: {} ({}), sRGB: {}, Preferred timing: {}, Continuous: {}",
+            self.dpms.standby,
+            self.dpms.suspend,
+            self.dpms.active_off,
+            display.0,
+            display.1,
+            self.standard_rgb,
+            self.timing_mode,
+            self.timing_continuous
+        )
+    }
+}

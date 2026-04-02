@@ -8,7 +8,7 @@ fn parse_footer_acer_ek221q_h() {
     let raw: [u8; BLOCK_LEN] = std::array::from_fn(|i| ACER[i]);
     let out = Footer::new(&raw);
 
-    assert_eq!(out.extension_num(), 1);
+    assert_eq!(out.extension_count(), 1);
     assert_eq!(out.checksum(), 0x18);
 }
 
@@ -17,6 +17,6 @@ fn parse_footer_asus_rog_pg27u() {
     let raw: [u8; BLOCK_LEN] = std::array::from_fn(|i| ASUS[i]);
     let out = Footer::new(&raw);
 
-    assert_eq!(out.extension_num(), 2);
+    assert_eq!(out.extension_count(), 2);
     assert_eq!(out.checksum(), 0x72);
 }

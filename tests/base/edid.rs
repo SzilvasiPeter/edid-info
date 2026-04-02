@@ -11,7 +11,7 @@ fn parse_edid_acer_ek221q_h() {
 
     // Verify base block
     assert_eq!(edid.base().header().manufacturer(), ['A', 'C', 'R']);
-    assert_eq!(edid.base().footer().extension_num(), 1);
+    assert_eq!(edid.base().footer().extension_count(), 1);
 
     // Verify extensions
     let first = edid.extensions().next().expect("extension 0");
@@ -31,7 +31,7 @@ fn parse_edid_asus_rog_pg27u() {
 
     // Verify base block
     assert_eq!(edid.base().header().manufacturer(), ['A', 'U', 'S']);
-    assert_eq!(edid.base().footer().extension_num(), 2);
+    assert_eq!(edid.base().footer().extension_count(), 2);
 
     // Verify extensions (footer says 2, so we expect 2 parsed extensions even if file is longer)
     let first = edid.extensions().next().expect("extension 0");
