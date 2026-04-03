@@ -1,6 +1,7 @@
 //! Chromaticity coordinates (bytes 25–34).
 //!
 //! 10-bit 2° [CIE 1931 xy coordinates](https://en.wikipedia.org/wiki/CIE_1931_color_space) for red, green, blue, and white point.
+//! In simple terms, it stores where the red, green, blue, and white colors land on a standard color map.
 //!
 //! # Structure
 //!
@@ -18,9 +19,10 @@
 //! | 34   | White-y MSBs |
 
 use crate::{
-    bit::{u2_from_masks, u10_hi},
-    common::{BLOCK_LEN, Validation},
+    bit::{get_bits, pack_bits},
+    common::{BLOCK_LEN, Validation, WarningKind},
 };
+use core::fmt::{self, Display, Formatter};
 
 /// Chromaticity coordinates offset in the base block.
 pub const CHROMA_OFF: usize = 25;
@@ -28,22 +30,7 @@ pub const CHROMA_OFF: usize = 25;
 /// Chromaticity coordinates length in bytes.
 pub const CHROMA_LEN: usize = 10;
 
-/// The [sRGB primaries](https://en.wikipedia.org/wiki/SRGB#Primaries) as EDID bytes 25–34.
-///
-/// Raw byte components:
-/// - Red:   LSB `0xee`, MSB `0xa3` (x), `0x54` (y)
-/// - Green: LSB `0xee`, MSB `0x4c` (x), `0x99` (y)
-/// - Blue:  LSB `0x91`, MSB `0x26` (x), `0x0f` (y)
-/// - White: LSB `0x91`, MSB `0x50` (x), `0x54` (y)
-///
-/// Decoded 10-bit values (value / 1024) with rounded primaries (x, y):
-/// - red:   (655, 338) -> (0.639648, 0.330078) ~ (0.6400, 0.3300)
-/// - green: (307, 614) -> (0.299805, 0.599609) ~ (0.3000, 0.6000)
-/// - blue:  (154, 61)  -> (0.150391, 0.059570) ~ (0.1500, 0.0600)
-/// - white: (320, 337) -> (0.312500, 0.329102) ~ (0.3127, 0.3290)
-// TODO: Add a unit test to assert the decoded and the primaries (calculated or rounded)
-pub const SRGB_PRIMARIES: [u8; 10] = [0xee, 0x91, 0xa3, 0x54, 0x4c, 0x99, 0x26, 0x0f, 0x50, 0x54];
-
+/// Chromaticity coordinates for red, green, blue, and white.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Chroma {
     red: Coord,
@@ -53,88 +40,116 @@ pub struct Chroma {
 }
 
 impl Chroma {
-    // TODO: Add byte size and byte packing info in docstring.
+    /// Parses chromaticity coordinates from bytes 25–34 of the base block.
+    ///
+    /// Each coordinate is a 10-bit value packed as:
+    /// - 2 LSBs stored in bytes 25–26 (two bits per component)
+    /// - 8 MSBs stored in bytes 27–34 (one byte per component)
+    ///
+    /// The LSB layout is:
+    /// - Byte 25: red-x, red-y, green-x, green-y (from MSB to LSB pairs)
+    /// - Byte 26: blue-x, blue-y, white-x, white-y (from MSB to LSB pairs)
     #[must_use]
     pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
         let chroma = &raw[CHROMA_OFF..CHROMA_OFF + CHROMA_LEN];
-        // TODO: Make the bit packing more readable.
-        // For example, first gather the LSBs and MSBs, then combine them
-        // Use packing LSBs + MSBs so the indexing is easier to follow.
-        // Mask the LSBs before packing.
-        // Use better name for the bit packing.
-        let red_green_lsb = chroma[0];
-        let blue_white_lsb = chroma[1];
+        let green = (get_bits(chroma[0], 0, 1), get_bits(chroma[0], 2, 3));
+        let red = (get_bits(chroma[0], 4, 5), get_bits(chroma[0], 6, 7));
+        let white = (get_bits(chroma[1], 0, 1), get_bits(chroma[1], 2, 3));
+        let blue = (get_bits(chroma[1], 4, 5), get_bits(chroma[1], 6, 7));
         Self {
             red: Coord {
-                x: u10_hi(
-                    chroma[2],
-                    u2_from_masks(red_green_lsb, 0b1000_0000, 0b0100_0000),
-                ),
-                y: u10_hi(
-                    chroma[3],
-                    u2_from_masks(red_green_lsb, 0b0010_0000, 0b0001_0000),
-                ),
+                x: pack_bits(chroma[2], red.1, 2),
+                y: pack_bits(chroma[3], red.0, 2),
             },
             green: Coord {
-                x: u10_hi(
-                    chroma[4],
-                    u2_from_masks(red_green_lsb, 0b0000_1000, 0b0000_0100),
-                ),
-                y: u10_hi(
-                    chroma[5],
-                    u2_from_masks(red_green_lsb, 0b0000_0010, 0b0000_0001),
-                ),
+                x: pack_bits(chroma[4], green.1, 2),
+                y: pack_bits(chroma[5], green.0, 2),
             },
             blue: Coord {
-                x: u10_hi(
-                    chroma[6],
-                    u2_from_masks(blue_white_lsb, 0b1000_0000, 0b0100_0000),
-                ),
-                y: u10_hi(
-                    chroma[7],
-                    u2_from_masks(blue_white_lsb, 0b0010_0000, 0b0001_0000),
-                ),
+                x: pack_bits(chroma[6], blue.1, 2),
+                y: pack_bits(chroma[7], blue.0, 2),
             },
             white: Coord {
-                x: u10_hi(
-                    chroma[8],
-                    u2_from_masks(blue_white_lsb, 0b0000_1000, 0b0000_0100),
-                ),
-                y: u10_hi(
-                    chroma[9],
-                    u2_from_masks(blue_white_lsb, 0b0000_0010, 0b0000_0001),
-                ),
+                x: pack_bits(chroma[8], white.1, 2),
+                y: pack_bits(chroma[9], white.0, 2),
             },
         }
     }
 
+    /// Returns the red chromaticity coordinate.
     #[must_use]
     pub const fn red(&self) -> Coord {
         self.red
     }
 
+    /// Returns the green chromaticity coordinate.
     #[must_use]
     pub const fn green(&self) -> Coord {
         self.green
     }
 
+    /// Returns the blue chromaticity coordinate.
     #[must_use]
     pub const fn blue(&self) -> Coord {
         self.blue
     }
 
+    /// Returns the white chromaticity coordinate.
     #[must_use]
     pub const fn white(&self) -> Coord {
         self.white
     }
 
+    /// Returns true if all coordinates match [sRGB primaries](https://en.wikipedia.org/wiki/SRGB#Primaries)
+    /// within +/- 1 in the raw decoded values (0–1023) to tolerate rounding differences.
+    ///
+    /// Decoded 10-bit values (value / 1024) with rounded primaries (x, y):
+    /// - red:   (655, 338) -> (0.639648, 0.330078) ~ (0.6400, 0.3300)
+    /// - green: (307, 614) -> (0.299805, 0.599609) ~ (0.3000, 0.6000)
+    /// - blue:  (154, 61)  -> (0.150391, 0.059570) ~ (0.1500, 0.0600)
+    /// - white: (320, 337) -> (0.312500, 0.329102) ~ (0.3127, 0.3290)
+    #[must_use]
+    pub const fn is_srgb(&self) -> bool {
+        self.red.x.abs_diff(655) <= 1
+            && self.red.y.abs_diff(338) <= 1
+            && self.green.x.abs_diff(307) <= 1
+            && self.green.y.abs_diff(614) <= 1
+            && self.blue.x.abs_diff(154) <= 1
+            && self.blue.y.abs_diff(61) <= 1
+            && self.white.x.abs_diff(320) <= 1
+            && self.white.y.abs_diff(337) <= 1
+    }
+
     /// Validates the chroma fields.
     #[must_use]
-    pub const fn validate(&self) -> Validation {
-        todo!()
+    pub const fn validate(&self, mono: bool) -> Validation {
+        let red = self.red;
+        let green = self.green;
+        let blue = self.blue;
+        let rgb_non_zero = !(red.x == 0
+            && red.y == 0
+            && green.x == 0
+            && green.y == 0
+            && blue.x == 0
+            && blue.y == 0);
+        Validation::new().warn_if(
+            mono && rgb_non_zero,
+            WarningKind::ChromaMonochromeRgbNonZero,
+        )
     }
 }
 
+impl Display for Chroma {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "red={}, green={}, blue={}, white={}",
+            self.red, self.green, self.blue, self.white
+        )
+    }
+}
+
+/// A 10-bit CIE 1931 xy coordinate pair.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Coord {
     x: u16,
@@ -142,13 +157,21 @@ pub struct Coord {
 }
 
 impl Coord {
+    /// Returns the x coordinate value.
     #[must_use]
     pub const fn x(&self) -> u16 {
         self.x
     }
 
+    /// Returns the y coordinate value.
     #[must_use]
     pub const fn y(&self) -> u16 {
         self.y
+    }
+}
+
+impl Display for Coord {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }

@@ -44,8 +44,10 @@ fn parse_base_acer_ek221q_h() {
 
     match out.descriptors().mode(1).expect("dtd mode 1 should exist") {
         Mode::Timing(timing) => {
-            assert_eq!(timing.h_active(), 1920);
-            assert_eq!(timing.v_active(), 1080);
+            let h = timing.horizontal();
+            let v = timing.vertical();
+            assert_eq!(h.active(), 1920);
+            assert_eq!(v.active(), 1080);
             assert_eq!(timing.pixel_clock_hz(), 148_500_000);
         }
         Mode::Display(serial) => {
@@ -119,11 +121,15 @@ fn parse_base_asus_rog_pg27u() {
 
     let dtd0 = cta.dtd(0).expect("cta dtd 0");
     assert_eq!(dtd0.pixel_clock_hz(), 262_750_000);
-    assert_eq!(dtd0.h_active(), 3840);
-    assert_eq!(dtd0.v_active(), 2160);
+    let h0 = dtd0.horizontal();
+    let v0 = dtd0.vertical();
+    assert_eq!(h0.active(), 3840);
+    assert_eq!(v0.active(), 2160);
 
     let dtd1 = cta.dtd(1).expect("cta dtd 1");
     assert_eq!(dtd1.pixel_clock_hz(), 209_750_000);
-    assert_eq!(dtd1.h_active(), 3840);
-    assert_eq!(dtd1.v_active(), 2160);
+    let h1 = dtd1.horizontal();
+    let v1 = dtd1.vertical();
+    assert_eq!(h1.active(), 3840);
+    assert_eq!(v1.active(), 2160);
 }

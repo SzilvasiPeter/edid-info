@@ -67,6 +67,17 @@ impl Descriptors {
     /// Validates the descriptors.
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        todo!()
+        let mut v = Validation::new();
+        let mut i = 0;
+        while i < DTD_NUM {
+            if let Some(mode) = self.modes[i] {
+                match mode {
+                    Mode::Timing(timing) => v = v.then(timing.validate()),
+                    Mode::Display(display) => v = v.then(display.validate()),
+                }
+            }
+            i += 1;
+        }
+        v
     }
 }

@@ -64,7 +64,7 @@ impl Std1 {
     /// Validates the standard timings.
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        todo!()
+        Validation::new()
     }
 }
 

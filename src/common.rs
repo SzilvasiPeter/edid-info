@@ -173,6 +173,11 @@ pub enum WarningKind {
     BasicImageSizeDubious = 8,
     /// sRGB is signaled, but the gamma is not 2.2.
     BasicSrgbGammaInvalid = 9,
+    /// Chromaticities match sRGB, but sRGB is not signaled.
+    BasicSrgbNotSignaled = 10,
+    // --- Chromaticity ---
+    /// Monochrome display has non-zero RGB chromaticities.
+    ChromaMonochromeRgbNonZero = 11,
 }
 
 impl WarningKind {
@@ -190,6 +195,10 @@ impl WarningKind {
             Self::RangeCvtNoPreferredRefresh => "CVT block missing preferred refresh rate",
             Self::BasicImageSizeDubious => "Dubious maximum image size",
             Self::BasicSrgbGammaInvalid => "sRGB signaled, but gamma is not 2.2",
+            Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
+            Self::ChromaMonochromeRgbNonZero => {
+                "Monochrome display has non-zero RGB chromaticities"
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
 //! Bit manipulation helpers for EDID parsing.
 //!
-//! EDID encodes many fields using bitfields, packed values, and
-//! non-standard integer formats (e.g., 10-bit or 12-bit values
-//! split across multiple bytes).
+//! EDID stores many fields as bitfields packed across bytes.
 
 /// Checks if a specific bit is set in a byte.
 #[must_use]
@@ -17,48 +15,12 @@ pub const fn is_set(byte: u8, bit: u8) -> bool {
 pub const fn get_bits(byte: u8, start: u8, end: u8) -> u8 {
     debug_assert!(start <= end && end <= 7, "invalid bit range");
     let width = end - start;
-    (byte >> start) & 0b1111_1111 >> (7 - width)
+    (byte >> start) & (0b1111_1111 >> (7 - width))
 }
 
-// TODO: Make better names for bit packing
-/// Packs a 12-bit value where the lower 8 bits are in one byte and the upper 4 bits
-/// are in the high nibble of another byte.
+/// Combines two 8-bit values into a `u16` by shifting `hi` left by `lo_width` and performing a bitwise OR with `lo`.
 #[must_use]
-pub const fn u12_hi(lo: u8, mix: u8) -> u16 {
-    u16::from_le_bytes([lo, (mix >> 4) & 0x0f])
-}
-
-/// Packs a 12-bit value where the lower 8 bits are in one byte and the upper 4 bits
-/// are in the low nibble of another byte.
-#[must_use]
-pub const fn u12_lo(lo: u8, mix: u8) -> u16 {
-    u16::from_le_bytes([lo, mix & 0x0f])
-}
-
-/// Packs a 10-bit value where the lower 8 bits are in one byte and the upper 2 bits
-/// are provided as a u16 (usually extracted via bitfield).
-#[must_use]
-pub const fn u10_lo(lo: u8, hi: u16) -> u16 {
-    u16::from_le_bytes([lo, (hi & 0x03) as u8])
-}
-
-/// Packs a 10-bit value where the upper 8 bits are in one byte and the lower 2 bits
-/// are provided as a u16 (usually extracted via bitfield).
-#[must_use]
-pub const fn u10_hi(msb: u8, lsb: u16) -> u16 {
-    ((msb as u16) << 2) | (lsb & 0x03)
-}
-
-/// Extracts a 2-bit value from a byte using two bit masks (high and low bits).
-#[must_use]
-pub const fn u2_from_masks(value: u8, hi_mask: u8, lo_mask: u8) -> u16 {
-    let hi = if (value & hi_mask) != 0 { 2 } else { 0 };
-    let lo = if (value & lo_mask) != 0 { 1 } else { 0 };
-    hi | lo
-}
-
-/// Packs a 6-bit value from two parts.
-#[must_use]
-pub const fn u6_pack(lo4: u8, hi2: u8) -> u8 {
-    (lo4 & 0x0f) | ((hi2 & 0x03) << 4)
+pub const fn pack_bits(hi: u8, lo: u8, lo_width: u8) -> u16 {
+    debug_assert!(lo_width <= 8, "lo_width must be <= 8");
+    ((hi as u16) << lo_width) | (lo as u16)
 }

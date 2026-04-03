@@ -277,7 +277,7 @@ impl Basic {
 
     /// Validates the basic block.
     #[must_use]
-    pub const fn validate(&self) -> Validation {
+    pub const fn validate(&self, chroma_srgb: bool) -> Validation {
         let mut validation = Validation::new();
         if let InputKind::Digital { depth, iface } = self.video_input().kind() {
             validation = validation.fail_if(
@@ -290,14 +290,14 @@ impl Basic {
             );
         }
 
+        let srgb = self.features().standard_rgb();
+        validation = validation.fail_if(srgb && !chroma_srgb, FailureKind::BasicSrgbChromaMismatch);
+        validation = validation.warn_if(!srgb && chroma_srgb, WarningKind::BasicSrgbNotSignaled);
         let gamma_warn = match self.gamma() {
             Some(value) => value != 220,
             None => false,
         };
-        validation = validation.warn_if(
-            self.features().standard_rgb() && gamma_warn,
-            WarningKind::BasicSrgbGammaInvalid,
-        );
+        validation = validation.warn_if(srgb && gamma_warn, WarningKind::BasicSrgbGammaInvalid);
         validation = validation.warn_if(
             self.width_cm != 0
                 && self.height_cm != 0

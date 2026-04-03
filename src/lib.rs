@@ -15,8 +15,8 @@
 //!
 //! # References
 //!
-//! - [EDID 1.4 Specification](https://grouper.ieee.org/groups/2040/2040_14.pdf)
 //! - [Wikipedia: EDID Structure, version 1.4](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
+//! - [EDID 1.4 Specification](https://grouper.ieee.org/groups/2040/2040_14.pdf)
 
 #![forbid(unsafe_code)]
 #![no_std]

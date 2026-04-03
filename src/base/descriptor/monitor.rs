@@ -185,8 +185,8 @@ impl MonitorDesc {
     }
 
     #[must_use]
-    pub fn validate() -> Validation {
-        todo!();
+    pub const fn validate(&self) -> Validation {
+        Validation::new()
     }
 
     // TODO: remove this after getting rid of the redundant tag_raw and byte4 fields

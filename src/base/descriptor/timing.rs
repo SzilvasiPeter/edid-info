@@ -16,7 +16,7 @@
 //! | 14    | Border size |
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
-use crate::bit::{u6_pack, u10_lo, u12_hi, u12_lo};
+use crate::bit::{get_bits, is_set, pack_bits};
 use crate::common::{DESC_LEN, FailureKind, Validation};
 
 const CLK_UNIT: u32 = 10_000;
@@ -71,44 +71,84 @@ impl Features {
     }
 }
 
-// TODO: Group the horizontal and vertical fields together at the getters for better usage
+/// Timings for a single orientation (horizontal or vertical).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Timings {
+    active: u16,
+    blank: u16,
+    front: u16,
+    sync: u16,
+    size_mm: u16,
+    border: u8,
+}
+
+impl Timings {
+    #[must_use]
+    pub const fn active(&self) -> u16 {
+        self.active
+    }
+    #[must_use]
+    pub const fn blank(&self) -> u16 {
+        self.blank
+    }
+    #[must_use]
+    pub const fn front(&self) -> u16 {
+        self.front
+    }
+    #[must_use]
+    pub const fn sync(&self) -> u16 {
+        self.sync
+    }
+    #[must_use]
+    pub const fn back(&self) -> u16 {
+        self.blank
+            .saturating_sub(self.front)
+            .saturating_sub(self.sync)
+    }
+    #[must_use]
+    pub const fn total(&self) -> u16 {
+        self.active + self.blank
+    }
+    #[must_use]
+    pub const fn size_mm(&self) -> u16 {
+        self.size_mm
+    }
+    #[must_use]
+    pub const fn border(&self) -> u8 {
+        self.border
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
     pixel_clock_10khz: u16,
-    h_active: u16,
-    h_blank: u16,
-    v_active: u16,
-    v_blank: u16,
-    h_front: u16,
-    h_sync: u16,
-    v_front: u8,
-    v_sync: u8,
-    h_size_mm: u16,
-    v_size_mm: u16,
-    h_border: u8,
-    v_border: u8,
-    feat: Features,
+    horizontal: Timings,
+    vertical: Timings,
+    features: Features,
 }
 
 impl DetailedTiming {
     #[must_use]
     pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         Some(Self {
-            // TODO: Simplify the bit packing
             pixel_clock_10khz: u16::from_le_bytes([raw[0], raw[1]]),
-            h_active: u12_hi(raw[2], raw[4]),
-            h_blank: u12_lo(raw[3], raw[4]),
-            v_active: u12_hi(raw[5], raw[7]),
-            v_blank: u12_lo(raw[6], raw[7]),
-            h_front: u10_lo(raw[8], (raw[11] >> 6) as u16),
-            h_sync: u10_lo(raw[9], ((raw[11] >> 4) & 0x03) as u16),
-            v_front: u6_pack((raw[10] >> 4) & 0x0f, (raw[11] >> 2) & 0x03),
-            v_sync: u6_pack(raw[10] & 0x0f, raw[11] & 0x03),
-            h_size_mm: u12_hi(raw[12], raw[14]),
-            v_size_mm: u12_lo(raw[13], raw[14]),
-            h_border: raw[15],
-            v_border: raw[16],
-            feat: parse_feat(raw[17]),
+            horizontal: Timings {
+                active: pack_bits(get_bits(raw[4], 4, 7), raw[2], 8),
+                blank: pack_bits(get_bits(raw[4], 0, 3), raw[3], 8),
+                front: pack_bits(get_bits(raw[11], 6, 7), raw[8], 8),
+                sync: pack_bits(get_bits(raw[11], 4, 5), raw[9], 8),
+                size_mm: pack_bits(get_bits(raw[14], 4, 7), raw[12], 8),
+                border: raw[15],
+            },
+            vertical: Timings {
+                active: pack_bits(get_bits(raw[7], 4, 7), raw[5], 8),
+                blank: pack_bits(get_bits(raw[7], 0, 3), raw[6], 8),
+                front: pack_bits(get_bits(raw[11], 2, 3), get_bits(raw[10], 4, 7), 4),
+                sync: pack_bits(get_bits(raw[11], 0, 1), get_bits(raw[10], 0, 3), 4),
+                size_mm: pack_bits(get_bits(raw[14], 0, 3), raw[13], 8),
+                border: raw[16],
+            },
+            features: parse_features(raw[17]),
         })
     }
 
@@ -116,94 +156,25 @@ impl DetailedTiming {
     pub const fn pixel_clock_hz(&self) -> u32 {
         self.pixel_clock_10khz as u32 * CLK_UNIT
     }
+
     #[must_use]
-    pub const fn h_active(&self) -> u16 {
-        self.h_active
+    pub const fn horizontal(&self) -> &Timings {
+        &self.horizontal
     }
+
     #[must_use]
-    pub const fn h_blank(&self) -> u16 {
-        self.h_blank
+    pub const fn vertical(&self) -> &Timings {
+        &self.vertical
     }
-    #[must_use]
-    pub const fn v_active(&self) -> u16 {
-        self.v_active
-    }
-    #[must_use]
-    pub const fn v_blank(&self) -> u16 {
-        self.v_blank
-    }
-    #[must_use]
-    pub const fn h_front(&self) -> u16 {
-        self.h_front
-    }
-    #[must_use]
-    pub const fn h_sync(&self) -> u16 {
-        self.h_sync
-    }
-    #[must_use]
-    pub const fn h_back(&self) -> u16 {
-        self.h_blank - self.h_front - self.h_sync
-    }
-    #[must_use]
-    pub const fn v_front(&self) -> u8 {
-        self.v_front
-    }
-    #[must_use]
-    pub const fn v_sync(&self) -> u8 {
-        self.v_sync
-    }
-    #[must_use]
-    pub fn v_back(&self) -> u16 {
-        self.v_blank - u16::from(self.v_front) - u16::from(self.v_sync)
-    }
+
     #[must_use]
     pub fn h_khz(&self) -> f64 {
-        f64::from(self.pixel_clock_hz()) / f64::from(self.h_active + self.h_blank) / 1000.0
+        f64::from(self.pixel_clock_hz()) / f64::from(self.horizontal.total()) / 1000.0
     }
 
-    /// Vertical refresh rate in Hz.
-    ///
-    /// For interlaced modes, this returns the field rate (e.g., 60Hz for 1080i).
-    /// Use [`frame_rate_hz`](Self::frame_rate_hz) to get the frame rate.
     #[must_use]
-    pub fn v_hz(&self) -> f64 {
-        f64::from(self.pixel_clock_hz())
-            / f64::from(self.h_active + self.h_blank)
-            / f64::from(self.v_active + self.v_blank)
-    }
-
-    /// Frame refresh rate in Hz.
-    ///
-    /// For progressive modes, this is identical to [`v_hz`](Self::v_hz).
-    /// For interlaced modes, this is half of the field rate.
-    #[must_use]
-    pub fn frame_rate_hz(&self) -> f64 {
-        let v_hz = self.v_hz();
-        if self.feat().interlaced() {
-            v_hz / 2.0
-        } else {
-            v_hz
-        }
-    }
-    #[must_use]
-    pub const fn h_size_mm(&self) -> u16 {
-        self.h_size_mm
-    }
-    #[must_use]
-    pub const fn v_size_mm(&self) -> u16 {
-        self.v_size_mm
-    }
-    #[must_use]
-    pub const fn h_border(&self) -> u8 {
-        self.h_border
-    }
-    #[must_use]
-    pub const fn v_border(&self) -> u8 {
-        self.v_border
-    }
-    #[must_use]
-    pub const fn feat(&self) -> Features {
-        self.feat
+    pub const fn features(&self) -> Features {
+        self.features
     }
 
     #[must_use]
@@ -215,16 +186,16 @@ impl DetailedTiming {
     }
 }
 
-const fn parse_feat(raw: u8) -> Features {
+const fn parse_features(raw: u8) -> Features {
     Features {
-        interlaced: (raw & 0b1000_0000) != 0,
+        interlaced: is_set(raw, 7),
         stereo: parse_stereo(raw),
         sync: parse_sync(raw),
     }
 }
 
 const fn parse_stereo(raw: u8) -> Stereo {
-    match (raw >> 5, raw & 0x01) {
+    match ((raw >> 5) & 0b11, raw & 0b0000_0001) {
         (0b00, _) => Stereo::None,
         (0b01, 0) => Stereo::FieldSeqRight,
         (0b10, 0) => Stereo::FieldSeqLeft,
@@ -236,19 +207,19 @@ const fn parse_stereo(raw: u8) -> Stereo {
 }
 
 const fn parse_sync(raw: u8) -> Sync {
-    match (raw >> 3) & 0x03 {
+    match (raw >> 3) & 0b0000_0011 {
         0b00 | 0b01 => Sync::Analog {
-            bipolar: (raw & 0b0000_1000) != 0,
-            serr: (raw & 0b0000_0100) != 0,
-            rgb: (raw & 0b0000_0010) != 0,
+            bipolar: is_set(raw, 3),
+            serr: is_set(raw, 2),
+            rgb: is_set(raw, 1),
         },
         0b10 => Sync::DigitalComposite {
-            serr: (raw & 0b0000_0100) != 0,
-            h_polar: (raw & 0b0000_0010) != 0,
+            serr: is_set(raw, 2),
+            h_polar: is_set(raw, 1),
         },
         _ => Sync::DigitalSeparate {
-            v_polar: (raw & 0b0000_0100) != 0,
-            h_polar: (raw & 0b0000_0010) != 0,
+            v_polar: is_set(raw, 2),
+            h_polar: is_set(raw, 1),
         },
     }
 }

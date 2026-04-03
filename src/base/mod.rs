@@ -30,6 +30,7 @@ pub mod header;
 pub mod std1;
 
 use crate::common::{BLOCK_LEN, FailureKind, Validation, checksum_ok};
+use basic::{AnalogType, DisplayType};
 
 /// Base block structure containing header, display parameters, chroma, timings and descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -89,15 +90,17 @@ impl<'a> Base<'a> {
     /// Validates the base block.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        // TODO: Validate the standard sRGB color space.
-        // `self.chroma()` must contain sRGB standard values if `self.basic().standard_rgb()` is set:
-        // - BasicSrgbChromaMismatch
-        // - BasicSrgbNotSignaled
-        // Use the `SRGB_PRIMARIES` to check the bytes directly.
+        let basic = self.basic();
+        let chroma = self.chroma();
+        let chroma_srgb = chroma.is_srgb();
+        let mono = matches!(
+            basic.features().display(),
+            DisplayType::Analog(AnalogType::MonoGray)
+        );
         Validation::new()
             .then(self.header().validate())
-            .then(self.basic().validate())
-            .then(self.chroma().validate())
+            .then(basic.validate(chroma_srgb))
+            .then(chroma.validate(mono))
             .then(self.timings().validate())
             .then(self.descriptors().validate())
             .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)

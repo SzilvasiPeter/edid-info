@@ -1,6 +1,7 @@
 use edid_info::base::basic::{
     AnalogType, Basic, BitDepth, DigitalType, DisplayType, InputKind, Interface, Level, ScreenSize,
 };
+use edid_info::base::chroma::Chroma;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
@@ -46,7 +47,7 @@ fn parse_basic_acer_ek221q_h() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -83,7 +84,7 @@ fn parse_basic_asus_rog_pg27u() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -124,7 +125,7 @@ fn parse_basic_phl_221v8() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -165,7 +166,7 @@ fn parse_basic_rol_rolsen_c707n() {
     assert!(!out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -206,7 +207,7 @@ fn parse_basic_tsb_tv() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -247,7 +248,7 @@ fn parse_basic_vit_vt988() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -288,7 +289,7 @@ fn parse_basic_wg_unknown() {
     assert!(!out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate();
+    let validation = out.validate(Chroma::parse(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);

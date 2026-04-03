@@ -6,8 +6,8 @@ Lightweight Rust library for reading EDID data, extracting monitor name, resolut
 
 ## Features
 
-- Zero-copy parsing of EDID 1.4 base blocks
-- Support for CTA-861
+- Zero-copy parsing
+- Extension support: CTA-861
 - No external dependencies and `#[no_std]` support
 - `#![forbid(unsafe_code)]`
 
