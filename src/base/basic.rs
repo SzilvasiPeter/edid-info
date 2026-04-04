@@ -278,34 +278,28 @@ impl Basic {
     /// Validates the basic block.
     #[must_use]
     pub const fn validate(&self, chroma_srgb: bool) -> Validation {
-        let mut validation = Validation::new();
-        if let InputKind::Digital { depth, iface } = self.video_input().kind() {
-            validation = validation.fail_if(
+        let (bitdepth_reserved, iface_reserved) = match self.video_input().kind() {
+            InputKind::Digital { depth, iface } => (
                 matches!(depth, BitDepth::Reserved),
-                FailureKind::BasicColorDepthReserved,
-            );
-            validation = validation.fail_if(
                 matches!(iface, Interface::Other(_)),
-                FailureKind::BasicInterfaceReserved,
-            );
-        }
-
+            ),
+            InputKind::Analog { .. } => (false, false),
+        };
         let srgb = self.features().standard_rgb();
-        validation = validation.fail_if(srgb && !chroma_srgb, FailureKind::BasicSrgbChromaMismatch);
-        validation = validation.warn_if(!srgb && chroma_srgb, WarningKind::BasicSrgbNotSignaled);
         let gamma_warn = match self.gamma() {
             Some(value) => value != 220,
             None => false,
         };
-        validation = validation.warn_if(srgb && gamma_warn, WarningKind::BasicSrgbGammaInvalid);
-        validation = validation.warn_if(
-            self.width_cm != 0
-                && self.height_cm != 0
-                && (self.width_cm < 10 || self.height_cm < 10),
-            WarningKind::BasicImageSizeDubious,
-        );
-
-        validation
+        let small_size = self.width_cm != 0
+            && self.height_cm != 0
+            && (self.width_cm < 10 || self.height_cm < 10);
+        Validation::new()
+            .fail_if(bitdepth_reserved, FailureKind::BasicColorDepthReserved)
+            .fail_if(iface_reserved, FailureKind::BasicInterfaceReserved)
+            .fail_if(srgb && !chroma_srgb, FailureKind::BasicSrgbChromaMismatch)
+            .warn_if(!srgb && chroma_srgb, WarningKind::BasicSrgbNotSignaled)
+            .warn_if(srgb && gamma_warn, WarningKind::BasicSrgbGammaInvalid)
+            .warn_if(small_size, WarningKind::BasicImageSizeDubious)
     }
 }
 
@@ -434,19 +428,18 @@ impl core::fmt::Display for VideoInput {
                     BitDepth::B16 => "16 bit per color",
                     BitDepth::Reserved => "reserved",
                 };
-                match iface {
-                    Interface::Undef => write!(f, "Digital (depth: {depth}, iface: undefined)"),
-                    Interface::Dvi => write!(f, "Digital (depth: {depth}, iface: DVI)"),
-                    Interface::HdmiA => write!(f, "Digital (depth: {depth}, iface: HDMIa)"),
-                    Interface::HdmiB => write!(f, "Digital (depth: {depth}, iface: HDMIb)"),
-                    Interface::Mddi => write!(f, "Digital (depth: {depth}, iface: MDDI)"),
-                    Interface::DisplayPort => {
-                        write!(f, "Digital (depth: {depth}, iface: DisplayPort)")
-                    }
+                let iface = match iface {
+                    Interface::Undef => "undefined",
+                    Interface::Dvi => "DVI",
+                    Interface::HdmiA => "HDMIa",
+                    Interface::HdmiB => "HDMIb",
+                    Interface::Mddi => "MDDI",
+                    Interface::DisplayPort => "DisplayPort",
                     Interface::Other(value) => {
-                        write!(f, "Digital (depth: {depth}, iface: 0x{value:01X})")
+                        return write!(f, "Digital (depth: {depth}, iface: 0x{value:01X})");
                     }
-                }
+                };
+                write!(f, "Digital (depth: {depth}, iface: {iface})")
             }
             InputKind::Analog {
                 level,

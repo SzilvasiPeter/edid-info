@@ -7,8 +7,8 @@
 //!
 //! | Byte | Description |
 //! |------|-------------|
-//! | 25   | Red-x LSBs + Green-x LSBs |
-//! | 26   | Blue-x LSBs + White-x LSBs |
+//! | 25   | Green-x LSBs + Red-x LSBs |
+//! | 26   | White-x LSBs + Blue-x LSBs |
 //! | 27   | Red-x MSBs |
 //! | 28   | Red-y MSBs |
 //! | 29   | Green-x MSBs |
@@ -100,38 +100,27 @@ impl Chroma {
         self.white
     }
 
-    /// Returns true if all coordinates match [sRGB primaries](https://en.wikipedia.org/wiki/SRGB#Primaries)
-    /// within +/- 1 in the raw decoded values (0–1023) to tolerate rounding differences.
+    /// Returns true if all coordinates match [sRGB primaries](https://en.wikipedia.org/wiki/SRGB#Primaries) exactly.
     ///
-    /// Decoded 10-bit values (value / 1024) with rounded primaries (x, y):
-    /// - red:   (655, 338) -> (0.639648, 0.330078) ~ (0.6400, 0.3300)
-    /// - green: (307, 614) -> (0.299805, 0.599609) ~ (0.3000, 0.6000)
-    /// - blue:  (154, 61)  -> (0.150391, 0.059570) ~ (0.1500, 0.0600)
-    /// - white: (320, 337) -> (0.312500, 0.329102) ~ (0.3127, 0.3290)
+    /// Expected 10-bit values (value / 1024 -> rounded xy):
+    /// - red:   (655, 338) -> (0.6396, 0.3301) ~ (0.6400, 0.3300)
+    /// - green: (307, 614) -> (0.2998, 0.5996) ~ (0.3000, 0.6000)
+    /// - blue:  (154, 61)  -> (0.1504, 0.0596) ~ (0.1500, 0.0600)
+    /// - white: (320, 337) -> (0.3125, 0.3291) ~ (0.3127, 0.3290)
     #[must_use]
     pub const fn is_srgb(&self) -> bool {
-        self.red.x.abs_diff(655) <= 1
-            && self.red.y.abs_diff(338) <= 1
-            && self.green.x.abs_diff(307) <= 1
-            && self.green.y.abs_diff(614) <= 1
-            && self.blue.x.abs_diff(154) <= 1
-            && self.blue.y.abs_diff(61) <= 1
-            && self.white.x.abs_diff(320) <= 1
-            && self.white.y.abs_diff(337) <= 1
+        (self.red.x == 655 && self.red.y == 338)
+            && (self.green.x == 307 && self.green.y == 614)
+            && (self.blue.x == 154 && self.blue.y == 61)
+            && (self.white.x == 320 && self.white.y == 337)
     }
 
     /// Validates the chroma fields.
     #[must_use]
     pub const fn validate(&self, mono: bool) -> Validation {
-        let red = self.red;
-        let green = self.green;
-        let blue = self.blue;
-        let rgb_non_zero = !(red.x == 0
-            && red.y == 0
-            && green.x == 0
-            && green.y == 0
-            && blue.x == 0
-            && blue.y == 0);
+        let rgb_non_zero = !((self.red.x == 0 && self.red.y == 0)
+            && (self.green.x == 0 && self.green.y == 0)
+            && (self.blue.x == 0 && self.blue.y == 0));
         Validation::new().warn_if(
             mono && rgb_non_zero,
             WarningKind::ChromaMonochromeRgbNonZero,

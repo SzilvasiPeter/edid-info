@@ -90,17 +90,15 @@ impl<'a> Base<'a> {
     /// Validates the base block.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        let basic = self.basic();
-        let chroma = self.chroma();
-        let chroma_srgb = chroma.is_srgb();
+        let chroma_srgb = self.chroma().is_srgb();
         let mono = matches!(
-            basic.features().display(),
+            self.basic().features().display(),
             DisplayType::Analog(AnalogType::MonoGray)
         );
         Validation::new()
             .then(self.header().validate())
-            .then(basic.validate(chroma_srgb))
-            .then(chroma.validate(mono))
+            .then(self.basic().validate(chroma_srgb))
+            .then(self.chroma().validate(mono))
             .then(self.timings().validate())
             .then(self.descriptors().validate())
             .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)
