@@ -19,7 +19,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 fn parse_basic_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
     let raw = base(ACER);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -47,7 +47,7 @@ fn parse_basic_acer_ek221q_h() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -56,7 +56,7 @@ fn parse_basic_acer_ek221q_h() {
 #[test]
 fn parse_basic_asus_rog_pg27u() {
     let raw = base(ASUS);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -84,7 +84,7 @@ fn parse_basic_asus_rog_pg27u() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -93,7 +93,7 @@ fn parse_basic_asus_rog_pg27u() {
 #[test]
 fn parse_basic_phl_221v8() {
     let raw = base(PHL);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -125,7 +125,7 @@ fn parse_basic_phl_221v8() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -134,7 +134,7 @@ fn parse_basic_phl_221v8() {
 #[test]
 fn parse_basic_rol_rolsen_c707n() {
     let raw = base(ROL);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -166,7 +166,7 @@ fn parse_basic_rol_rolsen_c707n() {
     assert!(!out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -175,7 +175,7 @@ fn parse_basic_rol_rolsen_c707n() {
 #[test]
 fn parse_basic_tsb_tv() {
     let raw = base(TSB);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -207,7 +207,7 @@ fn parse_basic_tsb_tv() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -216,7 +216,7 @@ fn parse_basic_tsb_tv() {
 #[test]
 fn parse_basic_vit_vt988() {
     let raw = base(VIT);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -248,7 +248,7 @@ fn parse_basic_vit_vt988() {
     assert!(out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
@@ -257,7 +257,7 @@ fn parse_basic_vit_vt988() {
 #[test]
 fn parse_basic_wg_unknown() {
     let raw = base(WG);
-    let out = Basic::parse(&raw);
+    let out = Basic::new(&raw);
 
     assert_eq!(
         out.video_input().kind(),
@@ -289,7 +289,7 @@ fn parse_basic_wg_unknown() {
     assert!(!out.features().timing_mode());
     assert!(!out.features().timing_continuous());
 
-    let validation = out.validate(Chroma::parse(&raw).is_srgb());
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);

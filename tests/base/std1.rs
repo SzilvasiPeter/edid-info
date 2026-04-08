@@ -11,7 +11,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 fn parse_standard_acer_ek221q_h() {
     let raw = base(ACER);
     let mode = |i| {
-        Std1::parse(&raw)
+        Std1::new(&raw)
             .mode(i)
             .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
     };
@@ -31,7 +31,7 @@ fn parse_standard_acer_ek221q_h() {
 fn parse_standard_asus_rog_pg27u() {
     let raw = base(ASUS);
     let mode = |i| {
-        Std1::parse(&raw)
+        Std1::new(&raw)
             .mode(i)
             .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
     };

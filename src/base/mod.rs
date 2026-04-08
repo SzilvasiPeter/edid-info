@@ -54,13 +54,13 @@ impl<'a> Base<'a> {
     /// Returns basic display parameters (video input, screen size, etc.).
     #[must_use]
     pub fn basic(&self) -> basic::Basic {
-        basic::Basic::parse(self.raw)
+        basic::Basic::new(self.raw)
     }
 
     /// Returns chromaticity coordinates (color characteristics).
     #[must_use]
     pub fn chroma(&self) -> chroma::Chroma {
-        chroma::Chroma::parse(self.raw)
+        chroma::Chroma::new(self.raw)
     }
 
     /// Returns the established timing bitmap (common legacy video timings).
@@ -72,13 +72,13 @@ impl<'a> Base<'a> {
     /// Returns the standard timing information.
     #[must_use]
     pub fn timings(&self) -> std1::Std1 {
-        std1::Std1::parse(self.raw)
+        std1::Std1::new(self.raw)
     }
 
     /// Returns the display timing and monitor descriptors.
     #[must_use]
     pub fn descriptors(&self) -> descriptors::Descriptors {
-        descriptors::Descriptors::parse(self.raw)
+        descriptors::Descriptors::new(self.raw)
     }
 
     /// Returns the extension flag and checksum.

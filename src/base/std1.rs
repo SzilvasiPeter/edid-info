@@ -38,7 +38,7 @@ impl Std1 {
     // TODO: add byte structure explaination in the docstring
     /// Parses the standard timings from base block bytes.
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let std1 = &raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN];
         // TODO: Make this more concise, no need to please const anymore.
         let mut modes = [None; STANDARD_NUM];

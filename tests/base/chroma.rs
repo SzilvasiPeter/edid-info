@@ -10,7 +10,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 #[test]
 fn parse_chroma_acer_ek221q_h() {
     let raw = base(ACER);
-    let out = Chroma::parse(&raw);
+    let out = Chroma::new(&raw);
 
     assert_eq!(out.red().x(), 662);
     assert_eq!(out.red().y(), 355);
@@ -25,7 +25,7 @@ fn parse_chroma_acer_ek221q_h() {
 #[test]
 fn parse_chroma_asus_rog_pg27u() {
     let raw = base(ASUS);
-    let out = Chroma::parse(&raw);
+    let out = Chroma::new(&raw);
 
     assert_eq!(out.red().x(), 690);
     assert_eq!(out.red().y(), 322);

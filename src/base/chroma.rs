@@ -50,7 +50,7 @@ impl Chroma {
     /// - Byte 25: red-x, red-y, green-x, green-y (from MSB to LSB pairs)
     /// - Byte 26: blue-x, blue-y, white-x, white-y (from MSB to LSB pairs)
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let chroma = &raw[CHROMA_OFF..CHROMA_OFF + CHROMA_LEN];
         let green = (get_bits(chroma[0], 0, 1), get_bits(chroma[0], 2, 3));
         let red = (get_bits(chroma[0], 4, 5), get_bits(chroma[0], 6, 7));

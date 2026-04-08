@@ -33,7 +33,7 @@ pub struct Descriptors {
 impl Descriptors {
     /// Parses descriptors from base block bytes.
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let desc = &raw[DTD_OFF..DTD_OFF + (DESC_LEN * DTD_NUM)];
 
         // TODO: Make this more concise, no need to please const anymore.

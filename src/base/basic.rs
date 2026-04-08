@@ -216,7 +216,7 @@ impl Basic {
     /// - `gamma`: 1 byte
     /// - `features`: 1 byte
     #[must_use]
-    pub fn parse(raw: &[u8; BLOCK_LEN]) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let basic = &raw[BASIC_OFF..BASIC_OFF + BASIC_LEN];
         Self {
             video_input: basic[0],
