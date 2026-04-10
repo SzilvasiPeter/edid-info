@@ -1,5 +1,6 @@
 use edid_info::base::descriptor::monitor::{DescTag, MonitorDesc};
-use edid_info::base::descriptor::range::{AspectPref, Timing};
+use edid_info::base::descriptor::range::Timing;
+use edid_info::common::Aspect;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -92,7 +93,7 @@ fn parse_range_cvt_sdc_123yl01() {
             assert!(!cvt.ar_16_10());
             assert!(cvt.ar_5_4());
             assert!(!cvt.ar_15_9());
-            assert_eq!(cvt.pref(), AspectPref::A4_3);
+            assert_eq!(cvt.preferred_aspect(), Some(Aspect::A4_3));
             assert!(cvt.rb());
             assert!(!cvt.std_blank());
             assert!(!cvt.h_shrink());

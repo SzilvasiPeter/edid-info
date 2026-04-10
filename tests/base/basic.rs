@@ -44,7 +44,7 @@ fn parse_basic_acer_ek221q_h() {
         DisplayType::Digital(DigitalType::Rgb444Y444)
     );
     assert!(!out.features().standard_rgb());
-    assert!(out.features().timing_mode());
+    assert!(out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -81,7 +81,7 @@ fn parse_basic_asus_rog_pg27u() {
         DisplayType::Digital(DigitalType::Rgb444Y444Y422)
     );
     assert!(!out.features().standard_rgb());
-    assert!(out.features().timing_mode());
+    assert!(out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -122,7 +122,7 @@ fn parse_basic_phl_221v8() {
         DisplayType::Analog(AnalogType::Rgb)
     );
     assert!(!out.features().standard_rgb());
-    assert!(out.features().timing_mode());
+    assert!(out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -163,7 +163,7 @@ fn parse_basic_rol_rolsen_c707n() {
         DisplayType::Analog(AnalogType::Rgb)
     );
     assert!(!out.features().standard_rgb());
-    assert!(!out.features().timing_mode());
+    assert!(!out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -204,7 +204,7 @@ fn parse_basic_tsb_tv() {
         DisplayType::Analog(AnalogType::Rgb)
     );
     assert!(!out.features().standard_rgb());
-    assert!(out.features().timing_mode());
+    assert!(out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -245,7 +245,7 @@ fn parse_basic_vit_vt988() {
         DisplayType::Analog(AnalogType::Rgb)
     );
     assert!(!out.features().standard_rgb());
-    assert!(out.features().timing_mode());
+    assert!(out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
@@ -286,7 +286,7 @@ fn parse_basic_wg_unknown() {
         DisplayType::Analog(AnalogType::Rgb)
     );
     assert!(!out.features().standard_rgb());
-    assert!(!out.features().timing_mode());
+    assert!(!out.features().preferred_timing_native());
     assert!(!out.features().timing_continuous());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());

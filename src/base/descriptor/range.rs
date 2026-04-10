@@ -14,7 +14,7 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Timing formula type |
 
-use crate::common::DESC_LEN;
+use crate::common::{Aspect, DESC_LEN};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Timing {
@@ -26,17 +26,8 @@ pub enum Timing {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AspectPref {
-    A4_3,
-    A16_9,
-    A16_10,
-    A5_4,
-    A15_9,
-    Reserved(u8),
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SecondaryGtf {
+    // TODO: add better name for fields
     start_khz: u16,
     c_x2: u8,
     m: u16,
@@ -85,16 +76,18 @@ impl SecondaryGtf {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[allow(clippy::struct_excessive_bools, reason = "Spec-aligned EDID bitfields")]
 pub struct Cvt {
+    // TODO: add better name for fields
     major: u8,
     minor: u8,
     add_clock_0_25_mhz: u8,
     max_active: Option<u16>,
+    // TODO: Use bit map instead
     ar_4_3: bool,
     ar_16_9: bool,
     ar_16_10: bool,
     ar_5_4: bool,
     ar_15_9: bool,
-    pref: AspectPref,
+    preferred_aspect: Option<Aspect>,
     rb: bool,
     std_blank: bool,
     h_shrink: bool,
@@ -118,12 +111,12 @@ impl Cvt {
             Some(((u16::from(msb)) << 8) | u16::from(lsb))
         };
         let pref = match (data[4] >> 5) & 0b111 {
-            0b000 => AspectPref::A4_3,
-            0b001 => AspectPref::A16_9,
-            0b010 => AspectPref::A16_10,
-            0b011 => AspectPref::A5_4,
-            0b100 => AspectPref::A15_9,
-            v => AspectPref::Reserved(v),
+            0b000 => Some(Aspect::A4_3),
+            0b001 => Some(Aspect::A16_9),
+            0b010 => Some(Aspect::A16_10),
+            0b011 => Some(Aspect::A5_4),
+            0b100 => Some(Aspect::A15_9),
+            _ => None,
         };
         Self {
             major,
@@ -135,7 +128,7 @@ impl Cvt {
             ar_16_10: (data[3] & 0b0010_0000) != 0,
             ar_5_4: (data[3] & 0b0001_0000) != 0,
             ar_15_9: (data[3] & 0b0000_1000) != 0,
-            pref,
+            preferred_aspect: pref,
             rb: (data[4] & 0b0001_0000) != 0,
             std_blank: (data[4] & 0b0000_1000) != 0,
             h_shrink: (data[5] & 0b1000_0000) != 0,
@@ -192,8 +185,8 @@ impl Cvt {
     }
 
     #[must_use]
-    pub const fn pref(&self) -> AspectPref {
-        self.pref
+    pub const fn preferred_aspect(&self) -> Option<Aspect> {
+        self.preferred_aspect
     }
 
     #[must_use]

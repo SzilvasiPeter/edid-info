@@ -109,6 +109,7 @@ impl Established {
                 flag(established[1], 0x04, EstablishedTiming::T1024x768_70),
                 flag(established[1], 0x02, EstablishedTiming::T1024x768_75),
                 flag(established[1], 0x01, EstablishedTiming::T1280x1024_75),
+                // TODO: This byte is not indicating the established III, the established III is definied under the std3.rs module
                 // Established III (Byte 37)
                 flag(established[2], 0x80, EstablishedTiming::T1152x870_75),
             ],
@@ -127,10 +128,6 @@ impl Established {
     pub const fn manufacturer_bits(&self) -> u8 {
         self.manufacturer_bits
     }
-}
-
-const fn flag(byte: u8, mask: u8, val: EstablishedTiming) -> Option<EstablishedTiming> {
-    if (byte & mask) != 0 { Some(val) } else { None }
 }
 
 impl core::fmt::Display for EstablishedTiming {
@@ -155,4 +152,8 @@ impl core::fmt::Display for EstablishedTiming {
             Self::T1152x870_75 => write!(f, "1152x870 @ 75 Hz (Apple, Mac II)"),
         }
     }
+}
+
+const fn flag(byte: u8, mask: u8, val: EstablishedTiming) -> Option<EstablishedTiming> {
+    if (byte & mask) != 0 { Some(val) } else { None }
 }

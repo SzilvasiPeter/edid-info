@@ -270,13 +270,100 @@ impl core::fmt::Display for Version {
     }
 }
 
+/// Common aspect ratios.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Aspect {
+    /// 1:1 aspect ratio.
+    A1_1,
+    /// 4:3 aspect ratio.
+    A4_3,
+    /// 5:4 aspect ratio.
+    A5_4,
+    /// 15:9 aspect ratio.
+    A15_9,
+    /// 16:9 aspect ratio.
+    A16_9,
+    /// 16:10 aspect ratio.
+    A16_10,
+    /// 21:9 (64:27) aspect ratio.
+    A21_9,
+    /// 256:135 (DCI 4K) aspect ratio.
+    A256_135,
+    /// Any other aspect ratio.
+    Other(AspectRatio),
+}
+
+impl Aspect {
+    /// Returns the aspect ratio as an [`AspectRatio`].
+    #[must_use]
+    pub const fn ratio(&self) -> AspectRatio {
+        match self {
+            Self::A1_1 => AspectRatio::new(1, 1),
+            Self::A4_3 => AspectRatio::new(4, 3),
+            Self::A5_4 => AspectRatio::new(5, 4),
+            Self::A15_9 => AspectRatio::new(15, 9),
+            Self::A16_9 => AspectRatio::new(16, 9),
+            Self::A16_10 => AspectRatio::new(16, 10),
+            Self::A21_9 => AspectRatio::new(64, 27),
+            Self::A256_135 => AspectRatio::new(256, 135),
+            Self::Other(ratio) => *ratio,
+        }
+    }
+}
+
+impl From<Aspect> for AspectRatio {
+    fn from(aspect: Aspect) -> Self {
+        aspect.ratio()
+    }
+}
+
+impl From<AspectRatio> for Aspect {
+    fn from(ratio: AspectRatio) -> Self {
+        ratio.as_aspect()
+    }
+}
+
 /// Aspect ratio represented as a width:height ratio.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AspectRatio {
+    width: u16,
+    height: u16,
+}
+
+impl AspectRatio {
+    /// Creates a new aspect ratio.
+    #[must_use]
+    pub const fn new(width: u16, height: u16) -> Self {
+        Self { width, height }
+    }
+
     /// Width component of the ratio.
-    pub width: u16,
+    #[must_use]
+    pub const fn width(&self) -> u16 {
+        self.width
+    }
+
     /// Height component of the ratio.
-    pub height: u16,
+    #[must_use]
+    pub const fn height(&self) -> u16 {
+        self.height
+    }
+
+    /// Returns this ratio as a common [`Aspect`].
+    #[must_use]
+    pub const fn as_aspect(&self) -> Aspect {
+        match (self.width, self.height) {
+            (1, 1) => Aspect::A1_1,
+            (4, 3) => Aspect::A4_3,
+            (5, 4) => Aspect::A5_4,
+            (15, 9) => Aspect::A15_9,
+            (16, 9) => Aspect::A16_9,
+            (16, 10) => Aspect::A16_10,
+            (64, 27) => Aspect::A21_9,
+            (256, 135) => Aspect::A256_135,
+            _ => Aspect::Other(*self),
+        }
+    }
 }
 
 /// Verifies the checksum of an EDID block.

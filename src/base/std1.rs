@@ -14,20 +14,11 @@
 //! | 38–53  | 8×2   | Standard timing descriptors |
 //!
 //! If both bytes are 0x01, the entry is unused.
-
-use crate::common::{BLOCK_LEN, Validation};
+use crate::common::{Aspect, BLOCK_LEN, Validation};
 
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
 pub const STANDARD_NUM: usize = 8;
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Aspect {
-    A16_10,
-    A4_3,
-    A5_4,
-    A16_9,
-}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Std1 {
@@ -106,17 +97,14 @@ pub(super) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing>
     }
     let width = (x_byte as u16 + 31) * 8;
     let aspect = match y_byte & 0b1100_0000 {
+        // TODO: (Versions prior to 1.3 defined 00 as 1:1.)
         0b0000_0000 => Aspect::A16_10,
         0b0100_0000 => Aspect::A4_3,
         0b1000_0000 => Aspect::A5_4,
         _ => Aspect::A16_9,
     };
-    let height = match aspect {
-        Aspect::A16_10 => width * 10 / 16,
-        Aspect::A4_3 => width * 3 / 4,
-        Aspect::A5_4 => width * 4 / 5,
-        Aspect::A16_9 => width * 9 / 16,
-    };
+    let ratio = aspect.ratio();
+    let height = width * ratio.height() / ratio.width();
     let vfreq = (y_byte & 0b0011_1111) + 60;
     Some(Timing {
         width,

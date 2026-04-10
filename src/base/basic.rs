@@ -242,14 +242,8 @@ impl Basic {
     pub const fn screen_size(&self) -> ScreenSize {
         match (self.width_cm, self.height_cm) {
             (0, 0) => ScreenSize::Undefined,
-            (w, 0) => ScreenSize::Landscape(AspectRatio {
-                width: w as u16 + 99,
-                height: 100,
-            }),
-            (0, h) => ScreenSize::Portrait(AspectRatio {
-                width: 100,
-                height: h as u16 + 99,
-            }),
+            (w, 0) => ScreenSize::Landscape(AspectRatio::new(w as u16 + 99, 100)),
+            (0, h) => ScreenSize::Portrait(AspectRatio::new(100, h as u16 + 99)),
             (w, h) => ScreenSize::Dimensions {
                 width_cm: w,
                 height_cm: h,
@@ -317,10 +311,10 @@ impl core::fmt::Display for Basic {
                 write!(f, "Size: {width_cm}x{height_cm} cm")?;
             }
             ScreenSize::Landscape(ratio) => {
-                write!(f, "Aspect: {}:{} landscape", ratio.width, ratio.height)?;
+                write!(f, "Aspect: {}:{} landscape", ratio.width(), ratio.height())?;
             }
             ScreenSize::Portrait(ratio) => {
-                write!(f, "Aspect: {}:{} portrait", ratio.width, ratio.height)?;
+                write!(f, "Aspect: {}:{} portrait", ratio.width(), ratio.height())?;
             }
             ScreenSize::Undefined => {
                 write!(f, "Size: undefined")?;
@@ -497,7 +491,7 @@ pub struct Features {
     dpms: Dpms,
     display: DisplayType,
     standard_rgb: bool,
-    timing_mode: bool,
+    preferred_timing_native: bool,
     timing_continuous: bool,
 }
 
@@ -520,7 +514,7 @@ impl Features {
             },
             display: DisplayType::parse(get_bits(features, 3, 4), digital),
             standard_rgb: is_set(features, 2),
-            timing_mode: is_set(features, 1),
+            preferred_timing_native: is_set(features, 1),
             timing_continuous: is_set(features, 0),
         }
     }
@@ -543,12 +537,12 @@ impl Features {
         self.standard_rgb
     }
 
-    /// Preferred timing mode specified in descriptor block 1.
-    /// For EDID 1.3+ the preferred timing mode is always in the first Detailed Timing Descriptor.
-    /// In that case, this bit specifies whether the preferred timing mode includes native pixel format and refresh rate.
+    /// Preferred timing mode.
+    /// - EDID 1.3+: it includes native pixel format and refresh rate.
+    /// - EDID 1.2: it is specified in the first descriptor block.
     #[must_use]
-    pub const fn timing_mode(&self) -> bool {
-        self.timing_mode
+    pub const fn preferred_timing_native(&self) -> bool {
+        self.preferred_timing_native
     }
 
     /// Continuous timings with GTF or CVT.
@@ -589,7 +583,7 @@ impl core::fmt::Display for Features {
             display.0,
             display.1,
             self.standard_rgb,
-            self.timing_mode,
+            self.preferred_timing_native,
             self.timing_continuous
         )
     }

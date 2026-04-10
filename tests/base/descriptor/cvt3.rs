@@ -1,5 +1,6 @@
-use edid_info::base::descriptor::cvt3::{Aspect, PrefRate};
+use edid_info::base::descriptor::cvt3::PrefRate;
 use edid_info::base::descriptor::monitor::MonitorDesc;
+use edid_info::common::Aspect;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");

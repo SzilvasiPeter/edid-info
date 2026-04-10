@@ -11,18 +11,10 @@
 //! | 0–1  | Vertical lines / 2 - 1 (11 bits) + aspect ratio (2 bits) |
 //! | 2    | Refresh rate flags + preferred rate |
 
+use crate::common::Aspect;
 use crate::common::DESC_LEN;
 
 const VERSION: u8 = 0x01;
-
-// TODO: Centralize the Aspect since it is used across the project.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Aspect {
-    A4_3,
-    A16_9,
-    A16_10,
-    A15_9,
-}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PrefRate {
@@ -113,15 +105,13 @@ impl Mode {
         (self.addr_lines + 1) * 2
     }
 
+    // TODO: Find real world data that could trigger the overflow
     #[must_use]
     pub const fn h_pixels(&self) -> u16 {
         let v = self.v_lines();
-        let h = match self.aspect {
-            Aspect::A4_3 => v * 4 / 3,
-            Aspect::A16_9 => v * 16 / 9,
-            Aspect::A16_10 => v * 16 / 10,
-            Aspect::A15_9 => v * 15 / 9,
-        };
+        let r = self.aspect.ratio();
+        // Calculate (v * width / height) without intermediate overflow
+        let h = (v / r.height()) * r.width() + (v % r.height()) * r.width() / r.height();
         (h / 8) * 8
     }
 }

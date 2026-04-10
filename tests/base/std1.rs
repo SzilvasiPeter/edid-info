@@ -1,4 +1,5 @@
-use edid_info::base::std1::{Aspect, Std1};
+use edid_info::base::std1::Std1;
+use edid_info::common::Aspect;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
