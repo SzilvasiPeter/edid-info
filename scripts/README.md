@@ -1,13 +1,9 @@
 # Usage
 
-Check invalid week byte:
-```
-scripts/check_edid_byte.sh 16 'val > 54 && val != 255' ../EDID/
-```
+Checks if the minor version is 4 (byte 19), then if the width is not zero (byte 21) but the height (byte 22) is zero:
 
-Check invalid model year flag on week byte:
 ```
-scripts/check_edid_byte.sh 16 'val == 255' ../EDID/
+./scripts/check_bytes.sh 'bytes[19] == 4 && bytes[21] != 0 && bytes[22] == 0' ../EDID/
 ```
 
 # EDID sources

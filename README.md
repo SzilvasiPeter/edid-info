@@ -23,7 +23,7 @@ edid-info = "0.1"
 ## Usage
 
 TODO: add most common usage examples.
-TODO: refer to the examples folder.
+TODO: refer to the `examples/` folder.
 
 ## API Overview
 
