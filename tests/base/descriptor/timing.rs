@@ -44,8 +44,8 @@ fn parse_timing_descriptor_acer_ek221q_h() {
     assert_eq!(
         out.features().sync(),
         Sync::DigitalSeparate {
-            v_polar: true,
-            h_polar: true,
+            v_positive: true,
+            h_positive: true,
         }
     );
 }
@@ -75,8 +75,8 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
     assert_eq!(
         out.features().sync(),
         Sync::DigitalSeparate {
-            v_polar: false,
-            h_polar: true,
+            v_positive: false,
+            h_positive: true,
         }
     );
 }
