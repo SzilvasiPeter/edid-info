@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::MonitorDesc;
+use edid_info::base::descriptor::monitor::Monitor;
 
 // TODO: use real world example instead of synthetic
 #[test]
@@ -19,7 +19,7 @@ fn parse_white_point_synthetic() {
     raw[16] = 0x00;
     raw[17] = 0x00;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let wp = desc.white_point().expect("white point parse");
 
     let first = wp.first().expect("first point");
@@ -49,7 +49,7 @@ fn parse_white_point_single_point() {
     raw[8] = 0x00;
     raw[9] = 0x40;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let wp = desc.white_point().expect("white point parse");
 
     assert!(wp.first().is_some());
@@ -66,7 +66,7 @@ fn parse_white_point_gamma() {
     raw[8] = 0x00;
     raw[9] = 0x64;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let wp = desc.white_point().expect("white point parse");
     let first = wp.first().expect("first point");
     assert_eq!(first.gamma_raw(), 0x64);

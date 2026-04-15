@@ -1,7 +1,7 @@
 //! Chromaticity coordinates (bytes 25–34).
 //!
 //! 10-bit 2° [CIE 1931 xy coordinates](https://en.wikipedia.org/wiki/CIE_1931_color_space) for red, green, blue, and white point.
-//! In simple terms, it stores where the red, green, blue, and white colors land on a standard color map.
+//! In simple terms, it stores where the red, green, blue, and [white](https://en.wikipedia.org/wiki/White_point) colors land on a standard color map.
 //!
 //! # Structure
 //!
@@ -138,7 +138,7 @@ impl Display for Chroma {
     }
 }
 
-/// A 10-bit CIE 1931 xy coordinate pair.
+/// The color coordinates.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Coord {
     x: u16,

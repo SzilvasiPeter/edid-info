@@ -2,7 +2,7 @@ use edid_info::{
     base::Base,
     base::basic::ScreenSize,
     base::descriptor::monitor::DescTag,
-    base::descriptors::Mode,
+    base::descriptors::Descriptor,
     base::established::EstablishedTiming,
     base::header::DateInfo,
     common::Version,
@@ -42,15 +42,19 @@ fn parse_base_acer_ek221q_h() {
         Some((1920, 1080, 75))
     );
 
-    match out.descriptors().mode(1).expect("dtd mode 1 should exist") {
-        Mode::Timing(timing) => {
+    match out
+        .descriptors()
+        .descriptors(1)
+        .expect("dtd mode 1 should exist")
+    {
+        Descriptor::Timing(timing) => {
             let h = timing.horizontal();
             let v = timing.vertical();
             assert_eq!(h.active(), 1920);
             assert_eq!(v.active(), 1080);
             assert_eq!(timing.pixel_clock_hz(), 148_500_000);
         }
-        Mode::Display(serial) => {
+        Descriptor::Display(serial) => {
             assert_eq!(serial.tag(), DescTag::SerialNumber);
             assert_eq!(serial.serial(), Some("13480002C3W01"));
         }

@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::timing::{DetailedTiming, Stereo, Sync};
+use edid_info::base::descriptor::dtd::{DetailedTiming, Stereo, Sync};
 use edid_info::extensions::Extension;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -14,7 +14,6 @@ fn parse_timing_descriptor_pre_p1710_stereo() {
     assert_eq!(out.horizontal().active(), 1280);
     assert_eq!(out.vertical().active(), 1024);
     assert!(!out.features().interlaced());
-    // flag 0x38: 0011 1000 -> bits 6:5 = 01, bit 0 = 0 -> FieldSeqRight
     assert_eq!(out.features().stereo(), Stereo::FieldSeqRight);
 }
 
@@ -84,8 +83,6 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
 
 #[test]
 fn test_interlaced_stereo_parsing() {
-    // DTD 2 from PHL_22PFL3606: flag byte 0x9e = 1001 1110
-    // bit 7 = 1 → interlaced, bits 6:5 = 00 → Stereo::None
     let raw_cta: [u8; 128] = std::array::from_fn(|i| PHL[128 + i]);
     let Extension::Cta(cta) = Extension::parse(&raw_cta) else {
         panic!("expected CTA extension")
@@ -95,8 +92,6 @@ fn test_interlaced_stereo_parsing() {
     assert!(dtd2.features().interlaced());
     assert_eq!(dtd2.features().stereo(), Stereo::None);
 
-    // DTD 3: flag byte 0x98 = 1001 1000
-    // bit 7 = 1 → interlaced, bits 6:5 = 00 → Stereo::None
     let dtd3 = cta.dtd(3).expect("dtd 3");
     assert!(dtd3.features().interlaced());
     assert_eq!(dtd3.features().stereo(), Stereo::None);

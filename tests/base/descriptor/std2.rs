@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::MonitorDesc;
+use edid_info::base::descriptor::monitor::Monitor;
 
 // TODO: use real world example instead of synthetic
 #[test]
@@ -19,7 +19,7 @@ fn parse_std2_synthetic() {
     raw[16] = 0x06;
     raw[17] = 0xFF;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let std2 = desc.std2().expect("std2 parse");
 
     assert!(std2.mode(0).is_some());
@@ -40,7 +40,7 @@ fn parse_std2_empty_modes() {
     raw[5] = 0x01;
     raw[6] = 0x01;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let std2 = desc.std2().expect("std2 parse");
 
     assert!(std2.mode(0).is_none());

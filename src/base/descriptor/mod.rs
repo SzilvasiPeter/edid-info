@@ -20,9 +20,9 @@
 //! | 0x00–0x0F | Vendor Reserved | Vendor-specific data |
 pub mod cvt3;
 pub mod dcm;
+pub mod dtd;
 pub mod monitor;
 pub mod range;
 pub mod std2;
 pub mod std3;
-pub mod timing;
 pub mod white_point;

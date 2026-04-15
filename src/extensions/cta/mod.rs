@@ -35,7 +35,7 @@ pub mod vendor;
 pub mod vic;
 pub mod video;
 
-use crate::base::descriptor::timing::DetailedTiming;
+use crate::base::descriptor::dtd::DetailedTiming;
 use crate::bit::is_set;
 use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok};
 

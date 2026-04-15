@@ -30,7 +30,7 @@ pub enum DescTag {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct MonitorDesc {
+pub struct Monitor {
     // TODO: remove the tag and tag_raw field, match on raw[3] at the getter
     tag: DescTag,
     tag_raw: u8,
@@ -39,7 +39,7 @@ pub struct MonitorDesc {
     data: [u8; 13],
 }
 
-impl MonitorDesc {
+impl Monitor {
     #[must_use]
     pub fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
         // TODO: move this to `validate` function

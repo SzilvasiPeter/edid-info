@@ -91,7 +91,7 @@ impl Established {
         let established = &raw[ESTABLISHED_OFF..ESTABLISHED_OFF + ESTABLISHED_LEN];
         Self {
             supported_timings: [
-                // Established I (Byte 35)
+                // Byte 35
                 flag(established[0], 0x80, EstablishedTiming::T720x400_70),
                 flag(established[0], 0x40, EstablishedTiming::T720x400_88),
                 flag(established[0], 0x20, EstablishedTiming::T640x480_60),
@@ -100,7 +100,7 @@ impl Established {
                 flag(established[0], 0x04, EstablishedTiming::T640x480_75),
                 flag(established[0], 0x02, EstablishedTiming::T800x600_56),
                 flag(established[0], 0x01, EstablishedTiming::T800x600_60),
-                // Established II (Byte 36)
+                // Byte 36
                 flag(established[1], 0x80, EstablishedTiming::T800x600_72),
                 flag(established[1], 0x40, EstablishedTiming::T800x600_75),
                 flag(established[1], 0x20, EstablishedTiming::T832x624_75),
@@ -109,8 +109,7 @@ impl Established {
                 flag(established[1], 0x04, EstablishedTiming::T1024x768_70),
                 flag(established[1], 0x02, EstablishedTiming::T1024x768_75),
                 flag(established[1], 0x01, EstablishedTiming::T1280x1024_75),
-                // TODO: This byte is not indicating the established III, the established III is definied under the std3.rs module
-                // Established III (Byte 37)
+                // Byte 37
                 flag(established[2], 0x80, EstablishedTiming::T1152x870_75),
             ],
             manufacturer_bits: established[2] & 0x7F,

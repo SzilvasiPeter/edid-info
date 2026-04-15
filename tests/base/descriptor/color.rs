@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::MonitorDesc;
+use edid_info::base::descriptor::monitor::Monitor;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -6,14 +6,14 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 #[test]
 fn parse_color_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    let color = MonitorDesc::parse(&raw).and_then(|desc| desc.color());
+    let color = Monitor::parse(&raw).and_then(|desc| desc.color());
     assert!(color.is_none());
 }
 
 #[test]
 fn parse_color_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    let color = MonitorDesc::parse(&raw).and_then(|desc| desc.color());
+    let color = Monitor::parse(&raw).and_then(|desc| desc.color());
     assert!(color.is_none());
 }
 
@@ -35,7 +35,7 @@ fn parse_color_synthetic() {
     raw[16] = 0x60;
     raw[17] = 0x00;
 
-    let desc = MonitorDesc::parse(&raw).expect("monitor descriptor parse");
+    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
     let color = desc.color().expect("color parse");
     assert_eq!(color.red_a3(), 0x0010);
     assert_eq!(color.red_a2(), 0x0020);
@@ -51,6 +51,6 @@ fn parse_color_wrong_version() {
     raw[3] = 0xF9;
     raw[5] = 0x02;
 
-    let color = MonitorDesc::parse(&raw).and_then(|desc| desc.color());
+    let color = Monitor::parse(&raw).and_then(|desc| desc.color());
     assert!(color.is_none());
 }

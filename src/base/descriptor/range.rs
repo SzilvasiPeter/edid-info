@@ -17,12 +17,12 @@
 use crate::common::{Aspect, DESC_LEN};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Timing {
+pub enum VideoTiming {
     DefaultGtf,
-    NoTiming,
+    NoInformation,
     SecondaryGtf(SecondaryGtf),
     Cvt(Cvt),
-    Other(u8),
+    Reserved(u8),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -232,7 +232,7 @@ pub struct Range {
     h_min_khz: u16,
     h_max_khz: u16,
     pixel_mhz: u16,
-    timing: Timing,
+    video_timing: VideoTiming,
     extra: [u8; 7],
 }
 
@@ -247,12 +247,12 @@ impl Range {
         let (h_min_khz, h_max_khz) = adjust(raw[7], raw[8], (raw[4] >> 2) & 0b11)?;
         let mut extra = [0; 7];
         extra.copy_from_slice(&raw[11..DESC_LEN]);
-        let timing = match raw[10] {
-            0x00 => Timing::DefaultGtf,
-            0x01 => Timing::NoTiming,
-            0x02 => Timing::SecondaryGtf(SecondaryGtf::parse(extra)),
-            0x04 => Timing::Cvt(Cvt::parse(extra)),
-            v => Timing::Other(v),
+        let video_timing = match raw[10] {
+            0x00 => VideoTiming::DefaultGtf,
+            0x01 => VideoTiming::NoInformation,
+            0x02 => VideoTiming::SecondaryGtf(SecondaryGtf::parse(extra)),
+            0x04 => VideoTiming::Cvt(Cvt::parse(extra)),
+            v => VideoTiming::Reserved(v),
         };
         Some(Self {
             v_min_hz,
@@ -260,7 +260,7 @@ impl Range {
             h_min_khz,
             h_max_khz,
             pixel_mhz: u16::from(raw[9]) * 10,
-            timing,
+            video_timing,
             extra,
         })
     }
@@ -291,8 +291,8 @@ impl Range {
     }
 
     #[must_use]
-    pub const fn timing(&self) -> Timing {
-        self.timing
+    pub const fn timing(&self) -> VideoTiming {
+        self.video_timing
     }
 
     #[must_use]
