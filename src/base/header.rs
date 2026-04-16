@@ -124,10 +124,7 @@ impl Header {
     /// EDID version information.
     #[must_use]
     pub const fn version(&self) -> Version {
-        Version {
-            major: self.major,
-            minor: self.minor,
-        }
+        Version::new(self.major, self.minor)
     }
 
     /// Validates the header blocks.

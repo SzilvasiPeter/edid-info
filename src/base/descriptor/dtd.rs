@@ -124,7 +124,7 @@ pub struct Scan {
 }
 
 impl Scan {
-    /// Rendered pixels (line) or lines (frame).
+    /// Rendered horizontal or vertical pixels.
     #[must_use]
     pub const fn active(&self) -> u16 {
         self.active
@@ -149,7 +149,7 @@ impl Scan {
     }
 
     /// Back porch duration. This period helps stabilize the signal before the next active pixels are displayed.
-    /// Formula: `back porch = blanking time - (front porch + sync pulse)`
+    /// Formula: `back_porch = blank_time - (front_porch + sync_pulse)`
     #[must_use]
     pub const fn back(&self) -> u16 {
         self.blank
