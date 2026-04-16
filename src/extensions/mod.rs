@@ -14,7 +14,6 @@
 //! - Extension defined by monitor manufacturer (`FF`): According to LS-EXT, actual contents varies from manufacturer. However, the value is later used by DDDB.
 
 pub mod cta;
-pub mod di;
 
 use crate::common::BLOCK_LEN;
 
@@ -23,8 +22,6 @@ use crate::common::BLOCK_LEN;
 pub enum Extension<'a> {
     /// Additional Timing Data (CTA) block.
     Cta(cta::Cta<'a>),
-    /// Display Information Extension (DI-EXT) block.
-    DiExt(di::DiExt<'a>),
     /// Unrecognized extension type, stored as raw bytes.
     Unknown(&'a [u8; BLOCK_LEN]),
 }
@@ -32,14 +29,11 @@ pub enum Extension<'a> {
 impl<'a> Extension<'a> {
     /// Parses an extension block from raw bytes.
     ///
-    /// Matches on the tag byte to determine the extension type,
-    /// then calls the internal parser for that type.
-    /// Returns `Unknown` if the tag is not recognized.
+    /// Matches on the tag byte to determine the extension type.
     #[must_use]
     pub const fn parse(block: &'a [u8; BLOCK_LEN]) -> Self {
         match block[0] {
             0x02 => Self::Cta(cta::Cta::parse(block)),
-            0x40 => Self::DiExt(di::DiExt::parse(block)),
             _ => Self::Unknown(block),
         }
     }

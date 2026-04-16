@@ -10,6 +10,8 @@ mod video;
 fn parse_cta(raw: &[u8; 128]) -> edid_info::extensions::cta::Cta<'_> {
     match edid_info::extensions::Extension::parse(raw) {
         edid_info::extensions::Extension::Cta(cta) => cta,
-        other => panic!("expected CTA extension, got {other:?}"),
+        other @ edid_info::extensions::Extension::Unknown(_) => {
+            panic!("expected CTA extension, got {other:?}")
+        }
     }
 }
