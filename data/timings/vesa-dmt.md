@@ -43,7 +43,9 @@ Attention is drawn to the possibility that some of the elements of this VESA Sta
 If you have a product that incorporates any of the standards in this document, you should ask the company that manufactured your product for assistance. If you are a display or controller manufacturer, VESA can assist you with any clarifications you may require. All comments or reported errors should be submitted in writing to VESA using one of the following methods
 
 Fax: 510 651 5127, Technical Support
+
 Email: support@vesa.org
+
 Mail: Video Electronics Standards Association 39899 Balentine Drive, Suite 125 Newark, CA 94560
 
 ## Revision History
