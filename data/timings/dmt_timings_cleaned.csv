@@ -1,4 +1,4 @@
-dmt_id,std_id,cvt_id,rb,standard,pixclk_khz,h_freq_hz,v_freq_mhz,interlaced,h_pol,v_pol,h_total,h_active,h_fp,h_sync,h_bp,v_total,v_active,v_fp,v_sync,v_bp,h_border,v_border
+dmt_id,std_code,cvt_code,rb,standard,pixclk_khz,h_freq_hz,v_freq_mhz,interlaced,h_pol,v_pol,h_total,h_active,h_fp,h_sync,h_bp,v_total,v_active,v_fp,v_sync,v_bp,h_border,v_border
 0x01,None,None,false,NO_CVT,31500,37861,85080,false,true,false,832,640,32,64,96,445,350,32,3,60,0,0
 0x02,0x3119,None,false,NO_CVT,31500,37861,85080,false,false,true,832,640,32,64,96,445,400,1,3,41,0,0
 0x03,None,None,false,NO_CVT,35500,37927,85039,false,false,true,936,720,36,72,108,446,400,1,3,42,0,0

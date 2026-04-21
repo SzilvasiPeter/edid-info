@@ -2,7 +2,7 @@ import csv
 import os
 import re
 
-def parse_hex_id(s):
+def parse_hex_val(s):
     if s == 'None' or not s or s == 'n/a':
         return 'None'
     hex_parts = re.findall(r'[0-9A-Fa-f]{2}', s)
@@ -13,8 +13,8 @@ def parse_hex_id(s):
 def clean_csv(input_path, output_path):
     COLUMN_MAPPING = {
         'DMT ID': 'dmt_id',
-        'Std 2-Byte Code': 'std_id',
-        'CVT 3-Byte Code': 'cvt_id',
+        'Std 2-Byte Code': 'std_code',
+        'CVT 3-Byte Code': 'cvt_code',
         'RB': 'rb',
         'PCLK (MHz)': 'pixclk_khz',
         'H-Freq (kHz)': 'h_freq_hz',
@@ -39,9 +39,9 @@ def clean_csv(input_path, output_path):
             new_row = {COLUMN_MAPPING[k]: row[k] for k in COLUMN_MAPPING}
             
             # 1. Standardize IDs
-            new_row['dmt_id'] = parse_hex_id(new_row['dmt_id'])
-            new_row['std_id'] = parse_hex_id(new_row['std_id'])
-            new_row['cvt_id'] = parse_hex_id(new_row['cvt_id'])
+            new_row['dmt_id'] = parse_hex_val(new_row['dmt_id'])
+            new_row['std_code'] = parse_hex_val(new_row['std_code'])
+            new_row['cvt_code'] = parse_hex_val(new_row['cvt_code'])
 
             # 2. Booleans
             new_row['interlaced'] = 'true' if row.get('Scan', '').upper() == 'INTERLACED' else 'false'
@@ -74,7 +74,7 @@ def clean_csv(input_path, output_path):
             rows.append(new_row)
 
     fieldnames = [
-        'dmt_id', 'std_id', 'cvt_id', 'rb', 'standard', 'pixclk_khz',
+        'dmt_id', 'std_code', 'cvt_code', 'rb', 'standard', 'pixclk_khz',
         'h_freq_hz', 'v_freq_mhz', 'interlaced', 'h_pol', 'v_pol',
         'h_total', 'h_active', 'h_fp', 'h_sync', 'h_bp',
         'v_total', 'v_active', 'v_fp', 'v_sync', 'v_bp',
