@@ -1,9 +1,7 @@
-39899 Balentine Drive, Suite 125 Phone: 510 651 5122
-Newark, CA 94560 Fax: 510 651 5127
-
 # VESA and Industry Standards and Guidelines for Computer Display Monitor Timing (DMT)
 
 Version 1.0, Rev. 13
+
 February 8, 2013
 
 This document includes all current VESA Monitor Timing Standards & Guidelines. Guidelines are subjected to the same VESA review and approval process as Standards, but are designated as Guidelines to ease concerns on the part of some members that VESA is 'endorsing' these timing standards. Guideline designations are typically used for lower resolutions or lower refresh rates that are in common industry use in lower-performance systems. For reference, this document also includes a number of industry-standard timings (de-facto standards) for the computer industry.
@@ -12,19 +10,19 @@ This document is the primary means of distribution for all VESA Monitor Timing S
 
 ## Table of Contents
 
-Intellectual Property
-Trademarks
-Patents
-Support
-DMT Standards and Guidelines Summary
-DMT Standard Codes & IDs Summary
-DMT Timing Specifications
+- Intellectual Property
+- Trademarks
+- Patents
+- Support
+- DMT Standards and Guidelines Summary
+- DMT Standard Codes & IDs Summary
+- DMT Timing Specifications
 
 
 ## Tables
 
-Table 1-1: Summary of Display Monitor Timings – Standards and Guidelines
-Table 2-1: Summary of DMT ID, Std. 2 Byte & CVT 3 Byte Codes
+- Table 1-1: Summary of Display Monitor Timings – Standards and Guidelines
+- Table 2-1: Summary of DMT ID, Std. 2 Byte & CVT 3 Byte Codes
 
 ## Intellectual Property
 
@@ -50,27 +48,27 @@ Mail: Video Electronics Standards Association 39899 Balentine Drive, Suite 125 N
 
 ## Revision History
 
-Version 1.0 Revision 0.0 Sept. 12, 1994 Initial Release of the Standard
-Version 1.0 Revision 0.1 Oct. 10, 1994 Fixed sync polarity of 1024x768 @ 60 & 70 Hz. Removed page numbers so new timings could be added.
-Version 1.0 Revision 0.2 Nov. 4, 1994 Added notes & comments to clarify timing of interlaced modes.
-Version 1.0 Revision 0.3 Feb. 16, 1995 Fixed miscellaneous typos
-Version 1.0 Revision 0.4 May 4, 1995 Added EDID IDs for DDC, fixed 1024x768 interlace vertical times.
-Version 1.0 Revision 0.5 June 14, 1995 Added BIOS mode #s, fixed miscellaneous typos
-Version 1.0 Revision 0.6 April 10, 1996 Added new modes from VDMTPROP V1.0, R0.6 passed in March 1996 (85 Hz stds, 1152x864@75, 1280x960@60).
-Version 1.0 Revision 0.6a Sept. 8, 1996 Reformatted to Word 6 for electronic distribution
-Version 1.0 Revision 0.7 Dec. 18, 1996 Added new modes from VDMTREV V1.0, R0.8 passed in Dec. 1996 (1280x1024@60, 1600x1200@60, 65, 70, 75, 85)
-Version 1.0 Revision 0.8 July 22, 1998 Added 1792x1344, 1856X1392 & 1920x1440 all @60, 75 Hz. Corrected EDID code for 1600x1200@85 Hz.
-Version 1.0 Revision 0.9 Aug. 21, 2003 Added 848x480@60 Hz, CVT 1280x768 timings, 1360x768@60 Hz, CVT 1400x1050 timings, & CVT 1920x1200 timings based on US & Japan workgroup requests.
-Version 1.0 Revision 10 July 14, 2004 Added CVT 1.30MA (1440x900) & CVT 1.76MA (1680x1050) formats.
-Version 1.0 Revision 11 May 1, 2007 Added several DMT CVT Reduced Blanking Timings, 1280x800@60/75/85 Hz timings, 2560x1600@60/75/85 Hz and DMT IDs.
-Version 1.0 Revision 12 Nov. 17, 2008 Added timing definitions for 1280x720 @ 60Hz, 1366x768 @ 60 Hz (Normal & Reduced Blanking), 1600x900 @ 60 Hz (Reduced Blanking), 1920x1080 @ 60 Hz and 2048x1152 @60 Hz (Reduced Blanking). Updated Tables 1-1 and 2-1.
-Version 1.0 Revision 13 Feb. 8, 2013 Added timing definitions for 4096x2160 @ 60Hz (Reduced Blanking v2) and4096x2160 @ 59.94Hz (Reduced Blanking v2). Updated Tables 1-1 and 2-1.
+- Version 1.0 Revision 0.0 Sept. 12, 1994 Initial Release of the Standard
+- Version 1.0 Revision 0.1 Oct. 10, 1994 Fixed sync polarity of 1024x768 @ 60 & 70 Hz. Removed page numbers so new timings could be added.
+- Version 1.0 Revision 0.2 Nov. 4, 1994 Added notes & comments to clarify timing of interlaced modes.
+- Version 1.0 Revision 0.3 Feb. 16, 1995 Fixed miscellaneous typos
+- Version 1.0 Revision 0.4 May 4, 1995 Added EDID IDs for DDC, fixed 1024x768 interlace vertical times.
+- Version 1.0 Revision 0.5 June 14, 1995 Added BIOS mode #s, fixed miscellaneous typos
+- Version 1.0 Revision 0.6 April 10, 1996 Added new modes from VDMTPROP V1.0, R0.6 passed in March 1996 (85 Hz stds, 1152x864@75, 1280x960@60).
+- Version 1.0 Revision 0.6a Sept. 8, 1996 Reformatted to Word 6 for electronic distribution
+- Version 1.0 Revision 0.7 Dec. 18, 1996 Added new modes from VDMTREV V1.0, R0.8 passed in Dec. 1996 (1280x1024@60, 1600x1200@60, 65, 70, 75, 85)
+- Version 1.0 Revision 0.8 July 22, 1998 Added 1792x1344, 1856X1392 & 1920x1440 all @60, 75 Hz. Corrected EDID code for 1600x1200@85 Hz.
+- Version 1.0 Revision 0.9 Aug. 21, 2003 Added 848x480@60 Hz, CVT 1280x768 timings, 1360x768@60 Hz, CVT 1400x1050 timings, & CVT 1920x1200 timings based on US & Japan workgroup requests.
+- Version 1.0 Revision 10 July 14, 2004 Added CVT 1.30MA (1440x900) & CVT 1.76MA (1680x1050) formats.
+- Version 1.0 Revision 11 May 1, 2007 Added several DMT CVT Reduced Blanking Timings, 1280x800@60/75/85 Hz timings, 2560x1600@60/75/85 Hz and DMT IDs.
+- Version 1.0 Revision 12 Nov. 17, 2008 Added timing definitions for 1280x720 @ 60Hz, 1366x768 @ 60 Hz (Normal & Reduced Blanking), 1600x900 @ 60 Hz (Reduced Blanking), 1920x1080 @ 60 Hz and 2048x1152 @60 Hz (Reduced Blanking). Updated Tables 1-1 and 2-1.
+- Version 1.0 Revision 13 Feb. 8, 2013 Added timing definitions for 4096x2160 @ 60Hz (Reduced Blanking v2) and4096x2160 @ 59.94Hz (Reduced Blanking v2). Updated Tables 1-1 and 2-1.
 
 # DMT Standards and Guidelines Summary
-
+ 
 Table 1-1 contains a summary of display monitor timings (DMT) that are defined in this standard. All DMTs listed in Table 1-1 are non-interlaced video timing modes, unless otherwise specified using the symbol “(Int.)”. The symbol “(Int.)” means that this DMT is interlaced. All DMTs listed in Table 1-1 include normal video blanking, unless otherwise specified using the symbol “(RB)”. The symbol “(RB)” means that this DMT includes Reduced Blanking. Complete timing specifications for these DMTs are defined in Section 4.
 
-Table 1-1: Summary of Display Monitor Timings – Standards and Guidelines
+*Table 1-1: Summary of Display Monitor Timings – Standards and Guidelines*
 
 | Pixel Format | Refresh Rate | Horizontal Frequency | Pixel Frequency | Standard Type | Original Document | Date |
 | ------------ | ------------ | -------------------- | --------------- | ------------- | ----------------- | ---- |
@@ -165,9 +163,9 @@ Table 1-1: Summary of Display Monitor Timings – Standards and Guidelines
 
 # DMT Standard Codes & ID Summary
 
-Table 2-1 includes a list of DMT ID codes, Standard (Std.) Timing 2 byte codes and Coordinated Video Timing (CVT) 3 byte codes. A display may use these codes to indicate support for the associated DMT. Refer to the latest version of VESA’s Enhanced Extended Display Identification (E-EDID) Standard for an explanation of how to derive the Std.   byte codes and the CVT 3 byte codes. The letters “n/a” (not applicable) indicates that a Std. 2 byte code and/or a CVT 3 byte code (DMT is not CVT-compliant) cannot be created.
+Table 2-1 includes a list of DMT ID codes, Standard (Std.) Timing 2 byte codes and Coordinated Video Timing (CVT) 3 byte codes. A display may use these codes to indicate support for the associated DMT. Refer to the latest version of VESA’s Enhanced Extended Display Identification (E-EDID) Standard for an explanation of how to derive the Std. byte codes and the CVT 3 byte codes. The letters “n/a” (not applicable) indicates that a Std. 2 byte code and/or a CVT 3 byte code (DMT is not CVT-compliant) cannot be created.
 
-Table 2-1:  Summary of DMT ID, Std. 2 Byte & CVT 3 Byte Codes
+*Table 2-1:  Summary of DMT ID, Std. 2 Byte & CVT 3 Byte Codes*
 
 | Pixel Format | Refresh Rate | DMT ID Codes | Std. 2 Byte Codes | CVT 3 Byte Codes |
 | ------------ | ------------ | ------------ | ----------------- | ---------------- |
