@@ -9,6 +9,10 @@ readme = "README.md"
 keywords = ["edid", "display", "monitor", "parsing", "hardware", "no-std"]
 categories = ["parsing", "hardware-support", "multimedia"]
 
+[[bin]]
+name = "check-bytes"
+path = "tools/check-bytes.rs"
+
 [[test]]
 name = "base"
 path = "tests/base/mod.rs"
