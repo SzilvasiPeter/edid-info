@@ -5,6 +5,7 @@ use edid_info::{
     base::descriptors::Descriptor,
     base::established::EstablishedTiming,
     base::header::DateInfo,
+    common::Size,
     common::Version,
     extensions::{
         Extension,
@@ -24,10 +25,7 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(
         out.basic().screen_size(),
-        ScreenSize::Dimensions {
-            width_cm: 48,
-            height_cm: 26
-        }
+        ScreenSize::Dimensions(Size::new(480, 260))
     );
     assert_eq!(out.chroma().white().x(), 321);
     assert!(
@@ -88,10 +86,7 @@ fn parse_base_asus_rog_pg27u() {
 
     assert_eq!(
         base.basic().screen_size(),
-        ScreenSize::Dimensions {
-            width_cm: 60,
-            height_cm: 34
-        }
+        ScreenSize::Dimensions(Size::new(600, 340))
     );
     assert_eq!(base.basic().gamma(), Some(220));
 

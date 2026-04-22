@@ -14,7 +14,7 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Timing formula type |
 
-use crate::common::{Aspect, DESC_LEN};
+use crate::common::{AspectRatio, DESC_LEN};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VideoTiming {
@@ -87,7 +87,7 @@ pub struct Cvt {
     ar_16_10: bool,
     ar_5_4: bool,
     ar_15_9: bool,
-    preferred_aspect: Option<Aspect>,
+    preferred_aspect: Option<AspectRatio>,
     rb: bool,
     std_blank: bool,
     h_shrink: bool,
@@ -111,11 +111,11 @@ impl Cvt {
             Some(((u16::from(msb)) << 8) | u16::from(lsb))
         };
         let pref = match (data[4] >> 5) & 0b111 {
-            0b000 => Some(Aspect::A4_3),
-            0b001 => Some(Aspect::A16_9),
-            0b010 => Some(Aspect::A16_10),
-            0b011 => Some(Aspect::A5_4),
-            0b100 => Some(Aspect::A15_9),
+            0b000 => Some(AspectRatio::new(4, 3)),
+            0b001 => Some(AspectRatio::new(16, 9)),
+            0b010 => Some(AspectRatio::new(16, 10)),
+            0b011 => Some(AspectRatio::new(5, 4)),
+            0b100 => Some(AspectRatio::new(15, 9)),
             _ => None,
         };
         Self {
@@ -185,7 +185,7 @@ impl Cvt {
     }
 
     #[must_use]
-    pub const fn preferred_aspect(&self) -> Option<Aspect> {
+    pub const fn preferred_aspect(&self) -> Option<AspectRatio> {
         self.preferred_aspect
     }
 

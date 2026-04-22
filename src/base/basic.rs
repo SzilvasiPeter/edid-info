@@ -12,7 +12,7 @@
 
 use crate::{
     bit::{get_bits, is_set},
-    common::{AspectRatio, BLOCK_LEN, FailureKind, Validation, WarningKind},
+    common::{AspectRatio, BLOCK_LEN, FailureKind, Size, Validation, WarningKind},
 };
 
 /// Basic display information offset in the base block.
@@ -179,19 +179,14 @@ impl DisplayType {
 ///
 /// The `width_cm` and `height_cm` raw bytes can represent:
 /// - Physical dimensions when both are non-zero
-/// - Landscape aspect ratio when height is zero
-/// - Portrait aspect ratio when width is zero
+/// - Aspect ratio when either is zero
 /// - Undefined when both are zero (e.g. projector)
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ScreenSize {
-    /// Physical screen dimensions in centimetres.
-    Dimensions { width_cm: u8, height_cm: u8 },
-    /// Landscape aspect ratio:
-    /// `width = raw_byte + 99`, `height = 100`.
-    Landscape(AspectRatio),
-    /// Portrait aspect ratio:
-    /// `width = 100`, `height = raw_byte + 99`.
-    Portrait(AspectRatio),
+    /// Physical screen dimensions in millimeters.
+    Dimensions(Size),
+    /// Screen aspect ratio.
+    Aspect(AspectRatio),
     /// Both bytes are zero, screen size is undefined (e.g. projector).
     Undefined,
 }
@@ -235,19 +230,16 @@ impl Basic {
 
     /// Returns [`ScreenSize`] interpretation based on the width and height:
     /// - Both non-zero: [`ScreenSize::Dimensions`]
-    /// - Height zero: [`ScreenSize::Landscape`] with `width = width_cm + 99`, `height = 100`
-    /// - Width zero: [`ScreenSize::Portrait`] with `width = 100`, `height = height_cm + 99`
+    /// - Height zero: Landscape aspect ratio: `width = width_cm + 99`, `height = 100`
+    /// - Width zero: Portrait aspect ratio: `width = 100`, `height = height_cm + 99`
     /// - Both zero: [`ScreenSize::Undefined`]
     #[must_use]
     pub const fn screen_size(&self) -> ScreenSize {
         match (self.width_cm, self.height_cm) {
             (0, 0) => ScreenSize::Undefined,
-            (w, 0) => ScreenSize::Landscape(AspectRatio::new(w as u16 + 99, 100)),
-            (0, h) => ScreenSize::Portrait(AspectRatio::new(100, h as u16 + 99)),
-            (w, h) => ScreenSize::Dimensions {
-                width_cm: w,
-                height_cm: h,
-            },
+            (w, 0) => ScreenSize::Aspect(AspectRatio::new(w as u16 + 99, 100)),
+            (0, h) => ScreenSize::Aspect(AspectRatio::new(100, h as u16 + 99)),
+            (w, h) => ScreenSize::Dimensions(Size::new(w as u16 * 10, h as u16 * 10)),
         }
     }
 
@@ -304,17 +296,11 @@ impl core::fmt::Display for Basic {
         let features = self.features();
         write!(f, "Input: {input}, ")?;
         match size {
-            ScreenSize::Dimensions {
-                width_cm,
-                height_cm,
-            } => {
-                write!(f, "Size: {width_cm}x{height_cm} cm")?;
+            ScreenSize::Dimensions(s) => {
+                write!(f, "Size: {}x{} mm", s.width(), s.height())?;
             }
-            ScreenSize::Landscape(ratio) => {
-                write!(f, "Aspect: {}:{} landscape", ratio.width(), ratio.height())?;
-            }
-            ScreenSize::Portrait(ratio) => {
-                write!(f, "Aspect: {}:{} portrait", ratio.width(), ratio.height())?;
+            ScreenSize::Aspect(ratio) => {
+                write!(f, "Aspect: {}:{}", ratio.width(), ratio.height())?;
             }
             ScreenSize::Undefined => {
                 write!(f, "Size: undefined")?;

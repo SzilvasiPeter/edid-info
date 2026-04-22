@@ -1,6 +1,6 @@
 use edid_info::base::descriptor::cvt3::PrefRate;
 use edid_info::base::descriptor::monitor::Monitor;
-use edid_info::common::Aspect;
+use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
@@ -42,7 +42,7 @@ fn parse_cvt3_synthetic() {
 
     let mode1 = cvt3.mode1();
     assert_eq!(mode1.addr_lines(), 0);
-    assert_eq!(mode1.aspect(), Aspect::A4_3);
+    assert_eq!(mode1.aspect(), AspectRatio::new(4, 3));
     assert_eq!(mode1.pref(), PrefRate::Hz50);
     assert!(!mode1.hz50());
     assert!(!mode1.hz60());
@@ -52,17 +52,17 @@ fn parse_cvt3_synthetic() {
 
     let mode2 = cvt3.mode2();
     assert_eq!(mode2.addr_lines(), 16);
-    assert_eq!(mode2.aspect(), Aspect::A16_9);
+    assert_eq!(mode2.aspect(), AspectRatio::new(16, 9));
     assert_eq!(mode2.pref(), PrefRate::Hz60);
 
     let mode3 = cvt3.mode3();
     assert_eq!(mode3.addr_lines(), 32);
-    assert_eq!(mode3.aspect(), Aspect::A16_10);
+    assert_eq!(mode3.aspect(), AspectRatio::new(16, 10));
     assert_eq!(mode3.pref(), PrefRate::Hz75);
 
     let mode4 = cvt3.mode4();
     assert_eq!(mode4.addr_lines(), 48);
-    assert_eq!(mode4.aspect(), Aspect::A15_9);
+    assert_eq!(mode4.aspect(), AspectRatio::new(15, 9));
     assert_eq!(mode4.pref(), PrefRate::Hz85);
 }
 

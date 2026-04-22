@@ -17,7 +17,7 @@
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
 use crate::bit::{get_bits, is_set, pack_bits};
-use crate::common::{DESC_LEN, FailureKind, Validation};
+use crate::common::{DESC_LEN, FailureKind, Size, Validation, WarningKind};
 
 const CLK_UNIT: u32 = 10_000;
 
@@ -114,16 +114,15 @@ impl Features {
 ///    = 60.00 Hz
 /// ```
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Scan {
+pub struct Timing {
     active: u16,
     blank: u16,
     front: u16,
     sync: u16,
-    size_mm: u16,
     border: u8,
 }
 
-impl Scan {
+impl Timing {
     /// Rendered horizontal or vertical pixels.
     #[must_use]
     pub const fn active(&self) -> u16 {
@@ -163,12 +162,6 @@ impl Scan {
         self.active + self.blank
     }
 
-    /// Physical display dimension along this axis in millimeters.
-    #[must_use]
-    pub const fn size_mm(&self) -> u16 {
-        self.size_mm
-    }
-
     /// Border pixels/lines on one edge. Applied to both sides (left+right for horizontal, top+bottom for vertical),
     /// so the total border is twice this value. Typically zero.
     #[must_use]
@@ -180,32 +173,35 @@ impl Scan {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
     pixel_clock_10khz: u16,
-    horizontal: Scan,
-    vertical: Scan,
+    horizontal: Timing,
+    vertical: Timing,
+    physical: Size,
     features: Features,
 }
 
 impl DetailedTiming {
     #[must_use]
     pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+        let width_mm = pack_bits(get_bits(raw[14], 4, 7), raw[12], 8);
+        let height_mm = pack_bits(get_bits(raw[14], 0, 3), raw[13], 8);
+
         Some(Self {
             pixel_clock_10khz: u16::from_le_bytes([raw[0], raw[1]]),
-            horizontal: Scan {
+            horizontal: Timing {
                 active: pack_bits(get_bits(raw[4], 4, 7), raw[2], 8),
                 blank: pack_bits(get_bits(raw[4], 0, 3), raw[3], 8),
                 front: pack_bits(get_bits(raw[11], 6, 7), raw[8], 8),
                 sync: pack_bits(get_bits(raw[11], 4, 5), raw[9], 8),
-                size_mm: pack_bits(get_bits(raw[14], 4, 7), raw[12], 8),
                 border: raw[15],
             },
-            vertical: Scan {
+            vertical: Timing {
                 active: pack_bits(get_bits(raw[7], 4, 7), raw[5], 8),
                 blank: pack_bits(get_bits(raw[7], 0, 3), raw[6], 8),
                 front: pack_bits(get_bits(raw[11], 2, 3), get_bits(raw[10], 4, 7), 4),
                 sync: pack_bits(get_bits(raw[11], 0, 1), get_bits(raw[10], 0, 3), 4),
-                size_mm: pack_bits(get_bits(raw[14], 0, 3), raw[13], 8),
                 border: raw[16],
             },
+            physical: Size::new(width_mm, height_mm),
             features: parse_features(raw[17]),
         })
     }
@@ -216,13 +212,18 @@ impl DetailedTiming {
     }
 
     #[must_use]
-    pub const fn horizontal(&self) -> &Scan {
+    pub const fn horizontal(&self) -> &Timing {
         &self.horizontal
     }
 
     #[must_use]
-    pub const fn vertical(&self) -> &Scan {
+    pub const fn vertical(&self) -> &Timing {
         &self.vertical
+    }
+
+    #[must_use]
+    pub const fn physical(&self) -> Size {
+        self.physical
     }
 
     // TODO: is this correct? shouldn't we use the `Hz = pixel_clock / (horizontal.total() × vertical.total())` formula?
@@ -238,10 +239,15 @@ impl DetailedTiming {
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        Validation::new().fail_if(
-            self.pixel_clock_10khz == 0,
-            FailureKind::TimingPixelClockIsZero,
-        )
+        Validation::new()
+            .fail_if(
+                self.pixel_clock_10khz == 0,
+                FailureKind::TimingPixelClockIsZero,
+            )
+            .warn_if(
+                self.physical.width() == 0 || self.physical.height() == 0,
+                WarningKind::BasicImageSizeDubious,
+            )
     }
 }
 

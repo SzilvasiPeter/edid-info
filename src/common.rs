@@ -10,6 +10,7 @@ pub const DESC_LEN: usize = 18;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum FailureKind {
+    // TODO: Remove the module prefix after including the warnings in the validation steps
     // --- Base & Footer ---
     /// Invalid checksum for the base block.
     BaseChecksum = 0,
@@ -146,6 +147,7 @@ impl FailureKind {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum WarningKind {
+    // TODO: Remove the module prefix after including the warnings in the validation steps
     // --- Header ---
     /// Manufacturer ID reserved bit (bit 15) is set.
     HeaderMfrReservedSet = 0,
@@ -169,7 +171,7 @@ pub enum WarningKind {
     RangeCvtNoPreferredRefresh = 7,
 
     // --- Basic Parameters ---
-    /// Dubious maximum image size (smaller than 10x10 cm).
+    /// Dubious image size (smaller than 10x10 cm).
     BasicImageSizeDubious = 8,
     /// sRGB is signaled, but the gamma is not 2.2.
     BasicSrgbGammaInvalid = 9,
@@ -193,7 +195,7 @@ impl WarningKind {
             Self::RangeGtfDeprecated => "GTF support is deprecated",
             Self::RangeCvtDotClockLargeCorrection => "CVT dotclock correction exceeds 9.75 MHz",
             Self::RangeCvtNoPreferredRefresh => "CVT block missing preferred refresh rate",
-            Self::BasicImageSizeDubious => "Dubious maximum image size",
+            Self::BasicImageSizeDubious => "Dubious image size (zero or suspiciously small)",
             Self::BasicSrgbGammaInvalid => "sRGB signaled, but gamma is not 2.2",
             Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
             Self::ChromaMonochromeRgbNonZero => {
@@ -278,56 +280,30 @@ impl core::fmt::Display for Version {
     }
 }
 
-/// Common aspect ratios.
+/// Physical dimensions in millimeters.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Aspect {
-    /// 1:1 aspect ratio.
-    A1_1,
-    /// 4:3 aspect ratio.
-    A4_3,
-    /// 5:4 aspect ratio.
-    A5_4,
-    /// 15:9 aspect ratio.
-    A15_9,
-    /// 16:9 aspect ratio.
-    A16_9,
-    /// 16:10 aspect ratio.
-    A16_10,
-    /// 21:9 (64:27) aspect ratio.
-    A21_9,
-    /// 256:135 (DCI 4K) aspect ratio.
-    A256_135,
-    /// Any other aspect ratio.
-    Other(AspectRatio),
+pub struct Size {
+    width: u16,
+    height: u16,
 }
 
-impl Aspect {
-    /// Returns the aspect ratio as an [`AspectRatio`].
+impl Size {
+    /// Creates a new size in millimeters.
     #[must_use]
-    pub const fn ratio(&self) -> AspectRatio {
-        match self {
-            Self::A1_1 => AspectRatio::new(1, 1),
-            Self::A4_3 => AspectRatio::new(4, 3),
-            Self::A5_4 => AspectRatio::new(5, 4),
-            Self::A15_9 => AspectRatio::new(15, 9),
-            Self::A16_9 => AspectRatio::new(16, 9),
-            Self::A16_10 => AspectRatio::new(16, 10),
-            Self::A21_9 => AspectRatio::new(64, 27),
-            Self::A256_135 => AspectRatio::new(256, 135),
-            Self::Other(ratio) => *ratio,
-        }
+    pub const fn new(width: u16, height: u16) -> Self {
+        Self { width, height }
     }
-}
 
-impl From<Aspect> for AspectRatio {
-    fn from(aspect: Aspect) -> Self {
-        aspect.ratio()
+    /// Returns the width in millimeters.
+    #[must_use]
+    pub const fn width(&self) -> u16 {
+        self.width
     }
-}
 
-impl From<AspectRatio> for Aspect {
-    fn from(ratio: AspectRatio) -> Self {
-        ratio.as_aspect()
+    /// Returns the height in millimeters.
+    #[must_use]
+    pub const fn height(&self) -> u16 {
+        self.height
     }
 }
 
@@ -345,6 +321,15 @@ impl AspectRatio {
         Self { width, height }
     }
 
+    /// Creates an aspect ratio from physical dimensions.
+    #[must_use]
+    pub const fn from_size(size: Size) -> Self {
+        Self {
+            width: size.width,
+            height: size.height,
+        }
+    }
+
     /// Width component of the ratio.
     #[must_use]
     pub const fn width(&self) -> u16 {
@@ -355,22 +340,6 @@ impl AspectRatio {
     #[must_use]
     pub const fn height(&self) -> u16 {
         self.height
-    }
-
-    /// Returns this ratio as a common [`Aspect`].
-    #[must_use]
-    pub const fn as_aspect(&self) -> Aspect {
-        match (self.width, self.height) {
-            (1, 1) => Aspect::A1_1,
-            (4, 3) => Aspect::A4_3,
-            (5, 4) => Aspect::A5_4,
-            (15, 9) => Aspect::A15_9,
-            (16, 9) => Aspect::A16_9,
-            (16, 10) => Aspect::A16_10,
-            (64, 27) => Aspect::A21_9,
-            (256, 135) => Aspect::A256_135,
-            _ => Aspect::Other(*self),
-        }
     }
 }
 

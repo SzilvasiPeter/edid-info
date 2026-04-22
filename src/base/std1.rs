@@ -14,7 +14,7 @@
 //! | 38–53  | 8×2   | Standard timing descriptors |
 //!
 //! If both bytes are 0x01, the entry is unused.
-use crate::common::{Aspect, BLOCK_LEN, Validation};
+use crate::common::{AspectRatio, BLOCK_LEN, Validation};
 
 pub const STANDARD_OFF: usize = 38;
 pub const STANDARD_LEN: usize = 16;
@@ -63,7 +63,7 @@ impl Std1 {
 pub struct Timing {
     width: u16,
     height: u16,
-    aspect: Aspect,
+    aspect: AspectRatio,
     vfreq: u8,
 }
 
@@ -79,7 +79,7 @@ impl Timing {
     }
 
     #[must_use]
-    pub const fn aspect(&self) -> Aspect {
+    pub const fn aspect(&self) -> AspectRatio {
         self.aspect
     }
 
@@ -98,13 +98,12 @@ pub(super) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing>
     let width = (x_byte as u16 + 31) * 8;
     let aspect = match y_byte & 0b1100_0000 {
         // TODO: (Versions prior to 1.3 defined 00 as 1:1.)
-        0b0000_0000 => Aspect::A16_10,
-        0b0100_0000 => Aspect::A4_3,
-        0b1000_0000 => Aspect::A5_4,
-        _ => Aspect::A16_9,
+        0b0000_0000 => AspectRatio::new(16, 10),
+        0b0100_0000 => AspectRatio::new(4, 3),
+        0b1000_0000 => AspectRatio::new(5, 4),
+        _ => AspectRatio::new(16, 9),
     };
-    let ratio = aspect.ratio();
-    let height = width * ratio.height() / ratio.width();
+    let height = width * aspect.height() / aspect.width();
     let vfreq = (y_byte & 0b0011_1111) + 60;
     Some(Timing {
         width,

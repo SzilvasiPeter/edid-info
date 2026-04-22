@@ -11,7 +11,7 @@
 //! | 0–1  | Vertical lines / 2 - 1 (11 bits) + aspect ratio (2 bits) |
 //! | 2    | Refresh rate flags + preferred rate |
 
-use crate::common::Aspect;
+use crate::common::AspectRatio;
 use crate::common::DESC_LEN;
 
 const VERSION: u8 = 0x01;
@@ -28,7 +28,7 @@ pub enum PrefRate {
 #[expect(clippy::struct_excessive_bools, reason = "Spec-aligned EDID bitfields")]
 pub struct Mode {
     addr_lines: u16,
-    aspect: Aspect,
+    aspect: AspectRatio,
     // TODO: Use a single Frequency enum for the bitmaps
     // VerticalRate or RefreshRate or VerticalFrequency
     pref: PrefRate,
@@ -44,10 +44,10 @@ impl Mode {
     fn parse(raw: [u8; 3]) -> Self {
         let addr_lines = (u16::from(raw[0])) | (u16::from((raw[1] >> 4) & 0x0F) << 8);
         let aspect = match (raw[1] >> 2) & 0b11 {
-            0b00 => Aspect::A4_3,
-            0b01 => Aspect::A16_9,
-            0b10 => Aspect::A16_10,
-            _ => Aspect::A15_9,
+            0b00 => AspectRatio::new(4, 3),
+            0b01 => AspectRatio::new(16, 9),
+            0b10 => AspectRatio::new(16, 10),
+            _ => AspectRatio::new(15, 9),
         };
         let pref = match (raw[2] >> 5) & 0b11 {
             0b00 => PrefRate::Hz50,
@@ -72,7 +72,7 @@ impl Mode {
         self.addr_lines
     }
     #[must_use]
-    pub const fn aspect(&self) -> Aspect {
+    pub const fn aspect(&self) -> AspectRatio {
         self.aspect
     }
     #[must_use]
@@ -109,7 +109,7 @@ impl Mode {
     #[must_use]
     pub const fn h_pixels(&self) -> u16 {
         let v = self.v_lines();
-        let r = self.aspect.ratio();
+        let r = self.aspect;
         // Calculate (v * width / height) without intermediate overflow
         let h = (v / r.height()) * r.width() + (v % r.height()) * r.width() / r.height();
         (h / 8) * 8
