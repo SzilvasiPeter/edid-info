@@ -35,19 +35,24 @@ pub enum Stereo {
 // TODO: Add documentations for the enum and its fields
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Sync {
-    Analog {
+    AnalogComposite {
         bipolar: bool,
         serrations: bool,
-        rgb: bool,
+        source: AnalogSource,
     },
     DigitalComposite {
         serrations: bool,
-        h_positive: bool,
     },
     DigitalSeparate {
         v_positive: bool,
         h_positive: bool,
     },
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AnalogSource {
+    GreenOnly,
+    Rgb,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -273,14 +278,26 @@ const fn parse_stereo(raw: u8) -> Stereo {
 
 const fn parse_sync(raw: u8) -> Sync {
     match (raw >> 3) & 0b0000_0011 {
-        0b00 | 0b01 => Sync::Analog {
-            bipolar: is_set(raw, 3),
+        0b00 => Sync::AnalogComposite {
+            bipolar: false,
             serrations: is_set(raw, 2),
-            rgb: is_set(raw, 1),
+            source: if is_set(raw, 1) {
+                AnalogSource::Rgb
+            } else {
+                AnalogSource::GreenOnly
+            },
+        },
+        0b01 => Sync::AnalogComposite {
+            bipolar: true,
+            serrations: is_set(raw, 2),
+            source: if is_set(raw, 1) {
+                AnalogSource::Rgb
+            } else {
+                AnalogSource::GreenOnly
+            },
         },
         0b10 => Sync::DigitalComposite {
             serrations: is_set(raw, 2),
-            h_positive: is_set(raw, 1),
         },
         _ => Sync::DigitalSeparate {
             v_positive: is_set(raw, 2),

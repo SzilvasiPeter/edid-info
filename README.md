@@ -54,6 +54,7 @@ edid.base().footer()      // Extension count, checksum
 - **Extended Display Identification Data (EDID) Wikipedia**: https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
 - **VESA E-EDID Standard**: https://glenwing.github.io/docs/VESA-EEDID-A2.pdf
 - **VESA Display Monitoring Timing (DMT 1.13)**: https://glenwing.github.io/docs/VESA-DMT-1.13.pdf
+- **CTA‐861‐G Specification**: https://web.archive.org/web/20171201033424/https://standards.cta.tech/kwspub/published_docs/CTA-861-G_FINAL_revised_2017.pdf
 - **Code**:
   - https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode/parse-base-block.cpp
   - https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode/parse-cta-block.cpp
