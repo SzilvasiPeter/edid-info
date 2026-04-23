@@ -6,7 +6,7 @@
 
 use super::cvt3::Cvt3;
 use super::dcm::Color;
-use super::range::Range;
+use super::range::DisplayRangeLimits;
 use super::std2::Std2;
 use super::std3::Std3;
 use super::white_point::WhitePoint;
@@ -114,11 +114,11 @@ impl Monitor {
     }
 
     #[must_use]
-    pub fn range(&self) -> Option<Range> {
+    pub fn range(&self) -> Option<DisplayRangeLimits> {
         if !matches!(self.tag, DescTag::RangeLimits) {
             return None;
         }
-        Range::parse(&self.raw_desc())
+        DisplayRangeLimits::parse(&self.raw_desc())
     }
 
     #[must_use]

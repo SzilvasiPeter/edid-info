@@ -478,7 +478,7 @@ pub struct Features {
     display: DisplayType,
     standard_rgb: bool,
     preferred_timing_native: bool,
-    timing_continuous: bool,
+    continous_frequency: bool,
 }
 
 impl Features {
@@ -501,7 +501,7 @@ impl Features {
             display: DisplayType::parse(get_bits(features, 3, 4), digital),
             standard_rgb: is_set(features, 2),
             preferred_timing_native: is_set(features, 1),
-            timing_continuous: is_set(features, 0),
+            continous_frequency: is_set(features, 0),
         }
     }
 
@@ -533,8 +533,8 @@ impl Features {
 
     /// Continuous timings with GTF or CVT.
     #[must_use]
-    pub const fn timing_continuous(&self) -> bool {
-        self.timing_continuous
+    pub const fn continous_frequency(&self) -> bool {
+        self.continous_frequency
     }
 }
 
@@ -570,7 +570,7 @@ impl core::fmt::Display for Features {
             display.1,
             self.standard_rgb,
             self.preferred_timing_native,
-            self.timing_continuous
+            self.continous_frequency
         )
     }
 }

@@ -232,6 +232,7 @@ impl DetailedTiming {
     }
 
     // TODO: is this correct? shouldn't we use the `Hz = pixel_clock / (horizontal.total() × vertical.total())` formula?
+    // This formula is the horizontal frequency, refresh rate is `refreash_rate = pxlclk / (h.total + v.total)`
     #[must_use]
     pub fn h_khz(&self) -> f64 {
         f64::from(self.pixel_clock_hz()) / f64::from(self.horizontal.total()) / 1000.0

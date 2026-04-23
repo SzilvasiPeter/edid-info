@@ -43,7 +43,7 @@ fn parse_basic_acer_ek221q_h() {
     );
     assert!(!out.features().standard_rgb());
     assert!(out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -77,7 +77,7 @@ fn parse_basic_asus_rog_pg27u() {
     );
     assert!(!out.features().standard_rgb());
     assert!(out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -115,7 +115,7 @@ fn parse_basic_phl_221v8() {
     );
     assert!(!out.features().standard_rgb());
     assert!(out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -153,7 +153,7 @@ fn parse_basic_rol_rolsen_c707n() {
     );
     assert!(!out.features().standard_rgb());
     assert!(!out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -191,7 +191,7 @@ fn parse_basic_tsb_tv() {
     );
     assert!(!out.features().standard_rgb());
     assert!(out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -229,7 +229,7 @@ fn parse_basic_vit_vt988() {
     );
     assert!(!out.features().standard_rgb());
     assert!(out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
@@ -267,7 +267,7 @@ fn parse_basic_wg_unknown() {
     );
     assert!(!out.features().standard_rgb());
     assert!(!out.features().preferred_timing_native());
-    assert!(!out.features().timing_continuous());
+    assert!(!out.features().continous_frequency());
 
     let validation = out.validate(Chroma::new(&raw).is_srgb());
     assert!(validation.is_valid());
