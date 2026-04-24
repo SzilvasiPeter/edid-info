@@ -324,9 +324,17 @@ impl AspectRatio {
     /// Creates an aspect ratio from physical dimensions.
     #[must_use]
     pub const fn from_size(size: Size) -> Self {
+        if size.width == 0 && size.height == 0 {
+            return Self {
+                width: 0,
+                height: 0,
+            };
+        }
+
+        let common = gcd(size.width, size.height);
         Self {
-            width: size.width,
-            height: size.height,
+            width: size.width / common,
+            height: size.height / common,
         }
     }
 
@@ -340,6 +348,116 @@ impl AspectRatio {
     #[must_use]
     pub const fn height(&self) -> u16 {
         self.height
+    }
+}
+
+/// Scan timing parameters for one axis.
+///
+/// A **line** (horizontal axis) is one row of pixels scanned left to right.
+/// A **frame** (vertical axis) is one full screen of lines scanned top to bottom.
+/// The GPU and monitor use these values to coordinate when pixels are sent
+/// and when to pause for synchronization.
+///
+/// # Scan Cycle
+///
+/// ```text
+/// ------------------------------------------------------
+/// |  visible   | front porch | sync pulse | back porch |
+/// | (user sees)|  (settle)   | (trigger)  | (stabilize)|
+/// |---active---|--------- blanking interval -----------|
+/// ```
+///
+/// The blanking interval exists because the GPU and monitor need time to
+/// synchronize between passes:
+///
+/// - **Front porch**: the receiver settles after active data ends,
+///   ensuring the sync pulse is not mistaken for noise.
+/// - **Sync pulse**: the retrace command — both sides reset their position
+///   to the start of the next line or frame.
+/// - **Back porch**: the sender and receiver stabilize after retrace
+///   before visible data begins.
+///
+/// # Example: 1920×1080 @ 60 Hz (pixel clock 148.50 MHz)
+///
+/// Horizontal (per line): 1920 active pixels, 280 pixel-times of blanking.
+/// The GPU renders 1920 pixels, then pauses for 280 pixel-times before the next line.
+///
+/// Vertical (per frame): 1080 active lines, 45 line-times of blanking.
+/// After 1080 lines, the GPU pauses for 45 line-times before the next frame.
+///
+/// The refresh rate emerges from the pixel clock and total scan periods:
+///
+/// ```text
+/// Hz = pixel_clock / (horizontal.total() × vertical.total())
+///    = 148_500_000 / (2200 × 1125)
+///    = 60.00 Hz
+/// ```
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Timing {
+    active: u16,
+    blank: u16,
+    front: u16,
+    sync: u16,
+    border: u8,
+}
+
+impl Timing {
+    /// Creates scan timing parameters for one axis.
+    #[must_use]
+    pub const fn new(active: u16, blank: u16, front: u16, sync: u16, border: u8) -> Self {
+        Self {
+            active,
+            blank,
+            front,
+            sync,
+            border,
+        }
+    }
+
+    /// Rendered horizontal or vertical pixels.
+    #[must_use]
+    pub const fn active(&self) -> u16 {
+        self.active
+    }
+
+    /// Pause duration in pixel-times (line) or line-times (frame).
+    #[must_use]
+    pub const fn blank(&self) -> u16 {
+        self.blank
+    }
+
+    /// Front porch duration.
+    #[must_use]
+    pub const fn front(&self) -> u16 {
+        self.front
+    }
+
+    /// Sync pulse width.
+    #[must_use]
+    pub const fn sync(&self) -> u16 {
+        self.sync
+    }
+
+    /// Back porch duration. This period helps stabilize the signal before the next active pixels are displayed.
+    /// Formula: `back_porch = blank_time - (front_porch + sync_pulse)`
+    #[must_use]
+    pub const fn back(&self) -> u16 {
+        self.blank
+            .saturating_sub(self.front)
+            .saturating_sub(self.sync)
+    }
+
+    /// Total scan period: active + blank. Used with the pixel clock to derive the refresh rate.
+    #[must_use]
+    pub const fn total(&self) -> u16 {
+        self.active + self.blank
+    }
+
+    /// Border pixels/lines on one edge. Applied to both sides (left+right for horizontal, top+bottom for vertical),
+    /// so the total border is twice this value. Typically zero.
+    #[must_use]
+    pub const fn border(&self) -> u8 {
+        self.border
     }
 }
 
@@ -361,4 +479,13 @@ pub(crate) fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -
     let mut out = [0u8; N];
     out.copy_from_slice(&raw[off..off + N]);
     out
+}
+
+const fn gcd(mut a: u16, mut b: u16) -> u16 {
+    while b != 0 {
+        let r = a % b;
+        a = b;
+        b = r;
+    }
+    a
 }
