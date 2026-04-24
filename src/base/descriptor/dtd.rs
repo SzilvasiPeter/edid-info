@@ -55,28 +55,6 @@ pub enum AnalogSource {
     Rgb,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Features {
-    interlaced: bool,
-    stereo: Stereo,
-    sync: Sync,
-}
-
-impl Features {
-    #[must_use]
-    pub const fn interlaced(&self) -> bool {
-        self.interlaced
-    }
-    #[must_use]
-    pub const fn stereo(&self) -> Stereo {
-        self.stereo
-    }
-    #[must_use]
-    pub const fn sync(&self) -> Sync {
-        self.sync
-    }
-}
-
 /// Scan timing parameters for one axis.
 ///
 /// A **line** (horizontal axis) is one row of pixels scanned left to right.
@@ -181,7 +159,9 @@ pub struct DetailedTiming {
     horizontal: Timing,
     vertical: Timing,
     physical: Size,
-    features: Features,
+    interlaced: bool,
+    stereo: Stereo,
+    sync: Sync,
 }
 
 impl DetailedTiming {
@@ -207,7 +187,9 @@ impl DetailedTiming {
                 border: raw[16],
             },
             physical: Size::new(width_mm, height_mm),
-            features: parse_features(raw[17]),
+            interlaced: is_set(raw[17], 7),
+            stereo: parse_stereo(raw[17]),
+            sync: parse_sync(raw[17]),
         })
     }
 
@@ -231,16 +213,26 @@ impl DetailedTiming {
         self.physical
     }
 
+    #[must_use]
+    pub const fn interlaced(&self) -> bool {
+        self.interlaced
+    }
+
+    #[must_use]
+    pub const fn stereo(&self) -> Stereo {
+        self.stereo
+    }
+
+    #[must_use]
+    pub const fn sync(&self) -> Sync {
+        self.sync
+    }
+
     // TODO: is this correct? shouldn't we use the `Hz = pixel_clock / (horizontal.total() × vertical.total())` formula?
     // This formula is the horizontal frequency, refresh rate is `refreash_rate = pxlclk / (h.total + v.total)`
     #[must_use]
     pub fn h_khz(&self) -> f64 {
         f64::from(self.pixel_clock_hz()) / f64::from(self.horizontal.total()) / 1000.0
-    }
-
-    #[must_use]
-    pub const fn features(&self) -> Features {
-        self.features
     }
 
     #[must_use]
@@ -254,14 +246,6 @@ impl DetailedTiming {
                 self.physical.width() == 0 || self.physical.height() == 0,
                 WarningKind::BasicImageSizeDubious,
             )
-    }
-}
-
-const fn parse_features(raw: u8) -> Features {
-    Features {
-        interlaced: is_set(raw, 7),
-        stereo: parse_stereo(raw),
-        sync: parse_sync(raw),
     }
 }
 

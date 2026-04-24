@@ -13,8 +13,8 @@ fn parse_timing_descriptor_pre_p1710_stereo() {
 
     assert_eq!(out.horizontal().active(), 1280);
     assert_eq!(out.vertical().active(), 1024);
-    assert!(!out.features().interlaced());
-    assert_eq!(out.features().stereo(), Stereo::FieldSeqRight);
+    assert!(!out.interlaced());
+    assert_eq!(out.stereo(), Stereo::FieldSeqRight);
 }
 
 #[test]
@@ -39,10 +39,10 @@ fn parse_timing_descriptor_acer_ek221q_h() {
     assert_eq!(v.back(), 36);
     assert_eq!(h.border(), 0);
     assert_eq!(v.border(), 0);
-    assert!(!out.features().interlaced());
-    assert_eq!(out.features().stereo(), Stereo::None);
+    assert!(!out.interlaced());
+    assert_eq!(out.stereo(), Stereo::None);
     assert_eq!(
-        out.features().sync(),
+        out.sync(),
         Sync::DigitalSeparate {
             v_positive: true,
             h_positive: true,
@@ -70,10 +70,10 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
     assert_eq!(v.front(), 3);
     assert_eq!(v.sync(), 5);
     assert_eq!(v.back(), 54);
-    assert!(!out.features().interlaced());
-    assert_eq!(out.features().stereo(), Stereo::None);
+    assert!(!out.interlaced());
+    assert_eq!(out.stereo(), Stereo::None);
     assert_eq!(
-        out.features().sync(),
+        out.sync(),
         Sync::DigitalSeparate {
             v_positive: false,
             h_positive: true,
@@ -89,10 +89,10 @@ fn test_interlaced_stereo_parsing() {
     };
 
     let dtd2 = cta.dtd(2).expect("dtd 2");
-    assert!(dtd2.features().interlaced());
-    assert_eq!(dtd2.features().stereo(), Stereo::None);
+    assert!(dtd2.interlaced());
+    assert_eq!(dtd2.stereo(), Stereo::None);
 
     let dtd3 = cta.dtd(3).expect("dtd 3");
-    assert!(dtd3.features().interlaced());
-    assert_eq!(dtd3.features().stereo(), Stereo::None);
+    assert!(dtd3.interlaced());
+    assert_eq!(dtd3.stereo(), Stereo::None);
 }
