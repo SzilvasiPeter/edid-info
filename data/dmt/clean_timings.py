@@ -55,15 +55,14 @@ def clean_csv(input_path, output_path):
             new_row["h_border"] = int(row["H-Left-Border (px)"])
             new_row["v_border"] = int(row["V-Top-Border (ln)"])
 
-            # 4. Standard
+            # 4. Formula
             method = row.get("Method", "")
-            is_rb = row["RB"].lower() == "true"
-            if is_rb:
-                new_row["standard"] = "CVT_V2" if "v2" in method else "CVT_V1"
-            elif "CVT Compliant" in method:
-                new_row["standard"] = "CVT"
+            if "*** NOT CVT COMPLIANT ***" in method:
+                new_row["formula"] = "NO_CVT"
+            elif "v2" in method:
+                new_row["formula"] = "CVT_V2"
             else:
-                new_row["standard"] = "NO_CVT"
+                new_row["formula"] = "CVT_V1"
 
             # 5. Numeric fields to int
             new_row["pixclk_khz"] = int(float(new_row["pixclk_khz"]) * 1000)
@@ -92,7 +91,7 @@ def clean_csv(input_path, output_path):
         "std_code",
         "cvt_code",
         "rb",
-        "standard",
+        "formula",
         "pixclk_khz",
         "h_freq_hz",
         "v_freq_mhz",
