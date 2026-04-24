@@ -1,4 +1,5 @@
 use edid_info::base::descriptor::dtd::{DetailedTiming, Stereo, Sync};
+use edid_info::common::Polarity;
 use edid_info::extensions::Extension;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -44,8 +45,8 @@ fn parse_timing_descriptor_acer_ek221q_h() {
     assert_eq!(
         out.sync(),
         Sync::DigitalSeparate {
-            v_positive: true,
-            h_positive: true,
+            v_polarity: Polarity::Positive,
+            h_polarity: Polarity::Positive,
         }
     );
 }
@@ -75,8 +76,8 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
     assert_eq!(
         out.sync(),
         Sync::DigitalSeparate {
-            v_positive: false,
-            h_positive: true,
+            v_polarity: Polarity::Negative,
+            h_polarity: Polarity::Positive,
         }
     );
 }

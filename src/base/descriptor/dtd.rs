@@ -17,7 +17,7 @@
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
 use crate::bit::{get_bits, is_set, pack_bits};
-use crate::common::{DESC_LEN, FailureKind, Size, Timing, Validation, WarningKind};
+use crate::common::{DESC_LEN, FailureKind, Polarity, Size, Timing, Validation, WarningKind};
 
 const CLK_UNIT: u32 = 10_000;
 
@@ -44,8 +44,8 @@ pub enum Sync {
         serrations: bool,
     },
     DigitalSeparate {
-        v_positive: bool,
-        h_positive: bool,
+        v_polarity: Polarity,
+        h_polarity: Polarity,
     },
 }
 
@@ -163,31 +163,30 @@ const fn parse_stereo(raw: u8) -> Stereo {
 }
 
 const fn parse_sync(raw: u8) -> Sync {
-    match (raw >> 3) & 0b0000_0011 {
-        0b00 => Sync::AnalogComposite {
-            bipolar: false,
-            serrations: is_set(raw, 2),
-            source: if is_set(raw, 1) {
+    const fn polarity(b: bool) -> Polarity {
+        if b {
+            Polarity::Positive
+        } else {
+            Polarity::Negative
+        }
+    }
+
+    let b1 = is_set(raw, 1);
+    let b2 = is_set(raw, 2);
+    match (raw >> 3) & 0b11 {
+        0b00 | 0b01 => Sync::AnalogComposite {
+            bipolar: is_set(raw, 3),
+            serrations: b2,
+            source: if b1 {
                 AnalogSource::Rgb
             } else {
                 AnalogSource::GreenOnly
             },
         },
-        0b01 => Sync::AnalogComposite {
-            bipolar: true,
-            serrations: is_set(raw, 2),
-            source: if is_set(raw, 1) {
-                AnalogSource::Rgb
-            } else {
-                AnalogSource::GreenOnly
-            },
-        },
-        0b10 => Sync::DigitalComposite {
-            serrations: is_set(raw, 2),
-        },
+        0b10 => Sync::DigitalComposite { serrations: b2 },
         _ => Sync::DigitalSeparate {
-            v_positive: is_set(raw, 2),
-            h_positive: is_set(raw, 1),
+            v_polarity: polarity(b2),
+            h_polarity: polarity(b1),
         },
     }
 }

@@ -259,6 +259,13 @@ impl Validation {
     }
 }
 
+/// Synchronization polarity.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Polarity {
+    Positive,
+    Negative,
+}
+
 /// EDID version (major and minor).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Version {
