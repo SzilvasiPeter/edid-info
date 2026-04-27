@@ -65,9 +65,9 @@ def clean_csv(input_path, output_path):
                 new_row["formula"] = "CVT_V1"
 
             # 5. Numeric fields to int
-            new_row["pixclk_khz"] = int(float(new_row["pixclk_khz"]) * 1000)
-            new_row["h_freq_hz"] = int(float(new_row["h_freq_hz"]) * 1000)
-            new_row["v_freq_mhz"] = int(float(new_row["v_freq_mhz"]) * 1000)
+            new_row["pixclk_khz"] = int(round(float(new_row["pixclk_khz"]) * 1000))
+            new_row["h_freq_hz"] = int(round(float(new_row["h_freq_hz"]) * 1000))
+            new_row["v_freq_mhz"] = int(round(float(new_row["v_freq_mhz"]) * 1000))
 
             # Standard components to int
             for field in [
