@@ -34,7 +34,7 @@ pub enum Stereo {
 
 // TODO: Add documentations for the enum and its fields
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Sync {
+pub enum SyncSignal {
     AnalogComposite {
         bipolar: bool,
         serrations: bool,
@@ -42,6 +42,7 @@ pub enum Sync {
     },
     DigitalComposite {
         serrations: bool,
+        h_polarity: Polarity,
     },
     DigitalSeparate {
         v_polarity: Polarity,
@@ -57,13 +58,13 @@ pub enum AnalogSource {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
-    pixel_clock_10khz: u16,
+    pixclk_10khz: u16,
     horizontal: Timing,
     vertical: Timing,
     physical: Size,
     interlaced: bool,
     stereo: Stereo,
-    sync: Sync,
+    signal: SyncSignal,
 }
 
 impl DetailedTiming {
@@ -84,19 +85,19 @@ impl DetailedTiming {
         let width_mm = pack_bits(get_bits(raw[14], 4, 7), raw[12], 8);
         let height_mm = pack_bits(get_bits(raw[14], 0, 3), raw[13], 8);
         Some(Self {
-            pixel_clock_10khz: u16::from_le_bytes([raw[0], raw[1]]),
+            pixclk_10khz: u16::from_le_bytes([raw[0], raw[1]]),
             horizontal: Timing::new(h_active, h_blank, h_front, h_sync, h_border),
             vertical: Timing::new(v_active, v_blank, v_front, v_sync, v_border),
             physical: Size::new(width_mm, height_mm),
             interlaced: is_set(raw[17], 7),
             stereo: parse_stereo(raw[17]),
-            sync: parse_sync(raw[17]),
+            signal: parse_signal(raw[17]),
         })
     }
 
     #[must_use]
     pub const fn pixel_clock_hz(&self) -> u32 {
-        self.pixel_clock_10khz as u32 * CLK_UNIT
+        self.pixclk_10khz as u32 * CLK_UNIT
     }
 
     #[must_use]
@@ -125,8 +126,8 @@ impl DetailedTiming {
     }
 
     #[must_use]
-    pub const fn sync(&self) -> Sync {
-        self.sync
+    pub const fn signal(&self) -> SyncSignal {
+        self.signal
     }
 
     // TODO: is this correct? shouldn't we use the `Hz = pixel_clock / (horizontal.total() × vertical.total())` formula?
@@ -139,10 +140,7 @@ impl DetailedTiming {
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new()
-            .fail_if(
-                self.pixel_clock_10khz == 0,
-                FailureKind::TimingPixelClockIsZero,
-            )
+            .fail_if(self.pixclk_10khz == 0, FailureKind::TimingPixelClockIsZero)
             .warn_if(
                 self.physical.width() == 0 || self.physical.height() == 0,
                 WarningKind::BasicImageSizeDubious,
@@ -162,29 +160,28 @@ const fn parse_stereo(raw: u8) -> Stereo {
     }
 }
 
-const fn parse_sync(raw: u8) -> Sync {
-    const fn polarity(b: bool) -> Polarity {
-        if b {
-            Polarity::Positive
-        } else {
-            Polarity::Negative
-        }
+const fn parse_signal(raw: u8) -> SyncSignal {
+    const fn polarity(bit: bool) -> Polarity {
+        let pos = Polarity::Positive;
+        let neg = Polarity::Negative;
+        if bit { pos } else { neg }
     }
 
     let b1 = is_set(raw, 1);
     let b2 = is_set(raw, 2);
+    let rgb = AnalogSource::Rgb;
+    let green = AnalogSource::GreenOnly;
     match (raw >> 3) & 0b11 {
-        0b00 | 0b01 => Sync::AnalogComposite {
+        0b00 | 0b01 => SyncSignal::AnalogComposite {
             bipolar: is_set(raw, 3),
             serrations: b2,
-            source: if b1 {
-                AnalogSource::Rgb
-            } else {
-                AnalogSource::GreenOnly
-            },
+            source: if b1 { rgb } else { green },
         },
-        0b10 => Sync::DigitalComposite { serrations: b2 },
-        _ => Sync::DigitalSeparate {
+        0b10 => SyncSignal::DigitalComposite {
+            serrations: b2,
+            h_polarity: polarity(b1),
+        },
+        _ => SyncSignal::DigitalSeparate {
             v_polarity: polarity(b2),
             h_polarity: polarity(b1),
         },

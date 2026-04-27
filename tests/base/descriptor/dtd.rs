@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::dtd::{DetailedTiming, Stereo, Sync};
+use edid_info::base::descriptor::dtd::{DetailedTiming, Stereo, SyncSignal};
 use edid_info::common::Polarity;
 use edid_info::extensions::Extension;
 
@@ -43,8 +43,8 @@ fn parse_timing_descriptor_acer_ek221q_h() {
     assert!(!out.interlaced());
     assert_eq!(out.stereo(), Stereo::None);
     assert_eq!(
-        out.sync(),
-        Sync::DigitalSeparate {
+        out.signal(),
+        SyncSignal::DigitalSeparate {
             v_polarity: Polarity::Positive,
             h_polarity: Polarity::Positive,
         }
@@ -74,8 +74,8 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
     assert!(!out.interlaced());
     assert_eq!(out.stereo(), Stereo::None);
     assert_eq!(
-        out.sync(),
-        Sync::DigitalSeparate {
+        out.signal(),
+        SyncSignal::DigitalSeparate {
             v_polarity: Polarity::Negative,
             h_polarity: Polarity::Positive,
         }
