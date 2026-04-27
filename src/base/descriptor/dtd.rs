@@ -17,7 +17,9 @@
 //! | 15–17 | Flags (interlace, stereo, sync type) |
 
 use crate::bit::{get_bits, is_set, pack_bits};
-use crate::common::{DESC_LEN, FailureKind, Polarity, Size, Timing, Validation, WarningKind};
+use crate::common::{
+    DESC_LEN, FailureKind, Polarity, Size, SyncPolarity, Timing, Validation, WarningKind,
+};
 
 const CLK_UNIT: u32 = 10_000;
 
@@ -44,10 +46,7 @@ pub enum SyncSignal {
         serrations: bool,
         h_polarity: Polarity,
     },
-    DigitalSeparate {
-        v_polarity: Polarity,
-        h_polarity: Polarity,
-    },
+    DigitalSeparate(SyncPolarity),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -181,9 +180,9 @@ const fn parse_signal(raw: u8) -> SyncSignal {
             serrations: b2,
             h_polarity: polarity(b1),
         },
-        _ => SyncSignal::DigitalSeparate {
-            v_polarity: polarity(b2),
-            h_polarity: polarity(b1),
-        },
+        _ => SyncSignal::DigitalSeparate(SyncPolarity {
+            horizontal: polarity(b1),
+            vertical: polarity(b2),
+        }),
     }
 }
