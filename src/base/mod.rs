@@ -24,6 +24,7 @@ pub mod basic;
 pub mod chroma;
 pub mod descriptor;
 pub mod descriptors;
+pub mod dmt;
 pub mod established;
 pub mod footer;
 pub mod header;
