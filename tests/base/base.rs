@@ -50,7 +50,7 @@ fn parse_base_acer_ek221q_h() {
             let v = timing.vertical();
             assert_eq!(h.active(), 1920);
             assert_eq!(v.active(), 1080);
-            assert_eq!(timing.pixel_clock_hz(), 148_500_000);
+            assert_eq!(timing.pixel_clock_khz(), 148_500);
         }
         Descriptor::Display(serial) => {
             assert_eq!(serial.tag(), DescTag::SerialNumber);
@@ -119,14 +119,14 @@ fn parse_base_asus_rog_pg27u() {
     assert_eq!(blocks[2].vendor_oui(), Some(0x0000_044b));
 
     let dtd0 = cta.dtd(0).expect("cta dtd 0");
-    assert_eq!(dtd0.pixel_clock_hz(), 262_750_000);
+    assert_eq!(dtd0.pixel_clock_khz(), 262_750);
     let h0 = dtd0.horizontal();
     let v0 = dtd0.vertical();
     assert_eq!(h0.active(), 3840);
     assert_eq!(v0.active(), 2160);
 
     let dtd1 = cta.dtd(1).expect("cta dtd 1");
-    assert_eq!(dtd1.pixel_clock_hz(), 209_750_000);
+    assert_eq!(dtd1.pixel_clock_khz(), 209_750);
     let h1 = dtd1.horizontal();
     let v1 = dtd1.vertical();
     assert_eq!(h1.active(), 3840);

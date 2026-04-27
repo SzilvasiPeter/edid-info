@@ -29,7 +29,7 @@ fn parse_timing_descriptor_acer_ek221q_h() {
     let v = out.vertical();
     assert_eq!(h.active(), 1920);
     assert_eq!(v.active(), 1080);
-    assert_eq!(out.pixel_clock_hz(), 148_500_000);
+    assert_eq!(out.pixel_clock_khz(), 148_500);
     assert_eq!(out.physical().width(), 479);
     assert_eq!(out.physical().height(), 260);
     assert_eq!(h.front(), 88);
@@ -62,7 +62,7 @@ fn parse_timing_descriptor_asus_rog_pg27u() {
     let v = out.vertical();
     assert_eq!(h.active(), 3840);
     assert_eq!(v.active(), 2160);
-    assert_eq!(out.pixel_clock_hz(), 533_250_000);
+    assert_eq!(out.pixel_clock_khz(), 533_250);
     assert_eq!(out.physical().width(), 598);
     assert_eq!(out.physical().height(), 336);
     assert_eq!(h.front(), 48);

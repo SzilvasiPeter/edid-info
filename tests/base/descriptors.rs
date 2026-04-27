@@ -10,7 +10,7 @@ fn parse_dtd_synthetic() {
 
     let out = Descriptors::new(&raw);
     match out.descriptors(1) {
-        Some(Descriptor::Timing(timing)) => assert_eq!(timing.pixel_clock_hz(), 74_250_000),
+        Some(Descriptor::Timing(timing)) => assert_eq!(timing.pixel_clock_khz(), 74_250),
         _ => panic!("slot 1 should parse as timing"),
     }
 }

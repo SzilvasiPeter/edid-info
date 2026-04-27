@@ -8,8 +8,7 @@ pub struct Dmt {
     id: u8,
     std_code: Option<u16>,
     cvt_code: Option<u32>,
-    reduced_blanking: bool,
-    pixclk_khz: u32,
+    pixel_clock_khz: u32,
     interlaced: bool,
     horizontal: Timing,
     vertical: Timing,
@@ -21,8 +20,7 @@ impl Dmt {
     #[must_use]
     pub const fn new(
         id: u8,
-        reduced_blanking: bool,
-        pixclk_khz: u32,
+        pixel_clock_khz: u32,
         interlaced: bool,
         horizontal: Timing,
         vertical: Timing,
@@ -32,8 +30,7 @@ impl Dmt {
             id,
             std_code: None,
             cvt_code: None,
-            reduced_blanking,
-            pixclk_khz,
+            pixel_clock_khz,
             interlaced,
             horizontal,
             vertical,
@@ -69,13 +66,8 @@ impl Dmt {
     }
 
     #[must_use]
-    pub const fn reduced_blanking(&self) -> bool {
-        self.reduced_blanking
-    }
-
-    #[must_use]
-    pub const fn pixclk_khz(&self) -> u32 {
-        self.pixclk_khz
+    pub const fn pixel_clock_khz(&self) -> u32 {
+        self.pixel_clock_khz
     }
 
     #[must_use]
@@ -100,7 +92,7 @@ impl Dmt {
 
     #[must_use]
     pub const fn h_freq_hz(&self) -> u32 {
-        let p = self.pixclk_khz;
+        let p = self.pixel_clock_khz;
         let h = self.horizontal.total() as u32;
         (p / h) * 1000 + ((p % h) * 1000 + h / 2) / h
     }

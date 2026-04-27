@@ -24,7 +24,7 @@ fn parse_cta_acer_ek221q_h() {
     assert_eq!(blocks[4].tag(), BlockTag::Audio);
 
     let dtd0 = out.dtd(0).expect("cta dtd 0");
-    assert_eq!(dtd0.pixel_clock_hz(), 174_500_000);
+    assert_eq!(dtd0.pixel_clock_khz(), 174_500);
 
     let h0 = dtd0.horizontal();
     let v0 = dtd0.vertical();
@@ -32,7 +32,7 @@ fn parse_cta_acer_ek221q_h() {
     assert_eq!(v0.active(), 1080);
 
     let dtd1 = out.dtd(1).expect("cta dtd 1");
-    assert_eq!(dtd1.pixel_clock_hz(), 228_800_000);
+    assert_eq!(dtd1.pixel_clock_khz(), 228_800);
 
     let h1 = dtd1.horizontal();
     let v1 = dtd1.vertical();
@@ -66,7 +66,7 @@ fn parse_cta_asus_rog_pg27u() {
     assert_eq!(blocks[5].tag(), BlockTag::Extended);
 
     let dtd0 = out.dtd(0).expect("cta dtd 0");
-    assert_eq!(dtd0.pixel_clock_hz(), 262_750_000);
+    assert_eq!(dtd0.pixel_clock_khz(), 262_750);
 
     let h0 = dtd0.horizontal();
     let v0 = dtd0.vertical();
@@ -74,7 +74,7 @@ fn parse_cta_asus_rog_pg27u() {
     assert_eq!(v0.active(), 2160);
 
     let dtd1 = out.dtd(1).expect("cta dtd 1");
-    assert_eq!(dtd1.pixel_clock_hz(), 209_750_000);
+    assert_eq!(dtd1.pixel_clock_khz(), 209_750);
 
     let h1 = dtd1.horizontal();
     let v1 = dtd1.vertical();

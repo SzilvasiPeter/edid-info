@@ -21,8 +21,6 @@ use crate::common::{
     DESC_LEN, FailureKind, Polarity, Size, SyncPolarity, Timing, Validation, WarningKind,
 };
 
-const CLK_UNIT: u32 = 10_000;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stereo {
     None,
@@ -57,7 +55,7 @@ pub enum AnalogSource {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
-    pixclk_10khz: u16,
+    pixel_clock_khz: u32,
     horizontal: Timing,
     vertical: Timing,
     physical: Size,
@@ -84,7 +82,7 @@ impl DetailedTiming {
         let width_mm = pack_bits(get_bits(raw[14], 4, 7), raw[12], 8);
         let height_mm = pack_bits(get_bits(raw[14], 0, 3), raw[13], 8);
         Some(Self {
-            pixclk_10khz: u16::from_le_bytes([raw[0], raw[1]]),
+            pixel_clock_khz: u16::from_le_bytes([raw[0], raw[1]]) as u32 * 10,
             horizontal: Timing::new(h_active, h_blank, h_front, h_sync, h_border),
             vertical: Timing::new(v_active, v_blank, v_front, v_sync, v_border),
             physical: Size::new(width_mm, height_mm),
@@ -95,8 +93,8 @@ impl DetailedTiming {
     }
 
     #[must_use]
-    pub const fn pixel_clock_hz(&self) -> u32 {
-        self.pixclk_10khz as u32 * CLK_UNIT
+    pub const fn pixel_clock_khz(&self) -> u32 {
+        self.pixel_clock_khz
     }
 
     #[must_use]
@@ -129,17 +127,13 @@ impl DetailedTiming {
         self.signal
     }
 
-    // TODO: is this correct? shouldn't we use the `Hz = pixel_clock / (horizontal.total() × vertical.total())` formula?
-    // This formula is the horizontal frequency, refresh rate is `refreash_rate = pxlclk / (h.total + v.total)`
-    #[must_use]
-    pub fn h_khz(&self) -> f64 {
-        f64::from(self.pixel_clock_hz()) / f64::from(self.horizontal.total()) / 1000.0
-    }
-
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new()
-            .fail_if(self.pixclk_10khz == 0, FailureKind::TimingPixelClockIsZero)
+            .fail_if(
+                self.pixel_clock_khz == 0,
+                FailureKind::TimingPixelClockIsZero,
+            )
             .warn_if(
                 self.physical.width() == 0 || self.physical.height() == 0,
                 WarningKind::BasicImageSizeDubious,
