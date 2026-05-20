@@ -82,7 +82,7 @@ fn parse_base_asus_rog_pg27u() {
             year: 2018
         }
     );
-    assert_eq!(base.header().version(), Version::new(1, 4));
+    assert_eq!(base.header().version(), Version { major: 1, minor: 4 });
 
     assert_eq!(
         base.basic().screen_size(),

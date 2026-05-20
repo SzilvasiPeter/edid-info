@@ -276,16 +276,8 @@ pub struct SyncPolarity {
 /// EDID version (major and minor).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Version {
-    major: u8,
-    minor: u8,
-}
-
-impl Version {
-    /// Initialize a version from major and minor version.
-    #[must_use]
-    pub const fn new(major: u8, minor: u8) -> Self {
-        Self { major, minor }
-    }
+    pub major: u8,
+    pub minor: u8,
 }
 
 impl core::fmt::Display for Version {

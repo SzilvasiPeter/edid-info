@@ -33,7 +33,7 @@ fn parse_header_acer_ek221q_h() {
             year: 2023
         }
     );
-    assert_eq!(out.version(), Version::new(1, 3));
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: ACR, Product: 0B5D, Version: 1.3"
@@ -67,7 +67,7 @@ fn parse_header_asus_rog_pg27u() {
             year: 2018
         }
     );
-    assert_eq!(out.version(), Version::new(1, 4));
+    assert_eq!(out.version(), Version { major: 1, minor: 4 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: AUS, Product: 27A4, Version: 1.4"
@@ -94,7 +94,7 @@ fn parse_header_cm_cm2400t() {
             year: 2017
         }
     );
-    assert_eq!(out.version(), Version::new(1, 3));
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: CM_, Product: 2400, Version: 1.3"
@@ -135,7 +135,7 @@ fn parse_header_cs_1920x1080() {
             year: 2013
         }
     );
-    assert_eq!(out.version(), Version::new(1, 4));
+    assert_eq!(out.version(), Version { major: 1, minor: 4 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: CS_, Product: 5211, Version: 1.4"
@@ -169,7 +169,7 @@ fn parse_header_lpl_lp154w01_zeroweek() {
             year: 2006
         }
     );
-    assert_eq!(out.version(), Version::new(1, 3));
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: LPL, Product: C800, Version: 1.3"
@@ -208,7 +208,7 @@ fn parse_header_ms_hsd_1903_a00() {
             year: 2021
         }
     );
-    assert_eq!(out.version(), Version::new(1, 2));
+    assert_eq!(out.version(), Version { major: 1, minor: 2 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: MS_, Product: 003C, Version: 1.2"
@@ -255,7 +255,7 @@ fn parse_header_tk_tianma() {
             year: 2018
         }
     );
-    assert_eq!(out.version(), Version::new(1, 4));
+    assert_eq!(out.version(), Version { major: 1, minor: 4 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: TK@, Product: 20EB, Version: 1.4"
@@ -296,7 +296,7 @@ fn parse_header_wg_unknown() {
             year: 2007
         }
     );
-    assert_eq!(out.version(), Version::new(1, 1));
+    assert_eq!(out.version(), Version { major: 1, minor: 1 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: WG@, Product: 0000, Version: 1.1"
@@ -347,7 +347,7 @@ fn parse_header_phl_bad_date() {
             year: 2034
         }
     );
-    assert_eq!(out.version(), Version::new(1, 3));
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: PHL, Product: C211, Version: 1.3"
@@ -382,7 +382,7 @@ fn parse_header_tsb_model_year() {
     assert_eq!(out.product(), 272);
     assert_eq!(out.serial(), 0x0101_0101);
     assert_eq!(out.date(), DateInfo::ModelYear { year: 2013 });
-    assert_eq!(out.version(), Version::new(1, 3));
+    assert_eq!(out.version(), Version { major: 1, minor: 3 });
     assert_eq!(
         out.to_string(),
         "Manufacturer: TSB, Product: 0110, Version: 1.3"
