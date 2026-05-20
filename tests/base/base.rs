@@ -3,7 +3,6 @@ use edid_info::{
     base::basic::ScreenSize,
     base::descriptor::monitor::DescTag,
     base::descriptors::Descriptor,
-    base::established::EstablishedTiming,
     base::header::DateInfo,
     common::Size,
     common::Version,
@@ -31,7 +30,9 @@ fn parse_base_acer_ek221q_h() {
     assert!(
         out.established()
             .supported()
-            .contains(&Some(EstablishedTiming::T1280x1024_75))
+            .iter()
+            .flatten()
+            .any(|d| d.id == 0x24)
     );
     assert_eq!(
         out.timings()

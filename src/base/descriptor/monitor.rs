@@ -6,9 +6,9 @@
 
 use super::cvt3::Cvt3;
 use super::dcm::Color;
+use super::established3::Established3;
 use super::range::DisplayRangeLimits;
 use super::std2::Std2;
-use super::std3::Std3;
 use super::white_point::WhitePoint;
 use crate::common::{DESC_LEN, Validation, slice};
 
@@ -154,11 +154,11 @@ impl Monitor {
     }
 
     #[must_use]
-    pub fn std3(&self) -> Option<Std3> {
+    pub fn std3(&self) -> Option<Established3> {
         if !matches!(self.tag, DescTag::StdTiming3) {
             return None;
         }
-        Std3::parse(&self.raw_desc())
+        Established3::parse(&self.raw_desc())
     }
 
     #[must_use]

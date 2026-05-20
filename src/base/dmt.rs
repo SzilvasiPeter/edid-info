@@ -34,6 +34,18 @@ impl Dmt {
     }
 }
 
+#[must_use]
+pub const fn find_dmt(id: u8) -> Option<Dmt> {
+    let mut i = 0;
+    while i < DMT_ARRAY.len() {
+        if DMT_ARRAY[i].id == id {
+            return Some(DMT_ARRAY[i]);
+        }
+        i += 1;
+    }
+    None
+}
+
 pub const DMT_ARRAY: [Dmt; 88] = [
     Dmt {
         id: 0x01,

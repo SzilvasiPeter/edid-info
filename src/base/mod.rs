@@ -66,8 +66,8 @@ impl<'a> Base<'a> {
 
     /// Returns the established timing bitmap (common legacy video timings).
     #[must_use]
-    pub fn established(&self) -> established::Established {
-        established::Established::new(self.raw)
+    pub fn established(&self) -> established::EstablishedLegacy {
+        established::EstablishedLegacy::new(self.raw)
     }
 
     /// Returns the standard timing information.
