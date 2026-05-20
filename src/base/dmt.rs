@@ -1,95 +1,21 @@
 //! VESA DMT timing metadata.
 
-use crate::common::{SyncPolarity, Timing};
+use crate::common::{Polarity, SyncPolarity, Timing};
 
 /// One DMT timing entry.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Dmt {
-    id: u8,
-    std_code: Option<u16>,
-    cvt_code: Option<u32>,
-    pixel_clock_khz: u32,
-    interlaced: bool,
-    horizontal: Timing,
-    vertical: Timing,
-    sync: SyncPolarity,
+    pub id: u8,
+    pub std_code: Option<u16>,
+    pub cvt_code: Option<u32>,
+    pub pixel_clock_khz: u32,
+    pub interlaced: bool,
+    pub horizontal: Timing,
+    pub vertical: Timing,
+    pub sync: SyncPolarity,
 }
 
 impl Dmt {
-    /// Creates a DMT timing entry.
-    #[must_use]
-    pub const fn new(
-        id: u8,
-        pixel_clock_khz: u32,
-        interlaced: bool,
-        horizontal: Timing,
-        vertical: Timing,
-        sync: SyncPolarity,
-    ) -> Self {
-        Self {
-            id,
-            std_code: None,
-            cvt_code: None,
-            pixel_clock_khz,
-            interlaced,
-            horizontal,
-            vertical,
-            sync,
-        }
-    }
-
-    #[must_use]
-    pub const fn with_std_code(mut self, code: u16) -> Self {
-        self.std_code = Some(code);
-        self
-    }
-
-    #[must_use]
-    pub const fn with_cvt_code(mut self, code: u32) -> Self {
-        self.cvt_code = Some(code);
-        self
-    }
-
-    #[must_use]
-    pub const fn id(&self) -> u8 {
-        self.id
-    }
-
-    #[must_use]
-    pub const fn std_code(&self) -> Option<u16> {
-        self.std_code
-    }
-
-    #[must_use]
-    pub const fn cvt_code(&self) -> Option<u32> {
-        self.cvt_code
-    }
-
-    #[must_use]
-    pub const fn pixel_clock_khz(&self) -> u32 {
-        self.pixel_clock_khz
-    }
-
-    #[must_use]
-    pub const fn interlaced(&self) -> bool {
-        self.interlaced
-    }
-
-    #[must_use]
-    pub const fn horizontal(&self) -> Timing {
-        self.horizontal
-    }
-
-    #[must_use]
-    pub const fn vertical(&self) -> Timing {
-        self.vertical
-    }
-
-    #[must_use]
-    pub const fn sync(&self) -> SyncPolarity {
-        self.sync
-    }
-
     #[must_use]
     pub const fn h_freq_hz(&self) -> u32 {
         let p = self.pixel_clock_khz;
@@ -107,3 +33,1150 @@ impl Dmt {
         (hf / v) * 1000 + ((hf % v) * 1000 + v / 2) / v
     }
 }
+
+pub const DMT_ARRAY: [Dmt; 88] = [
+    Dmt {
+        id: 0x01,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 31_500,
+        interlaced: false,
+        horizontal: Timing::new(640, 192, 32, 64, 0),
+        vertical: Timing::new(350, 95, 32, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x02,
+        std_code: Some(0x3119),
+        cvt_code: None,
+        pixel_clock_khz: 31_500,
+        interlaced: false,
+        horizontal: Timing::new(640, 192, 32, 64, 0),
+        vertical: Timing::new(400, 45, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x03,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 35_500,
+        interlaced: false,
+        horizontal: Timing::new(720, 216, 36, 72, 0),
+        vertical: Timing::new(400, 46, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x04,
+        std_code: Some(0x3140),
+        cvt_code: None,
+        pixel_clock_khz: 25_175,
+        interlaced: false,
+        horizontal: Timing::new(640, 160, 8, 96, 8),
+        vertical: Timing::new(480, 45, 2, 2, 8),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x05,
+        std_code: Some(0x314C),
+        cvt_code: None,
+        pixel_clock_khz: 31_500,
+        interlaced: false,
+        horizontal: Timing::new(640, 192, 16, 40, 8),
+        vertical: Timing::new(480, 40, 1, 3, 8),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x06,
+        std_code: Some(0x314F),
+        cvt_code: None,
+        pixel_clock_khz: 31_500,
+        interlaced: false,
+        horizontal: Timing::new(640, 200, 16, 64, 0),
+        vertical: Timing::new(480, 20, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x07,
+        std_code: Some(0x3159),
+        cvt_code: None,
+        pixel_clock_khz: 36_000,
+        interlaced: false,
+        horizontal: Timing::new(640, 192, 56, 56, 0),
+        vertical: Timing::new(480, 29, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x08,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 36_000,
+        interlaced: false,
+        horizontal: Timing::new(800, 224, 24, 72, 0),
+        vertical: Timing::new(600, 25, 1, 2, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x09,
+        std_code: Some(0x4540),
+        cvt_code: None,
+        pixel_clock_khz: 40_000,
+        interlaced: false,
+        horizontal: Timing::new(800, 256, 40, 128, 0),
+        vertical: Timing::new(600, 28, 1, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x0A,
+        std_code: Some(0x454C),
+        cvt_code: None,
+        pixel_clock_khz: 50_000,
+        interlaced: false,
+        horizontal: Timing::new(800, 240, 56, 120, 0),
+        vertical: Timing::new(600, 66, 37, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x0B,
+        std_code: Some(0x454F),
+        cvt_code: None,
+        pixel_clock_khz: 49_500,
+        interlaced: false,
+        horizontal: Timing::new(800, 256, 16, 80, 0),
+        vertical: Timing::new(600, 25, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x0C,
+        std_code: Some(0x4559),
+        cvt_code: None,
+        pixel_clock_khz: 56_250,
+        interlaced: false,
+        horizontal: Timing::new(800, 248, 32, 64, 0),
+        vertical: Timing::new(600, 31, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x0D,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 73_250,
+        interlaced: false,
+        horizontal: Timing::new(800, 160, 48, 32, 0),
+        vertical: Timing::new(600, 36, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x0E,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 33_750,
+        interlaced: false,
+        horizontal: Timing::new(848, 240, 16, 112, 0),
+        vertical: Timing::new(480, 37, 6, 8, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x0F,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 44_900,
+        interlaced: true,
+        horizontal: Timing::new(1024, 240, 8, 176, 0),
+        vertical: Timing::new(768, 49, 0, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x10,
+        std_code: Some(0x6140),
+        cvt_code: None,
+        pixel_clock_khz: 65_000,
+        interlaced: false,
+        horizontal: Timing::new(1024, 320, 24, 136, 0),
+        vertical: Timing::new(768, 38, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x11,
+        std_code: Some(0x614A),
+        cvt_code: None,
+        pixel_clock_khz: 75_000,
+        interlaced: false,
+        horizontal: Timing::new(1024, 304, 24, 136, 0),
+        vertical: Timing::new(768, 38, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x12,
+        std_code: Some(0x614F),
+        cvt_code: None,
+        pixel_clock_khz: 78_750,
+        interlaced: false,
+        horizontal: Timing::new(1024, 288, 16, 96, 0),
+        vertical: Timing::new(768, 32, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x13,
+        std_code: Some(0x6159),
+        cvt_code: None,
+        pixel_clock_khz: 94_500,
+        interlaced: false,
+        horizontal: Timing::new(1024, 352, 48, 96, 0),
+        vertical: Timing::new(768, 40, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x14,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 115_500,
+        interlaced: false,
+        horizontal: Timing::new(1024, 160, 48, 32, 0),
+        vertical: Timing::new(768, 45, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x15,
+        std_code: Some(0x714F),
+        cvt_code: None,
+        pixel_clock_khz: 108_000,
+        interlaced: false,
+        horizontal: Timing::new(1152, 448, 64, 128, 0),
+        vertical: Timing::new(864, 36, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x55,
+        std_code: Some(0x81C0),
+        cvt_code: None,
+        pixel_clock_khz: 74_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 370, 110, 40, 0),
+        vertical: Timing::new(720, 30, 5, 5, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x16,
+        std_code: None,
+        cvt_code: Some(0x7F_1C21),
+        pixel_clock_khz: 68_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(768, 22, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x17,
+        std_code: None,
+        cvt_code: Some(0x7F_1C28),
+        pixel_clock_khz: 79_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 384, 64, 128, 0),
+        vertical: Timing::new(768, 30, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x18,
+        std_code: None,
+        cvt_code: Some(0x7F_1C44),
+        pixel_clock_khz: 102_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 416, 80, 128, 0),
+        vertical: Timing::new(768, 37, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x19,
+        std_code: None,
+        cvt_code: Some(0x7F_1C62),
+        pixel_clock_khz: 117_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 432, 80, 136, 0),
+        vertical: Timing::new(768, 41, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x1A,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 140_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(768, 45, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x1B,
+        std_code: None,
+        cvt_code: Some(0x8F_1821),
+        pixel_clock_khz: 71_000,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(800, 23, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x1C,
+        std_code: Some(0x8100),
+        cvt_code: Some(0x8F_1828),
+        pixel_clock_khz: 83_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 400, 72, 128, 0),
+        vertical: Timing::new(800, 31, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x1D,
+        std_code: Some(0x810F),
+        cvt_code: Some(0x8F_1844),
+        pixel_clock_khz: 106_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 416, 80, 128, 0),
+        vertical: Timing::new(800, 38, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x1E,
+        std_code: Some(0x8119),
+        cvt_code: Some(0x8F_1862),
+        pixel_clock_khz: 122_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 432, 80, 136, 0),
+        vertical: Timing::new(800, 43, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x1F,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 146_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(800, 47, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x20,
+        std_code: Some(0x8140),
+        cvt_code: None,
+        pixel_clock_khz: 108_000,
+        interlaced: false,
+        horizontal: Timing::new(1280, 520, 96, 112, 0),
+        vertical: Timing::new(960, 40, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x21,
+        std_code: Some(0x8159),
+        cvt_code: None,
+        pixel_clock_khz: 148_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 448, 64, 160, 0),
+        vertical: Timing::new(960, 51, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x22,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 175_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(960, 57, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x23,
+        std_code: Some(0x8180),
+        cvt_code: None,
+        pixel_clock_khz: 108_000,
+        interlaced: false,
+        horizontal: Timing::new(1280, 408, 48, 112, 0),
+        vertical: Timing::new(1024, 42, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x24,
+        std_code: Some(0x818F),
+        cvt_code: None,
+        pixel_clock_khz: 135_000,
+        interlaced: false,
+        horizontal: Timing::new(1280, 408, 16, 144, 0),
+        vertical: Timing::new(1024, 42, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x25,
+        std_code: Some(0x8199),
+        cvt_code: None,
+        pixel_clock_khz: 157_500,
+        interlaced: false,
+        horizontal: Timing::new(1280, 448, 64, 160, 0),
+        vertical: Timing::new(1024, 48, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x26,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 187_250,
+        interlaced: false,
+        horizontal: Timing::new(1280, 160, 48, 32, 0),
+        vertical: Timing::new(1024, 60, 3, 7, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x27,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 85_500,
+        interlaced: false,
+        horizontal: Timing::new(1360, 432, 64, 112, 0),
+        vertical: Timing::new(768, 27, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x28,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 148_250,
+        interlaced: false,
+        horizontal: Timing::new(1360, 160, 48, 32, 0),
+        vertical: Timing::new(768, 45, 3, 5, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x51,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 85_500,
+        interlaced: false,
+        horizontal: Timing::new(1366, 426, 70, 143, 0),
+        vertical: Timing::new(768, 30, 3, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x56,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 72_000,
+        interlaced: false,
+        horizontal: Timing::new(1366, 134, 14, 56, 0),
+        vertical: Timing::new(768, 32, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x29,
+        std_code: None,
+        cvt_code: Some(0x0C_2021),
+        pixel_clock_khz: 101_000,
+        interlaced: false,
+        horizontal: Timing::new(1400, 160, 48, 32, 0),
+        vertical: Timing::new(1050, 30, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x2A,
+        std_code: Some(0x9040),
+        cvt_code: Some(0x0C_2028),
+        pixel_clock_khz: 121_750,
+        interlaced: false,
+        horizontal: Timing::new(1400, 464, 88, 144, 0),
+        vertical: Timing::new(1050, 39, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x2B,
+        std_code: Some(0x904F),
+        cvt_code: Some(0x0C_2044),
+        pixel_clock_khz: 156_000,
+        interlaced: false,
+        horizontal: Timing::new(1400, 496, 104, 144, 0),
+        vertical: Timing::new(1050, 49, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x2C,
+        std_code: Some(0x9059),
+        cvt_code: Some(0x0C_2062),
+        pixel_clock_khz: 179_500,
+        interlaced: false,
+        horizontal: Timing::new(1400, 512, 104, 152, 0),
+        vertical: Timing::new(1050, 55, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x2D,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 208_000,
+        interlaced: false,
+        horizontal: Timing::new(1400, 160, 48, 32, 0),
+        vertical: Timing::new(1050, 62, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x2E,
+        std_code: None,
+        cvt_code: Some(0xC1_1821),
+        pixel_clock_khz: 88_750,
+        interlaced: false,
+        horizontal: Timing::new(1440, 160, 48, 32, 0),
+        vertical: Timing::new(900, 26, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x2F,
+        std_code: Some(0x9500),
+        cvt_code: Some(0xC1_1828),
+        pixel_clock_khz: 106_500,
+        interlaced: false,
+        horizontal: Timing::new(1440, 464, 80, 152, 0),
+        vertical: Timing::new(900, 34, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x30,
+        std_code: Some(0x950F),
+        cvt_code: Some(0xC1_1844),
+        pixel_clock_khz: 136_750,
+        interlaced: false,
+        horizontal: Timing::new(1440, 496, 96, 152, 0),
+        vertical: Timing::new(900, 42, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x31,
+        std_code: Some(0x9519),
+        cvt_code: Some(0xC1_1868),
+        pixel_clock_khz: 157_000,
+        interlaced: false,
+        horizontal: Timing::new(1440, 512, 104, 152, 0),
+        vertical: Timing::new(900, 48, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x32,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 182_750,
+        interlaced: false,
+        horizontal: Timing::new(1440, 160, 48, 32, 0),
+        vertical: Timing::new(900, 53, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x53,
+        std_code: Some(0xA9C0),
+        cvt_code: None,
+        pixel_clock_khz: 108_000,
+        interlaced: false,
+        horizontal: Timing::new(1600, 200, 24, 80, 0),
+        vertical: Timing::new(900, 100, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x33,
+        std_code: Some(0xA940),
+        cvt_code: None,
+        pixel_clock_khz: 162_000,
+        interlaced: false,
+        horizontal: Timing::new(1600, 560, 64, 192, 0),
+        vertical: Timing::new(1200, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x34,
+        std_code: Some(0xA945),
+        cvt_code: None,
+        pixel_clock_khz: 175_500,
+        interlaced: false,
+        horizontal: Timing::new(1600, 560, 64, 192, 0),
+        vertical: Timing::new(1200, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x35,
+        std_code: Some(0xA94A),
+        cvt_code: None,
+        pixel_clock_khz: 189_000,
+        interlaced: false,
+        horizontal: Timing::new(1600, 560, 64, 192, 0),
+        vertical: Timing::new(1200, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x36,
+        std_code: Some(0xA94F),
+        cvt_code: None,
+        pixel_clock_khz: 202_500,
+        interlaced: false,
+        horizontal: Timing::new(1600, 560, 64, 192, 0),
+        vertical: Timing::new(1200, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x37,
+        std_code: Some(0xA959),
+        cvt_code: None,
+        pixel_clock_khz: 229_500,
+        interlaced: false,
+        horizontal: Timing::new(1600, 560, 64, 192, 0),
+        vertical: Timing::new(1200, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x38,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 268_250,
+        interlaced: false,
+        horizontal: Timing::new(1600, 160, 48, 32, 0),
+        vertical: Timing::new(1200, 71, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x39,
+        std_code: None,
+        cvt_code: Some(0x0C_2821),
+        pixel_clock_khz: 119_000,
+        interlaced: false,
+        horizontal: Timing::new(1680, 160, 48, 32, 0),
+        vertical: Timing::new(1050, 30, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x3A,
+        std_code: Some(0xB300),
+        cvt_code: Some(0x0C_2828),
+        pixel_clock_khz: 146_250,
+        interlaced: false,
+        horizontal: Timing::new(1680, 560, 104, 176, 0),
+        vertical: Timing::new(1050, 39, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x3B,
+        std_code: Some(0xB30F),
+        cvt_code: Some(0x0C_2844),
+        pixel_clock_khz: 187_000,
+        interlaced: false,
+        horizontal: Timing::new(1680, 592, 120, 176, 0),
+        vertical: Timing::new(1050, 49, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x3C,
+        std_code: Some(0xB319),
+        cvt_code: Some(0x0C_2868),
+        pixel_clock_khz: 214_750,
+        interlaced: false,
+        horizontal: Timing::new(1680, 608, 128, 176, 0),
+        vertical: Timing::new(1050, 55, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x3D,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 245_500,
+        interlaced: false,
+        horizontal: Timing::new(1680, 160, 48, 32, 0),
+        vertical: Timing::new(1050, 62, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x3E,
+        std_code: Some(0xC140),
+        cvt_code: None,
+        pixel_clock_khz: 204_750,
+        interlaced: false,
+        horizontal: Timing::new(1792, 656, 128, 200, 0),
+        vertical: Timing::new(1344, 50, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x3F,
+        std_code: Some(0xC14F),
+        cvt_code: None,
+        pixel_clock_khz: 261_000,
+        interlaced: false,
+        horizontal: Timing::new(1792, 664, 96, 216, 0),
+        vertical: Timing::new(1344, 73, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x40,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 333_250,
+        interlaced: false,
+        horizontal: Timing::new(1792, 160, 48, 32, 0),
+        vertical: Timing::new(1344, 79, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x41,
+        std_code: Some(0xC940),
+        cvt_code: None,
+        pixel_clock_khz: 218_250,
+        interlaced: false,
+        horizontal: Timing::new(1856, 672, 96, 224, 0),
+        vertical: Timing::new(1392, 47, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x42,
+        std_code: Some(0xC94F),
+        cvt_code: None,
+        pixel_clock_khz: 288_000,
+        interlaced: false,
+        horizontal: Timing::new(1856, 704, 128, 224, 0),
+        vertical: Timing::new(1392, 108, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x43,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 356_500,
+        interlaced: false,
+        horizontal: Timing::new(1856, 160, 48, 32, 0),
+        vertical: Timing::new(1392, 82, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x52,
+        std_code: Some(0xD1C0),
+        cvt_code: None,
+        pixel_clock_khz: 148_500,
+        interlaced: false,
+        horizontal: Timing::new(1920, 280, 88, 44, 0),
+        vertical: Timing::new(1080, 45, 4, 5, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x44,
+        std_code: None,
+        cvt_code: Some(0x57_2821),
+        pixel_clock_khz: 154_000,
+        interlaced: false,
+        horizontal: Timing::new(1920, 160, 48, 32, 0),
+        vertical: Timing::new(1200, 35, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x45,
+        std_code: Some(0xD100),
+        cvt_code: Some(0x57_2828),
+        pixel_clock_khz: 193_250,
+        interlaced: false,
+        horizontal: Timing::new(1920, 672, 136, 200, 0),
+        vertical: Timing::new(1200, 45, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x46,
+        std_code: Some(0xD10F),
+        cvt_code: Some(0x57_2844),
+        pixel_clock_khz: 245_250,
+        interlaced: false,
+        horizontal: Timing::new(1920, 688, 136, 208, 0),
+        vertical: Timing::new(1200, 55, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x47,
+        std_code: Some(0xD119),
+        cvt_code: Some(0x57_2862),
+        pixel_clock_khz: 281_250,
+        interlaced: false,
+        horizontal: Timing::new(1920, 704, 144, 208, 0),
+        vertical: Timing::new(1200, 62, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x48,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 317_000,
+        interlaced: false,
+        horizontal: Timing::new(1920, 160, 48, 32, 0),
+        vertical: Timing::new(1200, 71, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x49,
+        std_code: Some(0xD140),
+        cvt_code: None,
+        pixel_clock_khz: 234_000,
+        interlaced: false,
+        horizontal: Timing::new(1920, 680, 128, 208, 0),
+        vertical: Timing::new(1440, 60, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x4A,
+        std_code: Some(0xD14F),
+        cvt_code: None,
+        pixel_clock_khz: 297_000,
+        interlaced: false,
+        horizontal: Timing::new(1920, 720, 144, 224, 0),
+        vertical: Timing::new(1440, 60, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x4B,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 380_500,
+        interlaced: false,
+        horizontal: Timing::new(1920, 160, 48, 32, 0),
+        vertical: Timing::new(1440, 85, 3, 4, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x54,
+        std_code: Some(0xE1C0),
+        cvt_code: None,
+        pixel_clock_khz: 162_000,
+        interlaced: false,
+        horizontal: Timing::new(2048, 202, 26, 80, 0),
+        vertical: Timing::new(1152, 48, 1, 3, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x4C,
+        std_code: None,
+        cvt_code: Some(0x1F_3821),
+        pixel_clock_khz: 268_500,
+        interlaced: false,
+        horizontal: Timing::new(2560, 160, 48, 32, 0),
+        vertical: Timing::new(1600, 46, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x4D,
+        std_code: None,
+        cvt_code: Some(0x1F_3828),
+        pixel_clock_khz: 348_500,
+        interlaced: false,
+        horizontal: Timing::new(2560, 944, 192, 280, 0),
+        vertical: Timing::new(1600, 58, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x4E,
+        std_code: None,
+        cvt_code: Some(0x1F_3844),
+        pixel_clock_khz: 443_250,
+        interlaced: false,
+        horizontal: Timing::new(2560, 976, 208, 280, 0),
+        vertical: Timing::new(1600, 72, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x4F,
+        std_code: None,
+        cvt_code: Some(0x1F_3862),
+        pixel_clock_khz: 505_250,
+        interlaced: false,
+        horizontal: Timing::new(2560, 976, 208, 280, 0),
+        vertical: Timing::new(1600, 82, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Negative,
+            vertical: Polarity::Positive,
+        },
+    },
+    Dmt {
+        id: 0x50,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 552_750,
+        interlaced: false,
+        horizontal: Timing::new(2560, 160, 48, 32, 0),
+        vertical: Timing::new(1600, 94, 3, 6, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x57,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 556_744,
+        interlaced: false,
+        horizontal: Timing::new(4096, 80, 8, 32, 0),
+        vertical: Timing::new(2160, 62, 48, 8, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+    Dmt {
+        id: 0x58,
+        std_code: None,
+        cvt_code: None,
+        pixel_clock_khz: 556_188,
+        interlaced: false,
+        horizontal: Timing::new(4096, 80, 8, 32, 0),
+        vertical: Timing::new(2160, 62, 48, 8, 0),
+        sync: SyncPolarity {
+            horizontal: Polarity::Positive,
+            vertical: Polarity::Negative,
+        },
+    },
+];
