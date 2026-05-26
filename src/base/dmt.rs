@@ -1,4 +1,6 @@
 //! VESA DMT timing metadata.
+//!
+//! This module provides a fixed list of DMT timing entries and helper functions to look up modes and compute horizontal and vertical refresh rates.
 
 use crate::common::{Polarity, SyncPolarity, Timing};
 
@@ -16,6 +18,7 @@ pub struct Dmt {
 }
 
 impl Dmt {
+    /// Horizontal scan frequency in Hz, rounded to nearest integer.
     #[must_use]
     pub const fn h_freq_hz(&self) -> u32 {
         let p = self.pixel_clock_khz;
@@ -23,6 +26,9 @@ impl Dmt {
         (p / h) * 1000 + ((p % h) * 1000 + h / 2) / h
     }
 
+    /// Vertical refresh frequency in mHz, rounded to nearest integer.
+    ///
+    /// Interlaced modes use double horizontal rate before vertical division.
     #[must_use]
     pub const fn v_freq_mhz(&self) -> u32 {
         let mut hf = self.h_freq_hz();
@@ -34,6 +40,7 @@ impl Dmt {
     }
 }
 
+/// Finds a DMT timing entry by DMT ID.
 #[must_use]
 pub const fn find_dmt(id: u8) -> Option<Dmt> {
     let mut i = 0;
@@ -46,6 +53,7 @@ pub const fn find_dmt(id: u8) -> Option<Dmt> {
     None
 }
 
+/// The DMT timing table.
 pub const DMT_ARRAY: [Dmt; 88] = [
     Dmt {
         id: 0x01,

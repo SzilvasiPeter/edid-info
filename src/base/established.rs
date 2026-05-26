@@ -1,20 +1,26 @@
 //! Established timing I & II bitmap (bytes 35–37).
 //!
-//! Supported bitmap for (formerly) very common timing modes.
+//! This optional field is a compact bitmap of factory-supported legacy timings, where each bit set to `1` means that exact mode is supported.
+//! For Plug and Play displays, support for 640x480 at 60 Hz must be marked, and byte 37 bits 6-0 are manufacturer-defined flags that must not be used to infer display limits.
 //!
 //! # Structure
+//!
 //! | Byte | Description |
 //! |------|-------------|
-//! | 35   | 720×400 - 800×600 displays |
-//! | 36   | 800×600 - 1280×1024 displays |
-//! | 37   | 1152×870 + 7 manufacturer-specific display modes |
+//! | 35   | Established timings (common legacy modes) |
+//! | 36   | Established timings (common legacy modes) |
+//! | 37   | 1152x870 at 75 Hz + 7 manufacturer-defined flags |
 
 use super::dmt::{Dmt, find_dmt};
 use crate::common::{BLOCK_LEN, Polarity, SyncPolarity, Timing};
 
+/// Established timings offset in the base block.
 pub const ESTABLISHED_OFF: usize = 35;
+
+/// Established timings length in bytes.
 pub const ESTABLISHED_LEN: usize = 3;
 
+/// Parsed established timings and manufacturer-defined flags.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EstablishedLegacy {
     timings: [Option<Dmt>; 17],
@@ -22,6 +28,12 @@ pub struct EstablishedLegacy {
 }
 
 impl EstablishedLegacy {
+    /// Parses established timings from base block bytes.
+    ///
+    /// Bytes:
+    /// - 35-36: established timing flags
+    /// - 37 bit 7: 1152x870 at 75 Hz
+    /// - 37 bits 6-0: manufacturer-defined flags
     #[must_use]
     pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let established = &raw[ESTABLISHED_OFF..ESTABLISHED_OFF + ESTABLISHED_LEN];
@@ -50,11 +62,15 @@ impl EstablishedLegacy {
         }
     }
 
+    /// Supported established timings.
+    ///
+    /// Each entry is `Some` when its one-bit flag is set, otherwise `None`.
     #[must_use]
     pub const fn supported(&self) -> [Option<Dmt>; 17] {
         self.timings
     }
 
+    /// Raw manufacturer-defined flags from byte 37 bits 6-0.
     #[must_use]
     pub const fn manufacturer_bits(&self) -> u8 {
         self.manufacturer_bits
