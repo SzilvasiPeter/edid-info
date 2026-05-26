@@ -63,11 +63,8 @@ impl EstablishedLegacy {
     }
 
     /// Supported established timings.
-    ///
-    /// Each entry is `Some` when its one-bit flag is set, otherwise `None`.
-    #[must_use]
-    pub const fn supported(&self) -> [Option<Dmt>; 17] {
-        self.timings
+    pub fn supported(&self) -> impl Iterator<Item = Dmt> + '_ {
+        self.timings.iter().flatten().copied()
     }
 
     /// Raw manufacturer-defined flags from byte 37 bits 6-0.
@@ -81,7 +78,7 @@ const fn flag_custom(byte: u8, mask: u8, val: Dmt) -> Option<Dmt> {
     if (byte & mask) != 0 { Some(val) } else { None }
 }
 
-const fn flag_dmt(byte: u8, mask: u8, id: u8) -> Option<Dmt> {
+pub(crate) const fn flag_dmt(byte: u8, mask: u8, id: u8) -> Option<Dmt> {
     if (byte & mask) == 0 {
         return None;
     }

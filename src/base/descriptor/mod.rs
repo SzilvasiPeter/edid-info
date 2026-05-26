@@ -21,7 +21,7 @@
 pub mod cvt3;
 pub mod dcm;
 pub mod dtd;
-pub mod established3;
+pub mod established;
 pub mod monitor;
 pub mod range;
 pub mod std2;

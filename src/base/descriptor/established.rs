@@ -1,0 +1,72 @@
+//! Established Timings III Descriptor.
+//!
+//! A bitmap of supported additional standard timings.
+//! Uses tag 0xF7 and version 10.
+
+use crate::base::dmt::Dmt;
+use crate::base::established::flag_dmt;
+use crate::common::DESC_LEN;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Established3 {
+    timings: [Option<Dmt>; 44],
+}
+
+impl Established3 {
+    #[must_use]
+    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
+        Self {
+            timings: [
+                flag_dmt(raw[6], 0x80, 0x01),
+                flag_dmt(raw[6], 0x40, 0x02),
+                flag_dmt(raw[6], 0x20, 0x03),
+                flag_dmt(raw[6], 0x10, 0x07),
+                flag_dmt(raw[6], 0x08, 0x0E),
+                flag_dmt(raw[6], 0x04, 0x0C),
+                flag_dmt(raw[6], 0x02, 0x13),
+                flag_dmt(raw[6], 0x01, 0x15),
+                flag_dmt(raw[7], 0x80, 0x16),
+                flag_dmt(raw[7], 0x40, 0x17),
+                flag_dmt(raw[7], 0x20, 0x18),
+                flag_dmt(raw[7], 0x10, 0x19),
+                flag_dmt(raw[7], 0x08, 0x20),
+                flag_dmt(raw[7], 0x04, 0x21),
+                flag_dmt(raw[7], 0x02, 0x23),
+                flag_dmt(raw[7], 0x01, 0x25),
+                flag_dmt(raw[8], 0x80, 0x27),
+                flag_dmt(raw[8], 0x40, 0x2E),
+                flag_dmt(raw[8], 0x20, 0x2F),
+                flag_dmt(raw[8], 0x10, 0x30),
+                flag_dmt(raw[8], 0x08, 0x31),
+                flag_dmt(raw[8], 0x04, 0x29),
+                flag_dmt(raw[8], 0x02, 0x2A),
+                flag_dmt(raw[8], 0x01, 0x2B),
+                flag_dmt(raw[9], 0x80, 0x2C),
+                flag_dmt(raw[9], 0x40, 0x39),
+                flag_dmt(raw[9], 0x20, 0x3A),
+                flag_dmt(raw[9], 0x10, 0x3B),
+                flag_dmt(raw[9], 0x08, 0x3C),
+                flag_dmt(raw[9], 0x04, 0x33),
+                flag_dmt(raw[9], 0x02, 0x34),
+                flag_dmt(raw[9], 0x01, 0x35),
+                flag_dmt(raw[10], 0x80, 0x36),
+                flag_dmt(raw[10], 0x40, 0x37),
+                flag_dmt(raw[10], 0x20, 0x3E),
+                flag_dmt(raw[10], 0x10, 0x3F),
+                flag_dmt(raw[10], 0x08, 0x41),
+                flag_dmt(raw[10], 0x04, 0x42),
+                flag_dmt(raw[10], 0x02, 0x44),
+                flag_dmt(raw[10], 0x01, 0x45),
+                flag_dmt(raw[11], 0x80, 0x46),
+                flag_dmt(raw[11], 0x40, 0x47),
+                flag_dmt(raw[11], 0x20, 0x49),
+                flag_dmt(raw[11], 0x10, 0x4A),
+            ],
+        }
+    }
+
+    /// Supported established timings.
+    pub fn supported(&self) -> impl Iterator<Item = Dmt> + '_ {
+        self.timings.iter().flatten().copied()
+    }
+}

@@ -6,7 +6,7 @@
 
 use super::cvt3::Cvt3;
 use super::dcm::Color;
-use super::established3::Established3;
+use super::established::Established3;
 use super::range::DisplayRangeLimits;
 use super::std2::Std2;
 use super::white_point::WhitePoint;
@@ -23,7 +23,7 @@ pub enum DescTag {
     StdTimings2,
     Dcm,
     Cvt3Byte,
-    StdTiming3,
+    EstablishedTiming3,
     Dummy,
     VendorReserved,
     Unknown,
@@ -55,7 +55,7 @@ impl Monitor {
             0xFA => DescTag::StdTimings2,
             0xF9 => DescTag::Dcm,
             0xF8 => DescTag::Cvt3Byte,
-            0xF7 => DescTag::StdTiming3,
+            0xF7 => DescTag::EstablishedTiming3,
             0x10 => DescTag::Dummy,
             0x00..=0x0F => DescTag::VendorReserved,
             _ => DescTag::Unknown,
@@ -154,11 +154,11 @@ impl Monitor {
     }
 
     #[must_use]
-    pub fn std3(&self) -> Option<Established3> {
-        if !matches!(self.tag, DescTag::StdTiming3) {
+    pub fn established3(&self) -> Option<Established3> {
+        if !matches!(self.tag, DescTag::EstablishedTiming3) {
             return None;
         }
-        Established3::parse(&self.raw_desc())
+        Some(Established3::parse(&self.raw_desc()))
     }
 
     #[must_use]
