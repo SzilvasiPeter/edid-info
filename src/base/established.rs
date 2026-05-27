@@ -1,7 +1,7 @@
 //! Established timing I & II bitmap (bytes 35–37).
 //!
 //! This optional field is a compact bitmap of factory-supported legacy timings, where each bit set to `1` means that exact mode is supported.
-//! For Plug and Play displays, support for 640x480 at 60 Hz must be marked, and byte 37 bits 6-0 are manufacturer-defined flags that must not be used to infer display limits.
+//! Byte 37 bits 6-0 are manufacturer-defined flags that must not be used to infer display limits.
 //!
 //! # Structure
 //!
@@ -23,8 +23,7 @@ pub const ESTABLISHED_LEN: usize = 3;
 /// Parsed established timings and manufacturer-defined flags.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EstablishedLegacy {
-    timings: [Option<Dmt>; 17],
-    manufacturer_bits: u8,
+    bytes: [u8; 3],
 }
 
 impl EstablishedLegacy {
@@ -35,54 +34,59 @@ impl EstablishedLegacy {
     /// - 37 bit 7: 1152x870 at 75 Hz
     /// - 37 bits 6-0: manufacturer-defined flags
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        let established = &raw[ESTABLISHED_OFF..ESTABLISHED_OFF + ESTABLISHED_LEN];
-
+    pub const fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         Self {
-            timings: [
-                flag_custom(established[0], 0x80, IBM_720X400_70),
-                flag_custom(established[0], 0x40, IBM_720X400_88),
-                flag_dmt(established[0], 0x20, 0x04),
-                flag_custom(established[0], 0x10, APPLE_640X480_67),
-                flag_dmt(established[0], 0x08, 0x05),
-                flag_dmt(established[0], 0x04, 0x06),
-                flag_dmt(established[0], 0x02, 0x08),
-                flag_dmt(established[0], 0x01, 0x09),
-                flag_dmt(established[1], 0x80, 0x0A),
-                flag_dmt(established[1], 0x40, 0x0B),
-                flag_custom(established[1], 0x20, APPLE_832X624_75),
-                flag_dmt(established[1], 0x10, 0x0F),
-                flag_dmt(established[1], 0x08, 0x10),
-                flag_dmt(established[1], 0x04, 0x11),
-                flag_dmt(established[1], 0x02, 0x12),
-                flag_dmt(established[1], 0x01, 0x24),
-                flag_custom(established[2], 0x80, APPLE_1152X870_75),
+            bytes: [
+                raw[ESTABLISHED_OFF],
+                raw[ESTABLISHED_OFF + 1],
+                raw[ESTABLISHED_OFF + 2],
             ],
-            manufacturer_bits: established[2] & 0x7F,
         }
     }
 
     /// Supported established timings.
-    pub fn supported(&self) -> impl Iterator<Item = Dmt> + '_ {
-        self.timings.iter().flatten().copied()
+    pub fn supported(&self) -> impl Iterator<Item = Dmt> {
+        let bytes = self.bytes;
+        [
+            flag_custom(bytes[0], 0x80, IBM_720X400_70),
+            flag_custom(bytes[0], 0x40, IBM_720X400_88),
+            flag_dmt(bytes[0], 0x20, 0x04),
+            flag_custom(bytes[0], 0x10, APPLE_640X480_67),
+            flag_dmt(bytes[0], 0x08, 0x05),
+            flag_dmt(bytes[0], 0x04, 0x06),
+            flag_dmt(bytes[0], 0x02, 0x08),
+            flag_dmt(bytes[0], 0x01, 0x09),
+            flag_dmt(bytes[1], 0x80, 0x0A),
+            flag_dmt(bytes[1], 0x40, 0x0B),
+            flag_custom(bytes[1], 0x20, APPLE_832X624_75),
+            flag_dmt(bytes[1], 0x10, 0x0F),
+            flag_dmt(bytes[1], 0x08, 0x10),
+            flag_dmt(bytes[1], 0x04, 0x11),
+            flag_dmt(bytes[1], 0x02, 0x12),
+            flag_dmt(bytes[1], 0x01, 0x24),
+            flag_custom(bytes[2], 0x80, APPLE_1152X870_75),
+        ]
+        .into_iter()
+        .flatten()
     }
 
     /// Raw manufacturer-defined flags from byte 37 bits 6-0.
     #[must_use]
     pub const fn manufacturer_bits(&self) -> u8 {
-        self.manufacturer_bits
+        self.bytes[2] & 0x7F
     }
 }
 
-const fn flag_custom(byte: u8, mask: u8, val: Dmt) -> Option<Dmt> {
-    if (byte & mask) != 0 { Some(val) } else { None }
-}
-
+/// Returns a DMT timing if the corresponding bit in the byte is set.
 pub(crate) const fn flag_dmt(byte: u8, mask: u8, id: u8) -> Option<Dmt> {
     if (byte & mask) == 0 {
         return None;
     }
     find_dmt(id)
+}
+
+const fn flag_custom(byte: u8, mask: u8, val: Dmt) -> Option<Dmt> {
+    if (byte & mask) != 0 { Some(val) } else { None }
 }
 
 const IBM_720X400_70: Dmt = Dmt {

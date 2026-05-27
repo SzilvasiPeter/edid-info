@@ -1,7 +1,7 @@
 use edid_info::{
     base::Base,
     base::basic::ScreenSize,
-    base::descriptor::monitor::DescTag,
+    base::descriptor::monitor::DisplayDescriptor,
     base::descriptors::Descriptor,
     base::header::DateInfo,
     common::Size,
@@ -29,17 +29,20 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.chroma().white().x(), 321);
     assert!(out.established().supported().any(|d| d.id == 0x24));
     assert_eq!(
-        out.timings()
-            .mode(7)
-            .map(|m| (m.width(), m.height(), m.vfreq())),
+        out.timings().modes().nth(7).map(|m| (
+            m.width,
+            m.width * m.aspect.height() / m.aspect.width(),
+            m.vfreq
+        )),
         Some((1920, 1080, 75))
     );
 
-    match out
+    let dtd = out
         .descriptors()
-        .descriptors(1)
-        .expect("dtd mode 1 should exist")
-    {
+        .iter()
+        .nth(1)
+        .expect("dtd mode 1 should exist");
+    match dtd {
         Descriptor::Timing(timing) => {
             let h = timing.horizontal();
             let v = timing.vertical();
@@ -47,9 +50,12 @@ fn parse_base_acer_ek221q_h() {
             assert_eq!(v.active(), 1080);
             assert_eq!(timing.pixel_clock_khz(), 148_500);
         }
-        Descriptor::Display(serial) => {
-            assert_eq!(serial.tag(), DescTag::SerialNumber);
-            assert_eq!(serial.serial(), Some("13480002C3W01"));
+        Descriptor::Display(display) => {
+            let descriptor = display.descriptor();
+            let DisplayDescriptor::SerialNumber(sn) = descriptor else {
+                panic!("expected SerialNumber, got {descriptor:?}")
+            };
+            assert_eq!(sn.text(), "13480002C3W01");
         }
     }
 

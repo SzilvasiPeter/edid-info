@@ -61,8 +61,8 @@ impl<'a> Edid<'a> {
     /// Panics if the internal buffer is shorter than 128 bytes.
     /// This should never happen because `Edid::parse` validates the length.
     #[must_use]
-    pub fn base(&self) -> Base<'_> {
-        let base_raw: &[u8; BLOCK_LEN] = self.raw[..BLOCK_LEN].try_into().unwrap();
+    pub fn base(&self) -> Base<'a> {
+        let base_raw: &'a [u8; BLOCK_LEN] = self.raw[..BLOCK_LEN].try_into().unwrap();
         Base::new(base_raw)
     }
 

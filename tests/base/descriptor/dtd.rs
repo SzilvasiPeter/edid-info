@@ -10,7 +10,7 @@ const PHL: &[u8] = include_bytes!("../../data/PHL_22PFL3606.edid");
 #[test]
 fn parse_timing_descriptor_pre_p1710_stereo() {
     let raw = std::array::from_fn(|i| PRE[54 + i]);
-    let out = DetailedTiming::parse(&raw).expect("detailed timing parse");
+    let out = DetailedTiming::parse(&raw);
 
     assert_eq!(out.horizontal().active(), 1280);
     assert_eq!(out.vertical().active(), 1024);
@@ -22,9 +22,6 @@ fn parse_timing_descriptor_pre_p1710_stereo() {
 fn parse_timing_descriptor_acer_ek221q_h() {
     let raw = std::array::from_fn(|i| ACER[54 + i]);
     let out = DetailedTiming::parse(&raw);
-    assert!(out.is_some());
-
-    let out = out.expect("detailed timing parse");
     let h = out.horizontal();
     let v = out.vertical();
     assert_eq!(h.active(), 1920);
@@ -55,9 +52,6 @@ fn parse_timing_descriptor_acer_ek221q_h() {
 fn parse_timing_descriptor_asus_rog_pg27u() {
     let raw = std::array::from_fn(|i| ASUS[54 + i]);
     let out = DetailedTiming::parse(&raw);
-    assert!(out.is_some());
-
-    let out = out.expect("detailed timing parse");
     let h = out.horizontal();
     let v = out.vertical();
     assert_eq!(h.active(), 3840);

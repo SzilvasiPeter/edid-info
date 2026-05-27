@@ -30,7 +30,7 @@ pub mod footer;
 pub mod header;
 pub mod std1;
 
-use crate::common::{BLOCK_LEN, FailureKind, Validation, checksum_ok};
+use crate::common::{BLOCK_LEN, FailureKind, Validation, Version, checksum_ok};
 use basic::{AnalogType, DisplayType};
 
 /// Base block structure containing header, display parameters, chroma, timings and descriptors.
@@ -66,20 +66,22 @@ impl<'a> Base<'a> {
 
     /// Returns the established timing bitmap (common legacy video timings).
     #[must_use]
-    pub fn established(&self) -> established::EstablishedLegacy {
+    pub const fn established(&self) -> established::EstablishedLegacy {
         established::EstablishedLegacy::new(self.raw)
     }
 
     /// Returns the standard timing information.
     #[must_use]
     pub fn timings(&self) -> std1::Std1 {
-        std1::Std1::new(self.raw)
+        let legacy = self.header().version() < Version { major: 1, minor: 3 };
+        std1::Std1::new(self.raw, legacy)
     }
 
     /// Returns the display timing and monitor descriptors.
     #[must_use]
     pub fn descriptors(&self) -> descriptors::Descriptors {
-        descriptors::Descriptors::new(self.raw)
+        let legacy = self.header().version() < Version { major: 1, minor: 3 };
+        descriptors::Descriptors::new(self.raw, legacy)
     }
 
     /// Returns the extension flag and checksum.

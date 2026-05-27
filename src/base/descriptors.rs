@@ -16,8 +16,9 @@ use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
 use crate::common::{BLOCK_LEN, DESC_LEN, Validation};
 
-pub const DTD_OFF: usize = 54;
-pub const DTD_NUM: usize = 4;
+pub const DESCRIPTORS_OFF: usize = 54;
+pub const DESC_NUM: usize = 4;
+pub const DTD_SIZE: usize = DESC_NUM * DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Descriptor {
@@ -27,60 +28,41 @@ pub enum Descriptor {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Descriptors {
-    descriptors: [Option<Descriptor>; DTD_NUM],
+    bytes: [u8; DTD_SIZE],
+    legacy: bool,
 }
 
 impl Descriptors {
     /// Parses descriptors from base block bytes.
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        let desc = &raw[DTD_OFF..DTD_OFF + (DESC_LEN * DTD_NUM)];
-
-        // TODO: Make this more concise, no need to please const anymore.
-        let mut i = 0;
-        let mut descriptors = [None; DTD_NUM];
-        while i < DTD_NUM {
-            let offset = i * DESC_LEN;
-            let Ok(chunk): Result<&[u8; DESC_LEN], _> = desc[offset..offset + DESC_LEN].try_into()
-            else {
-                break;
-            };
-            if chunk[0] == 0 && chunk[1] == 0 {
-                if let Some(display) = Monitor::parse(chunk) {
-                    descriptors[i] = Some(Descriptor::Display(display));
-                }
-            } else if let Some(timing) = DetailedTiming::parse(chunk) {
-                descriptors[i] = Some(Descriptor::Timing(timing));
-            }
-            i += 1;
-        }
-
-        Self { descriptors }
+    pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
+        let mut bytes = [0u8; DTD_SIZE];
+        // TODO: Get rid of all the copy_from_slice
+        bytes.copy_from_slice(&raw[DESCRIPTORS_OFF..DESCRIPTORS_OFF + DTD_SIZE]);
+        Self { bytes, legacy }
     }
 
-    // TODO: Just return with the array (it is only 4 elements), then the caller can index to its heart content.
-    #[must_use]
-    pub const fn descriptors(&self, i: usize) -> Option<Descriptor> {
-        if i < DTD_NUM {
-            self.descriptors[i]
-        } else {
-            None
-        }
+    /// Returns an iterator over the parsed descriptors.
+    pub fn iter(&self) -> impl Iterator<Item = Descriptor> {
+        self.bytes.chunks_exact(DESC_LEN).filter_map(move |chunk| {
+            let chunk: &[u8; DESC_LEN] = chunk.try_into().ok()?;
+            if chunk[0] == 0 && chunk[1] == 0 {
+                Some(Descriptor::Display(Monitor::parse(chunk, self.legacy)))
+            } else {
+                Some(Descriptor::Timing(DetailedTiming::parse(chunk)))
+            }
+        })
     }
 
     /// Validates the descriptors.
     #[must_use]
-    pub const fn validate(&self) -> Validation {
+    pub fn validate(&self) -> Validation {
         let mut v = Validation::new();
-        let mut i = 0;
-        while i < DTD_NUM {
-            if let Some(mode) = self.descriptors[i] {
-                match mode {
-                    Descriptor::Timing(timing) => v = v.then(timing.validate()),
-                    Descriptor::Display(display) => v = v.then(display.validate()),
-                }
+        for mode in self.iter() {
+            match mode {
+                Descriptor::Timing(timing) => v = v.then(timing.validate()),
+                Descriptor::Display(display) => v = v.then(display.validate()),
             }
-            i += 1;
         }
         v
     }

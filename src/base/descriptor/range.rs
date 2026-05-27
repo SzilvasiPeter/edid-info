@@ -250,13 +250,9 @@ pub struct DisplayRangeLimits {
 
 impl DisplayRangeLimits {
     #[must_use]
-    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        // TODO: the reserved byte not fatal, move to the `monitor::validate` method.
-        if (raw[4] & 0xF0) != 0 {
-            return None;
-        }
-        let (v_min_hz, v_max_hz) = adjust(raw[5], raw[6], raw[4] & 0b11)?;
-        let (h_min_khz, h_max_khz) = adjust(raw[7], raw[8], (raw[4] >> 2) & 0b11)?;
+    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
+        let (v_min_hz, v_max_hz) = adjust(raw[5], raw[6], raw[4] & 0b11);
+        let (h_min_khz, h_max_khz) = adjust(raw[7], raw[8], (raw[4] >> 2) & 0b11);
         let mut data = [0; 7];
         data.copy_from_slice(&raw[11..DESC_LEN]);
         let (timing_support, timing_data) = match raw[10] {
@@ -272,7 +268,7 @@ impl DisplayRangeLimits {
             ),
             v => (VideoTimingSupport::Reserved(v), VideoTimingData::None),
         };
-        Some(Self {
+        Self {
             v_min_hz,
             v_max_hz,
             h_min_khz,
@@ -280,7 +276,7 @@ impl DisplayRangeLimits {
             pixel_mhz: u16::from(raw[9]) * 10,
             timing_support,
             timing_data,
-        })
+        }
     }
 
     #[must_use]
@@ -319,11 +315,10 @@ impl DisplayRangeLimits {
     }
 }
 
-fn adjust(min: u8, max: u8, mode: u8) -> Option<(u16, u16)> {
+fn adjust(min: u8, max: u8, mode: u8) -> (u16, u16) {
     match mode {
-        0b00 => Some((u16::from(min), u16::from(max))),
-        0b10 => Some((u16::from(min), u16::from(max) + 255)),
-        0b11 => Some((u16::from(min) + 255, u16::from(max) + 255)),
-        _ => None,
+        0b10 => (u16::from(min), u16::from(max) + 255),
+        0b11 => (u16::from(min) + 255, u16::from(max) + 255),
+        _ => (u16::from(min), u16::from(max)),
     }
 }

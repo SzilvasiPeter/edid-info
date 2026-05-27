@@ -5,8 +5,6 @@
 
 use crate::common::DESC_LEN;
 
-const VERSION: u8 = 0x03;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Color {
     red_a3: u16,
@@ -19,19 +17,15 @@ pub struct Color {
 
 impl Color {
     #[must_use]
-    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        // TODO: move to the `monitor::validate` function
-        if raw[5] != VERSION {
-            return None;
-        }
-        Some(Self {
+    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
+        Self {
             red_a3: u16::from_le_bytes([raw[6], raw[7]]),
             red_a2: u16::from_le_bytes([raw[8], raw[9]]),
             green_a3: u16::from_le_bytes([raw[10], raw[11]]),
             green_a2: u16::from_le_bytes([raw[12], raw[13]]),
             blue_a3: u16::from_le_bytes([raw[14], raw[15]]),
             blue_a2: u16::from_le_bytes([raw[16], raw[17]]),
-        })
+        }
     }
 
     #[must_use]

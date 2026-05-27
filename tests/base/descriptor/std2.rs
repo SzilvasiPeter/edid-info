@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::Monitor;
+use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
 
 // TODO: use real world example instead of synthetic
 #[test]
@@ -19,35 +19,27 @@ fn parse_std2_synthetic() {
     raw[16] = 0x06;
     raw[17] = 0xFF;
 
-    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
-    let std2 = desc.std2().expect("std2 parse");
-
-    assert!(std2.mode(0).is_some());
-    assert!(std2.mode(1).is_some());
-    assert!(std2.mode(2).is_some());
-    assert!(std2.mode(3).is_some());
-    assert!(std2.mode(4).is_some());
-    assert!(std2.mode(5).is_some());
-    assert!(std2.mode(6).is_none());
-
-    assert_eq!(std2.pad(), 0xFF);
+    let desc = Monitor::parse(&raw, false).descriptor();
+    if let DisplayDescriptor::StdTimings2(std2) = desc {
+        assert_eq!(std2.modes().count(), 6);
+    } else {
+        panic!("expected StdTimings2, got {desc:?}");
+    }
 }
-
 #[test]
 fn parse_std2_empty_modes() {
     let mut raw = [0u8; 18];
     raw[3] = 0xFA;
-    raw[5] = 0x01;
-    raw[6] = 0x01;
+    // Fill all 6 modes with 0x01, 0x01 (unused)
+    for i in 0..6 {
+        raw[5 + i * 2] = 0x01;
+        raw[6 + i * 2] = 0x01;
+    }
 
-    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
-    let std2 = desc.std2().expect("std2 parse");
-
-    assert!(std2.mode(0).is_none());
-    assert!(std2.mode(1).is_some());
-    assert!(std2.mode(2).is_some());
-    assert!(std2.mode(3).is_some());
-    assert!(std2.mode(4).is_some());
-    assert!(std2.mode(5).is_some());
-    assert_eq!(std2.pad(), 0);
+    let desc = Monitor::parse(&raw, false).descriptor();
+    if let DisplayDescriptor::StdTimings2(std2) = desc {
+        assert_eq!(std2.modes().count(), 0);
+    } else {
+        panic!("expected StdTimings2, got {desc:?}");
+    }
 }

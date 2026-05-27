@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::{DescTag, Monitor};
+use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
 use edid_info::base::descriptor::range::{VideoTimingData, VideoTimingSupport};
 use edid_info::common::AspectRatio;
 
@@ -11,32 +11,29 @@ const ROL: &[u8] = include_bytes!("../../data/ROL_ROLSEN_C707N.edid");
 #[test]
 fn parse_range_limit_descriptor_acer_ek221q_h() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ACER[108 + i]);
-    let range = Monitor::parse(&range_raw).expect("range descriptor parse");
-    assert_eq!(range.tag(), DescTag::RangeLimits);
-    assert_eq!(range.serial(), None);
-    assert_eq!(range.name(), None);
-    assert_eq!(range.text(), None);
+    let range = Monitor::parse(&range_raw, false);
+    let desc = range.descriptor();
+    assert!(matches!(desc, DisplayDescriptor::RangeLimits(_)));
 
-    let range = range.range().expect("range limits parse");
-    assert_eq!(range.v_min_hz(), 48);
-    assert_eq!(range.v_max_hz(), 100);
-    assert_eq!(range.h_min_khz(), 24);
-    assert_eq!(range.h_max_khz(), 120);
-    assert_eq!(range.pixel_mhz(), 250);
-    assert_eq!(range.timing(), VideoTimingSupport::DefaultGtf);
-    assert_eq!(range.timing_data(), VideoTimingData::None);
+    if let DisplayDescriptor::RangeLimits(range) = desc {
+        assert_eq!(range.v_min_hz(), 48);
+        assert_eq!(range.v_max_hz(), 100);
+        assert_eq!(range.h_min_khz(), 24);
+        assert_eq!(range.h_max_khz(), 120);
+        assert_eq!(range.pixel_mhz(), 250);
+        assert_eq!(range.timing(), VideoTimingSupport::DefaultGtf);
+        assert_eq!(range.timing_data(), VideoTimingData::None);
+    }
 }
 
 #[test]
 fn parse_range_limit_descriptor_asus_rog_pg27u() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    let range = Monitor::parse(&range_raw).expect("range descriptor parse");
-    assert_eq!(range.tag(), DescTag::RangeLimits);
-    assert_eq!(range.serial(), None);
-    assert_eq!(range.name(), None);
-    assert_eq!(range.text(), None);
+    let range = Monitor::parse(&range_raw, false);
 
-    let range = range.range().expect("range limits parse");
+    let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
+        panic!()
+    };
     assert_eq!(range.v_min_hz(), 24);
     assert_eq!(range.v_max_hz(), 144);
     assert_eq!(range.h_min_khz(), 52);
@@ -49,10 +46,11 @@ fn parse_range_limit_descriptor_asus_rog_pg27u() {
 #[test]
 fn parse_range_secondary_gtf_phl_22pfl3606() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| PHL[90 + i]);
-    let range = Monitor::parse(&range_raw).expect("range descriptor parse");
-    assert_eq!(range.tag(), DescTag::RangeLimits);
+    let range = Monitor::parse(&range_raw, false);
 
-    let range = range.range().expect("range limits parse");
+    let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
+        panic!()
+    };
     assert_eq!(range.v_min_hz(), 55);
     assert_eq!(range.v_max_hz(), 76);
     assert_eq!(range.h_min_khz(), 15);
@@ -75,10 +73,11 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
 #[test]
 fn parse_range_cvt_sdc_123yl01() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| SDC[72 + i]);
-    let range = Monitor::parse(&range_raw).expect("range descriptor parse");
-    assert_eq!(range.tag(), DescTag::RangeLimits);
+    let range = Monitor::parse(&range_raw, false);
 
-    let range = range.range().expect("range limits parse");
+    let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
+        panic!()
+    };
     assert_eq!(range.v_min_hz(), 48);
     assert_eq!(range.v_max_hz(), 60);
     assert_eq!(range.h_min_khz(), 0);
@@ -113,9 +112,11 @@ fn parse_range_cvt_sdc_123yl01() {
 #[test]
 fn parse_range_limits_descriptor_rol_rolsen_c707n() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ROL[108 + i]);
-    let range = Monitor::parse(&range_raw).expect("range descriptor parse");
-    assert_eq!(range.tag(), DescTag::RangeLimits);
-    let vals = range.range().expect("range parse");
+    let range = Monitor::parse(&range_raw, false);
+
+    let DisplayDescriptor::RangeLimits(vals) = range.descriptor() else {
+        panic!()
+    };
     assert_eq!(vals.v_min_hz(), 50);
     assert_eq!(vals.v_max_hz(), 90);
     assert_eq!(vals.h_min_khz(), 30);

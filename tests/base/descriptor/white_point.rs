@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::monitor::Monitor;
+use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
 
 // TODO: use real world example instead of synthetic
 #[test]
@@ -19,24 +19,26 @@ fn parse_white_point_synthetic() {
     raw[16] = 0x00;
     raw[17] = 0x00;
 
-    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
-    let wp = desc.white_point().expect("white point parse");
+    let desc = Monitor::parse(&raw, false).descriptor();
+    if let DisplayDescriptor::WhitePoint(wp) = desc {
+        let first = wp.first().expect("first point");
+        assert_eq!(first.index(), 1);
+        assert_eq!(first.x_raw(), 0x200);
+        assert_eq!(first.y_raw(), 0x000);
+        assert_eq!(first.gamma_raw(), 0x40);
+        assert!((first.gamma() - 1.64).abs() < 0.01);
 
-    let first = wp.first().expect("first point");
-    assert_eq!(first.index(), 1);
-    assert_eq!(first.x_raw(), 0x200);
-    assert_eq!(first.y_raw(), 0x000);
-    assert_eq!(first.gamma_raw(), 0x40);
-    assert!((first.gamma() - 1.64).abs() < 0.01);
+        let second = wp.second().expect("second point");
+        assert_eq!(second.index(), 2);
+        assert_eq!(second.x_raw(), 0x101);
+        assert_eq!(second.y_raw(), 1);
+        assert_eq!(second.gamma_raw(), 0x50);
+        assert!((second.gamma() - 1.80).abs() < 0.01);
 
-    let second = wp.second().expect("second point");
-    assert_eq!(second.index(), 2);
-    assert_eq!(second.x_raw(), 0x101);
-    assert_eq!(second.y_raw(), 1);
-    assert_eq!(second.gamma_raw(), 0x50);
-    assert!((second.gamma() - 1.80).abs() < 0.01);
-
-    assert_eq!(wp.pad(), [0x00, 0x00, 0x00]);
+        assert_eq!(wp.pad(), [0x00, 0x00, 0x00]);
+    } else {
+        panic!("expected WhitePoint, got {desc:?}");
+    }
 }
 
 #[test]
@@ -49,11 +51,13 @@ fn parse_white_point_single_point() {
     raw[8] = 0x00;
     raw[9] = 0x40;
 
-    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
-    let wp = desc.white_point().expect("white point parse");
-
-    assert!(wp.first().is_some());
-    assert!(wp.second().is_none());
+    let desc = Monitor::parse(&raw, false).descriptor();
+    if let DisplayDescriptor::WhitePoint(wp) = desc {
+        assert!(wp.first().is_some());
+        assert!(wp.second().is_none());
+    } else {
+        panic!("expected WhitePoint, got {desc:?}");
+    }
 }
 
 #[test]
@@ -66,9 +70,12 @@ fn parse_white_point_gamma() {
     raw[8] = 0x00;
     raw[9] = 0x64;
 
-    let desc = Monitor::parse(&raw).expect("monitor descriptor parse");
-    let wp = desc.white_point().expect("white point parse");
-    let first = wp.first().expect("first point");
-    assert_eq!(first.gamma_raw(), 0x64);
-    assert!((first.gamma() - 2.0).abs() < 0.01);
+    let desc = Monitor::parse(&raw, false).descriptor();
+    if let DisplayDescriptor::WhitePoint(wp) = desc {
+        let first = wp.first().expect("first point");
+        assert_eq!(first.gamma_raw(), 0x64);
+        assert!((first.gamma() - 2.0).abs() < 0.01);
+    } else {
+        panic!("expected WhitePoint, got {desc:?}");
+    }
 }

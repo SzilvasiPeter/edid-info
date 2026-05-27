@@ -12,9 +12,14 @@ fn base(raw: &[u8]) -> [u8; 128] {
 fn parse_standard_acer_ek221q_h() {
     let raw = base(ACER);
     let mode = |i| {
-        Std1::new(&raw)
-            .mode(i)
-            .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
+        Std1::new(&raw, false).modes().nth(i).map(|t| {
+            (
+                t.width,
+                t.width * t.aspect.height() / t.aspect.width(),
+                t.aspect,
+                t.vfreq,
+            )
+        })
     };
 
     assert_eq!(mode(0), Some((1152, 864, AspectRatio::new(4, 3), 75)));
@@ -32,9 +37,14 @@ fn parse_standard_acer_ek221q_h() {
 fn parse_standard_asus_rog_pg27u() {
     let raw = base(ASUS);
     let mode = |i| {
-        Std1::new(&raw)
-            .mode(i)
-            .map(|t| (t.width(), t.height(), t.aspect(), t.vfreq()))
+        Std1::new(&raw, false).modes().nth(i).map(|t| {
+            (
+                t.width,
+                t.width * t.aspect.height() / t.aspect.width(),
+                t.aspect,
+                t.vfreq,
+            )
+        })
     };
 
     assert_eq!(mode(0), None);

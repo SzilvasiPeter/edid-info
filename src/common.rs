@@ -480,13 +480,6 @@ pub(crate) const fn checksum_ok(raw: &[u8; BLOCK_LEN]) -> bool {
     sum == 0
 }
 
-/// Copy `N` bytes from `raw` starting at `off`.
-pub(crate) fn slice<const N: usize, const M: usize>(raw: &[u8; M], off: usize) -> [u8; N] {
-    let mut out = [0u8; N];
-    out.copy_from_slice(&raw[off..off + N]);
-    out
-}
-
 const fn gcd(mut a: u16, mut b: u16) -> u16 {
     while b != 0 {
         let r = a % b;

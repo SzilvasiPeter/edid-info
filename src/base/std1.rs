@@ -22,34 +22,29 @@ pub const STANDARD_NUM: usize = 8;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Std1 {
-    modes: [Option<Timing>; STANDARD_NUM],
+    bytes: [u8; STANDARD_LEN],
+    legacy: bool,
 }
 
 impl Std1 {
-    // TODO: add byte structure explaination in the docstring
     /// Parses the standard timings from base block bytes.
+    ///
+    /// # Byte Structure
+    /// - Byte 0: Horizontal pixels = (Value + 31) * 8
+    /// - Byte 1:
+    ///   - Bits 7-6: Aspect Ratio (00=16:10 or 1:1 legacy, 01=4:3, 10=5:4, 11=16:9)
+    ///   - Bits 5-0: Vertical Refresh Rate = Value + 60 Hz
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
-        let std1 = &raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN];
-        // TODO: Make this more concise, no need to please const anymore.
-        let mut modes = [None; STANDARD_NUM];
-        let mut i = 0;
-        while i < STANDARD_NUM {
-            let x_byte = std1[i * 2];
-            let y_byte = std1[i * 2 + 1];
-            modes[i] = parse_timing_bytes(x_byte, y_byte);
-            i += 1;
-        }
-        Self { modes }
+    pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
+        let mut bytes = [0u8; STANDARD_LEN];
+        bytes.copy_from_slice(&raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN]);
+        Self { bytes, legacy }
     }
 
-    #[must_use]
-    pub const fn mode(&self, i: usize) -> Option<Timing> {
-        if i < STANDARD_NUM {
-            self.modes[i]
-        } else {
-            None
-        }
+    pub fn modes(&self) -> impl Iterator<Item = StdTiming> {
+        self.bytes
+            .chunks_exact(2)
+            .filter_map(move |c| parse_std(c[0], c[1], self.legacy))
     }
 
     /// Validates the standard timings.
@@ -60,54 +55,34 @@ impl Std1 {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Timing {
-    width: u16,
-    height: u16,
-    aspect: AspectRatio,
-    vfreq: u8,
+pub struct StdTiming {
+    pub width: u16,
+    pub aspect: AspectRatio,
+    pub vfreq: u8,
 }
 
-impl Timing {
-    #[must_use]
-    pub const fn width(&self) -> u16 {
-        self.width
-    }
-
-    #[must_use]
-    pub const fn height(&self) -> u16 {
-        self.height
-    }
-
-    #[must_use]
-    pub const fn aspect(&self) -> AspectRatio {
-        self.aspect
-    }
-
-    #[must_use]
-    pub const fn vfreq(&self) -> u8 {
-        self.vfreq
-    }
-}
-
-// TODO: add docstring
+/// Parses a 2-byte standard timing entry.
 #[must_use]
-pub(super) const fn parse_timing_bytes(x_byte: u8, y_byte: u8) -> Option<Timing> {
-    if x_byte == 0b1 && y_byte == 0b1 {
+pub(super) const fn parse_std(x_byte: u8, y_byte: u8, legacy: bool) -> Option<StdTiming> {
+    if x_byte == 0x01 && y_byte == 0x01 {
         return None;
     }
     let width = (x_byte as u16 + 31) * 8;
     let aspect = match y_byte & 0b1100_0000 {
-        // TODO: (Versions prior to 1.3 defined 00 as 1:1.)
-        0b0000_0000 => AspectRatio::new(16, 10),
+        0b0000_0000 => {
+            if legacy {
+                AspectRatio::new(1, 1)
+            } else {
+                AspectRatio::new(16, 10)
+            }
+        }
         0b0100_0000 => AspectRatio::new(4, 3),
         0b1000_0000 => AspectRatio::new(5, 4),
         _ => AspectRatio::new(16, 9),
     };
-    let height = width * aspect.height() / aspect.width();
     let vfreq = (y_byte & 0b0011_1111) + 60;
-    Some(Timing {
+    Some(StdTiming {
         width,
-        height,
         aspect,
         vfreq,
     })

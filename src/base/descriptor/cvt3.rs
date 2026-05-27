@@ -14,8 +14,6 @@
 use crate::common::AspectRatio;
 use crate::common::DESC_LEN;
 
-const VERSION: u8 = 0x01;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PrefRate {
     Hz50,
@@ -126,19 +124,13 @@ pub struct Cvt3 {
 
 impl Cvt3 {
     #[must_use]
-    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
-        if raw[0] != 0 || raw[1] != 0 || raw[2] != 0 || raw[3] != 0xF8 || raw[4] != 0 {
-            return None;
-        }
-        if raw[5] != VERSION {
-            return None;
-        }
-        Some(Self {
+    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
+        Self {
             mode1: Mode::parse([raw[6], raw[7], raw[8]]),
             mode2: Mode::parse([raw[9], raw[10], raw[11]]),
             mode3: Mode::parse([raw[12], raw[13], raw[14]]),
             mode4: Mode::parse([raw[15], raw[16], raw[17]]),
-        })
+        }
     }
 
     #[must_use]

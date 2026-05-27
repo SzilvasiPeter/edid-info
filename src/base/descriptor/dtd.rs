@@ -66,7 +66,7 @@ pub struct DetailedTiming {
 
 impl DetailedTiming {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN]) -> Option<Self> {
+    pub const fn parse(raw: &[u8; DESC_LEN]) -> Self {
         let h_active = pack_bits(get_bits(raw[4], 4, 7), raw[2], 8);
         let h_blank = pack_bits(get_bits(raw[4], 0, 3), raw[3], 8);
         let h_front = pack_bits(get_bits(raw[11], 6, 7), raw[8], 8);
@@ -81,7 +81,7 @@ impl DetailedTiming {
 
         let width_mm = pack_bits(get_bits(raw[14], 4, 7), raw[12], 8);
         let height_mm = pack_bits(get_bits(raw[14], 0, 3), raw[13], 8);
-        Some(Self {
+        Self {
             pixel_clock_khz: u16::from_le_bytes([raw[0], raw[1]]) as u32 * 10,
             horizontal: Timing::new(h_active, h_blank, h_front, h_sync, h_border),
             vertical: Timing::new(v_active, v_blank, v_front, v_sync, v_border),
@@ -89,7 +89,7 @@ impl DetailedTiming {
             interlaced: is_set(raw[17], 7),
             stereo: parse_stereo(raw[17]),
             signal: parse_signal(raw[17]),
-        })
+        }
     }
 
     #[must_use]

@@ -4,42 +4,29 @@
 //! as the base Standard Timing Identification block. Uses tag 0xFA.
 //! Contains 6 timing entries (12 bytes total).
 
-use crate::base::std1::{Timing, parse_timing_bytes};
+use crate::base::std1::{StdTiming, parse_std};
 use crate::common::DESC_LEN;
 
 const MODE_NUM: usize = 6;
+const MODE_LEN: usize = MODE_NUM * 2;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Std2 {
-    modes: [Option<Timing>; MODE_NUM],
-    pad: u8,
+    bytes: [u8; MODE_LEN],
+    legacy: bool,
 }
 
 impl Std2 {
     #[must_use]
-    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
-        // TODO: Make this more concise, no need to please const anymore.
-        let mut modes = [None; MODE_NUM];
-        let mut i = 0;
-        while i < MODE_NUM {
-            let x_byte = raw[5 + i * 2];
-            let y_byte = raw[6 + i * 2];
-            modes[i] = parse_timing_bytes(x_byte, y_byte);
-            i += 1;
-        }
-        Self {
-            modes,
-            pad: raw[17],
-        }
+    pub(super) fn parse(raw: &[u8; DESC_LEN], legacy: bool) -> Self {
+        let mut bytes = [0u8; MODE_LEN];
+        bytes.copy_from_slice(&raw[5..17]);
+        Self { bytes, legacy }
     }
 
-    #[must_use]
-    pub const fn mode(&self, i: usize) -> Option<Timing> {
-        if i < MODE_NUM { self.modes[i] } else { None }
-    }
-
-    #[must_use]
-    pub const fn pad(&self) -> u8 {
-        self.pad
+    pub fn modes(&self) -> impl Iterator<Item = StdTiming> {
+        self.bytes
+            .chunks_exact(2)
+            .filter_map(move |c| parse_std(c[0], c[1], self.legacy))
     }
 }
