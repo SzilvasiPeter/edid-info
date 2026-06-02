@@ -28,7 +28,7 @@ pub mod dmt;
 pub mod established;
 pub mod footer;
 pub mod header;
-pub mod std1;
+pub mod standard;
 
 use crate::common::{BLOCK_LEN, FailureKind, Validation, Version, checksum_ok};
 use basic::{AnalogType, DisplayType};
@@ -72,9 +72,9 @@ impl<'a> Base<'a> {
 
     /// Returns the standard timing information.
     #[must_use]
-    pub fn timings(&self) -> std1::Std1 {
+    pub fn timings(&self) -> standard::StandardTimings {
         let legacy = self.header().version() < Version { major: 1, minor: 3 };
-        std1::Std1::new(self.raw, legacy)
+        standard::StandardTimings::new(self.raw, legacy)
     }
 
     /// Returns the display timing and monitor descriptors.

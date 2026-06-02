@@ -202,7 +202,7 @@ pub struct Basic {
 }
 
 impl Basic {
-    /// Parses the basic information from base block bytes.
+    /// Initialize the basic information from base block bytes.
     ///
     /// Byte sizes:
     /// - `video_input`: 1 byte

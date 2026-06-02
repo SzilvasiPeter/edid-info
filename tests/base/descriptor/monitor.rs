@@ -90,7 +90,7 @@ fn parse_std_timings2_descriptor_rol_rolsen_c707n() {
     let base: [u8; BLOCK_LEN] = ROL[0..BLOCK_LEN].try_into().unwrap();
     let std = Monitor::parse(&std_raw, is_legacy(&base));
     let desc = std.descriptor();
-    assert!(matches!(desc, DisplayDescriptor::StdTimings2(_)));
+    assert!(matches!(desc, DisplayDescriptor::StdTimings(_)));
 }
 
 #[test]

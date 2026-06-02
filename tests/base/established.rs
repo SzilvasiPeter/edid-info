@@ -11,7 +11,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 fn parse_established_acer_ek221q_h() {
     let raw = base(ACER);
     let out = EstablishedLegacy::new(&raw);
-    let list: Vec<_> = out.supported().map(|d| d.id).collect();
+    let list: Vec<_> = out.timings().map(|d| d.id).collect();
 
     assert_ids(
         &list,
@@ -27,7 +27,7 @@ fn parse_established_acer_ek221q_h() {
 fn parse_established_asus_rog_pg27u() {
     let raw = base(ASUS);
     let out = EstablishedLegacy::new(&raw);
-    let list: Vec<_> = out.supported().map(|d| d.id).collect();
+    let list: Vec<_> = out.timings().map(|d| d.id).collect();
 
     assert_ids(&list, &[0x04, 0x09, 0x10]);
     assert_eq!(out.manufacturer_bits(), 0);

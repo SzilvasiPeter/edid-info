@@ -35,6 +35,14 @@ pub enum FailureKind {
     /// Chromaticities match sRGB, but sRGB is not signaled.
     BasicSrgbNotSignaled = 33,
 
+    // --- Standard Timing ---
+    /// Standard timing horizontal pixels are outside 256–2288.
+    StdTimingHorizontalLimit = 35,
+    /// Standard timing refresh rate exceeds 123 Hz.
+    StdTimingRefreshLimit = 36,
+    /// Standard timing empty slot uses invalid bytes.
+    StdTimingEmptyInvalid = 37,
+
     // --- Descriptors ---
     /// Missing Display Product Name (mandatory in 1.4).
     DescriptorMissingDisplayName = 2,
@@ -85,17 +93,11 @@ pub enum FailureKind {
     /// CVT 3-byte timing preferred rate not supported.
     Cvt3BytePrefRateNotSupported = 27,
 
-    // --- Standard Timing 3 ---
-    /// Standard Timing 3 descriptor has invalid version.
-    Std3ByteInvalidVersion = 28,
-    /// Standard Timing 3 descriptor has non-zero trailing bytes.
-    Std3ByteNonZeroTrailing = 29,
-
     // --- DCM ---
     /// DCM descriptor has invalid version.
     DcmInvalidVersion = 30,
 
-    // --- Extension CTA ---
+    // --- CTA extension ---
     /// Invalid checksum for a CTA extension block.
     CtaChecksum = 31,
 }
@@ -135,9 +137,10 @@ impl FailureKind {
             Self::Cvt3ByteByte2Reserved => "CVT 3-byte timing byte 2 reserved bit is non-zero",
             Self::Cvt3ByteNoVerticalRates => "CVT 3-byte timing byte 2 supports no vertical rates",
             Self::Cvt3BytePrefRateNotSupported => "CVT 3-byte timing preferred rate not supported",
-            Self::Std3ByteInvalidVersion => "Standard Timing 3 has invalid version",
-            Self::Std3ByteNonZeroTrailing => "Standard Timing 3 has non-zero trailing bytes",
             Self::DcmInvalidVersion => "DCM descriptor has invalid version",
+            Self::StdTimingHorizontalLimit => "Standard timing horizontal pixels outside 256-2288",
+            Self::StdTimingRefreshLimit => "Standard timing refresh rate exceeds 123 Hz",
+            Self::StdTimingEmptyInvalid => "Use 0x0101 as the invalid Standard Timings code",
             Self::CtaChecksum => "Invalid CTA checksum",
         }
     }
@@ -160,7 +163,7 @@ pub enum WarningKind {
 
     // --- Standard Timing ---
     /// Standard Timing has a dubious odd vertical resolution.
-    StandardTimingOddVertical = 4,
+    StdTimingOddVertical = 4,
 
     // --- Range Limits ---
     /// GTF support is deprecated.
@@ -191,7 +194,7 @@ impl WarningKind {
             Self::HeaderProductInvalid => "Invalid product code",
             Self::HeaderSerialInvalid => "Invalid serial number",
             Self::HeaderVersionDeprecated => "Deprecated version",
-            Self::StandardTimingOddVertical => "Standard timing has odd vertical resolution",
+            Self::StdTimingOddVertical => "Standard timing has odd vertical resolution",
             Self::RangeGtfDeprecated => "GTF support is deprecated",
             Self::RangeCvtDotClockLargeCorrection => "CVT dotclock correction exceeds 9.75 MHz",
             Self::RangeCvtNoPreferredRefresh => "CVT block missing preferred refresh rate",

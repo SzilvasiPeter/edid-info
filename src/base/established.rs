@@ -27,7 +27,7 @@ pub struct EstablishedLegacy {
 }
 
 impl EstablishedLegacy {
-    /// Parses established timings from base block bytes.
+    /// Initialize established timings from base block bytes.
     ///
     /// Bytes:
     /// - 35-36: established timing flags
@@ -45,7 +45,7 @@ impl EstablishedLegacy {
     }
 
     /// Supported established timings.
-    pub fn supported(&self) -> impl Iterator<Item = Dmt> {
+    pub fn timings(&self) -> impl Iterator<Item = Dmt> {
         let bytes = self.bytes;
         [
             flag_custom(bytes[0], 0x80, IBM_720X400_70),

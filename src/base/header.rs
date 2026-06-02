@@ -49,7 +49,7 @@ pub struct Header {
 }
 
 impl Header {
-    /// Parses the header from base block bytes.
+    /// Initialize the header from base block bytes.
     ///
     /// Byte sizes and endianness:
     /// - `pattern`: 8 bytes, raw

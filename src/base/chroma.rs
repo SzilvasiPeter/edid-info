@@ -40,7 +40,7 @@ pub struct Chroma {
 }
 
 impl Chroma {
-    /// Parses chromaticity coordinates from bytes 25–34 of the base block.
+    /// Initialize chromaticity coordinates from the base block.
     ///
     /// Each coordinate is a 10-bit value packed as:
     /// - 2 LSBs stored in bytes 25–26 (two bits per component)

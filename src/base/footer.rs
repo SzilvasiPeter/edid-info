@@ -25,7 +25,7 @@ pub struct Footer {
 }
 
 impl Footer {
-    /// Parses a footer from base block bytes.
+    /// Initialize a footer from base block bytes.
     ///
     /// Byte sizes:
     /// - `extension_count`: 1 byte

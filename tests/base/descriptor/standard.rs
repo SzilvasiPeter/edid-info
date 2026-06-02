@@ -20,8 +20,8 @@ fn parse_std2_synthetic() {
     raw[17] = 0xFF;
 
     let desc = Monitor::parse(&raw, false).descriptor();
-    if let DisplayDescriptor::StdTimings2(std2) = desc {
-        assert_eq!(std2.modes().count(), 6);
+    if let DisplayDescriptor::StdTimings(std2) = desc {
+        assert_eq!(std2.iter().count(), 6);
     } else {
         panic!("expected StdTimings2, got {desc:?}");
     }
@@ -37,8 +37,8 @@ fn parse_std2_empty_modes() {
     }
 
     let desc = Monitor::parse(&raw, false).descriptor();
-    if let DisplayDescriptor::StdTimings2(std2) = desc {
-        assert_eq!(std2.modes().count(), 0);
+    if let DisplayDescriptor::StdTimings(std2) = desc {
+        assert_eq!(std2.iter().count(), 0);
     } else {
         panic!("expected StdTimings2, got {desc:?}");
     }
