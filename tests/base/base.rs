@@ -30,9 +30,9 @@ fn parse_base_acer_ek221q_h() {
     assert!(out.established_timings().timings().any(|d| d.id == 0x24));
     assert_eq!(
         out.standard_timings().iter().nth(7).map(|m| (
-            m.horizontal_active,
-            m.vertical_active,
-            m.refresh_rate
+            m.horizontal_active(),
+            m.vertical_active(),
+            m.refresh_rate()
         )),
         Some((1920, 1080, 75))
     );

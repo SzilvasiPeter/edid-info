@@ -44,7 +44,7 @@ impl StandardTimings {
             .filter_map(move |c| parse_std(c[0], c[1], self.legacy))
     }
 
-    /// Validates all standard timings in the block.
+    /// Validates all standard timings in the base block.
     #[must_use]
     pub fn validate(&self) -> Validation {
         let mut validations = Validation::new();
@@ -62,29 +62,67 @@ impl StandardTimings {
 /// A single standard timing entry.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct StandardTiming {
-    /// Horizontal addressable pixels (256–2288).
-    pub horizontal_active: u16,
-    /// Vertical addressable lines (calculated from aspect ratio).
-    pub vertical_active: u16,
-    /// Image aspect ratio.
-    pub aspect_ratio: AspectRatio,
-    /// Vertical refresh rate in Hz (60–123).
-    pub refresh_rate: u8,
+    bytes: [u8; 2],
+    legacy: bool,
 }
 
 impl StandardTiming {
+    /// Returns the standard timing code.
+    #[must_use]
+    pub const fn standard_timing_code(&self) -> u16 {
+        u16::from_be_bytes(self.bytes)
+    }
+
+    /// Returns the horizontal addressable pixels (256–2288).
+    #[must_use]
+    pub const fn horizontal_active(&self) -> u16 {
+        (self.bytes[0] as u16 + 31) * 8
+    }
+
+    /// Returns the image aspect ratio.
+    #[must_use]
+    pub const fn aspect_ratio(&self) -> AspectRatio {
+        match (self.bytes[1] >> 6) & 0b11 {
+            0b00 => {
+                if self.legacy {
+                    AspectRatio::new(1, 1)
+                } else {
+                    AspectRatio::new(16, 10)
+                }
+            }
+            0b01 => AspectRatio::new(4, 3),
+            0b10 => AspectRatio::new(5, 4),
+            _ => AspectRatio::new(16, 9),
+        }
+    }
+
+    /// Returns the vertical addressable lines.
+    #[must_use]
+    pub const fn vertical_active(&self) -> u16 {
+        self.horizontal_active() * self.aspect_ratio().height() / self.aspect_ratio().width()
+    }
+
+    /// Returns the vertical refresh rate in Hz (60–123).
+    #[must_use]
+    pub const fn refresh_rate(&self) -> u8 {
+        (self.bytes[1] & 0b0011_1111) + 60
+    }
+
     /// Validates the standard timing entry.
     /// Note: Standard timings are limited to 256–2288 pixels and 123 Hz. Greater values must use DTDs or CVT descriptors.
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new()
             .fail_if(
-                self.horizontal_active < 256 || self.horizontal_active > 2288,
+                self.horizontal_active() < 256 || self.horizontal_active() > 2288,
                 FailureKind::StdTimingHorizontalLimit,
             )
-            .fail_if(self.refresh_rate > 123, FailureKind::StdTimingRefreshLimit)
+            .fail_if(
+                self.refresh_rate() > 123,
+                FailureKind::StdTimingRefreshLimit,
+            )
             .warn_if(
-                !self.vertical_active.is_multiple_of(2),
+                !self.vertical_active().is_multiple_of(2),
                 WarningKind::StdTimingOddVertical,
             )
     }
@@ -92,7 +130,7 @@ impl StandardTiming {
 
 /// Parses a 2-byte standard timing entry. If both bytes are 0x01, the entry is unused.
 ///
-///  # Byte Structure
+/// # Byte Structure
 /// - Byte 0: Horizontal pixels = (Value + 31) * 8
 /// - Byte 1:
 ///   - Bits 7-6: Aspect Ratio (00=16:10 or 1:1 legacy, 01=4:3, 10=5:4, 11=16:9)
@@ -103,25 +141,8 @@ pub(super) const fn parse_std(byte1: u8, byte2: u8, legacy: bool) -> Option<Stan
         return None;
     }
 
-    let horizontal_active = (byte1 as u16 + 31) * 8;
-    let (aspect_ratio, vertical_active) = match (byte2 >> 6) & 0b11 {
-        0b00 => {
-            if legacy {
-                (AspectRatio::new(1, 1), horizontal_active)
-            } else {
-                (AspectRatio::new(16, 10), horizontal_active * 10 / 16)
-            }
-        }
-        0b01 => (AspectRatio::new(4, 3), horizontal_active * 3 / 4),
-        0b10 => (AspectRatio::new(5, 4), horizontal_active * 4 / 5),
-        _ => (AspectRatio::new(16, 9), horizontal_active * 9 / 16),
-    };
-    let refresh_rate = (byte2 & 0b0011_1111) + 60;
-
     Some(StandardTiming {
-        horizontal_active,
-        vertical_active,
-        aspect_ratio,
-        refresh_rate,
+        bytes: [byte1, byte2],
+        legacy,
     })
 }

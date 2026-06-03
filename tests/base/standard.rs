@@ -1,4 +1,4 @@
-use edid_info::base::standard::StandardTimings;
+use edid_info::base::{dmt::find_std, standard::StandardTimings};
 use edid_info::common::{AspectRatio, FailureKind};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
@@ -14,10 +14,10 @@ fn parse_standard_acer_ek221q_h() {
     let timings = |i| {
         StandardTimings::new(&raw, false).iter().nth(i).map(|t| {
             (
-                t.horizontal_active,
-                t.vertical_active,
-                t.aspect_ratio,
-                t.refresh_rate,
+                t.horizontal_active(),
+                t.vertical_active(),
+                t.aspect_ratio(),
+                t.refresh_rate(),
             )
         })
     };
@@ -39,10 +39,10 @@ fn parse_standard_asus_rog_pg27u() {
     let timings = |i| {
         StandardTimings::new(&raw, false).iter().nth(i).map(|t| {
             (
-                t.horizontal_active,
-                t.vertical_active,
-                t.aspect_ratio,
-                t.refresh_rate,
+                t.horizontal_active(),
+                t.vertical_active(),
+                t.aspect_ratio(),
+                t.refresh_rate(),
             )
         })
     };
@@ -55,6 +55,50 @@ fn parse_standard_asus_rog_pg27u() {
     assert_eq!(timings(5), None);
     assert_eq!(timings(6), None);
     assert_eq!(timings(7), None);
+}
+
+#[test]
+fn parse_standard_timing_code() {
+    let raw = base(ACER);
+
+    let code = StandardTimings::new(&raw, false)
+        .iter()
+        .next()
+        .map(|t| t.standard_timing_code());
+
+    assert_eq!(code, Some(0x714f));
+}
+
+#[test]
+fn parse_standard_timing_codes_find_dmt_entries() {
+    let raw = base(ACER);
+    let expected_dmt_ids = [
+        Some(0x15),
+        Some(0x20),
+        Some(0x23),
+        Some(0x55),
+        Some(0x3A),
+        Some(0x1C),
+        Some(0x2F),
+        None,
+    ];
+
+    let mut count = 0;
+    for (timing, expected_id) in StandardTimings::new(&raw, false)
+        .iter()
+        .zip(expected_dmt_ids)
+    {
+        count += 1;
+        let dmt = find_std(timing.standard_timing_code());
+        assert_eq!(dmt.map(|dmt| dmt.id), expected_id);
+
+        if let Some(dmt) = dmt {
+            assert_eq!(dmt.std_code, Some(timing.standard_timing_code()));
+            assert_eq!(dmt.horizontal.active(), timing.horizontal_active());
+            assert_eq!(dmt.vertical.active(), timing.vertical_active());
+        }
+    }
+    assert_eq!(count, expected_dmt_ids.len());
 }
 
 #[test]

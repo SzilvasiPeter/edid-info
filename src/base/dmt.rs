@@ -53,6 +53,21 @@ pub const fn find_dmt(id: u8) -> Option<Dmt> {
     None
 }
 
+/// Finds a DMT timing entry by standard timing code.
+#[must_use]
+pub const fn find_std(id: u16) -> Option<Dmt> {
+    let mut i = 0;
+    while i < DMT_ARRAY.len() {
+        if let Some(std) = DMT_ARRAY[i].std_code
+            && std == id
+        {
+            return Some(DMT_ARRAY[i]);
+        }
+        i += 1;
+    }
+    None
+}
+
 /// The DMT timing table.
 pub const DMT_ARRAY: [Dmt; 88] = [
     Dmt {
