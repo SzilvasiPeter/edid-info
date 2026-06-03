@@ -66,13 +66,13 @@ impl<'a> Base<'a> {
 
     /// Returns the established timing bitmap (common legacy video timings).
     #[must_use]
-    pub const fn established(&self) -> established::EstablishedLegacy {
+    pub const fn established_timings(&self) -> established::EstablishedLegacy {
         established::EstablishedLegacy::new(self.raw)
     }
 
     /// Returns the standard timing information.
     #[must_use]
-    pub fn timings(&self) -> standard::StandardTimings {
+    pub fn standard_timings(&self) -> standard::StandardTimings {
         let legacy = self.header().version() < Version { major: 1, minor: 3 };
         standard::StandardTimings::new(self.raw, legacy)
     }
@@ -102,7 +102,7 @@ impl<'a> Base<'a> {
             .then(self.header().validate())
             .then(self.basic().validate(chroma_srgb))
             .then(self.chroma().validate(mono))
-            .then(self.timings().validate())
+            .then(self.standard_timings().validate())
             .then(self.descriptors().validate())
             .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)
     }

@@ -27,9 +27,9 @@ fn parse_base_acer_ek221q_h() {
         ScreenSize::Dimensions(Size::new(480, 260))
     );
     assert_eq!(out.chroma().white().x(), 321);
-    assert!(out.established().timings().any(|d| d.id == 0x24));
+    assert!(out.established_timings().timings().any(|d| d.id == 0x24));
     assert_eq!(
-        out.timings().iter().nth(7).map(|m| (
+        out.standard_timings().iter().nth(7).map(|m| (
             m.horizontal_active,
             m.vertical_active,
             m.refresh_rate

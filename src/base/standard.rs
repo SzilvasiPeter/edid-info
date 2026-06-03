@@ -29,6 +29,7 @@ pub struct StandardTimings {
 
 impl StandardTimings {
     /// Initialize the standard timings from base block bytes.
+    /// If the EDID version is less than 1.3, use legacy mode.
     #[must_use]
     pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
         let mut bytes = [0u8; STANDARD_LEN];
@@ -46,15 +47,15 @@ impl StandardTimings {
     /// Validates all standard timings in the block.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        let mut v = Validation::new();
-        for c in self.bytes.chunks_exact(2) {
-            let empty = c[0] == 0x00 && c[1] == 0x00;
-            v = v.fail_if(empty, FailureKind::StdTimingEmptyInvalid);
-            if !empty && let Some(mode) = parse_std(c[0], c[1], self.legacy) {
-                v = v.then(mode.validate());
+        let mut validations = Validation::new();
+        for chunk in self.bytes.chunks_exact(2) {
+            let empty = chunk[0] == 0x00 && chunk[1] == 0x00;
+            validations = validations.fail_if(empty, FailureKind::StdTimingEmptyInvalid);
+            if !empty && let Some(mode) = parse_std(chunk[0], chunk[1], self.legacy) {
+                validations = validations.then(mode.validate());
             }
         }
-        v
+        validations
     }
 }
 
@@ -97,12 +98,12 @@ impl StandardTiming {
 ///   - Bits 7-6: Aspect Ratio (00=16:10 or 1:1 legacy, 01=4:3, 10=5:4, 11=16:9)
 ///   - Bits 5-0: Vertical Refresh Rate = Value + 60 Hz
 #[must_use]
-pub(super) fn parse_std(byte1: u8, byte2: u8, legacy: bool) -> Option<StandardTiming> {
+pub(super) const fn parse_std(byte1: u8, byte2: u8, legacy: bool) -> Option<StandardTiming> {
     if byte1 == 0x01 && byte2 == 0x01 {
         return None;
     }
 
-    let horizontal_active = (u16::from(byte1) + 31) * 8;
+    let horizontal_active = (byte1 as u16 + 31) * 8;
     let (aspect_ratio, vertical_active) = match (byte2 >> 6) & 0b11 {
         0b00 => {
             if legacy {
