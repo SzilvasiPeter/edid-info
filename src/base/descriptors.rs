@@ -37,7 +37,6 @@ impl Descriptors {
     #[must_use]
     pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
         let mut bytes = [0u8; DTD_SIZE];
-        // TODO: Get rid of all the copy_from_slice
         bytes.copy_from_slice(&raw[DESCRIPTORS_OFF..DESCRIPTORS_OFF + DTD_SIZE]);
         Self { bytes, legacy }
     }
@@ -59,19 +58,18 @@ impl Descriptors {
     /// Validates the descriptors.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        let mut v = Validation::new();
-
-        v = v.fail_if(
+        let mut validation = Validation::new();
+        validation = validation.fail_if(
             !matches!(self.iter().nth(0), Some(Descriptor::Timing(_))),
             FailureKind::DescriptorFirstNotDetailedTiming,
         );
 
         for mode in self.iter() {
             match mode {
-                Descriptor::Timing(timing) => v = v.then(timing.validate()),
-                Descriptor::Display(display) => v = v.then(display.validate()),
+                Descriptor::Timing(timing) => validation = validation.then(timing.validate()),
+                Descriptor::Display(display) => validation = validation.then(display.validate()),
             }
         }
-        v
+        validation
     }
 }

@@ -6,7 +6,7 @@
 
 use super::cvt3::Cvt3;
 use super::dcm::Color;
-use super::established::Established3;
+use super::established::EstablishedTimings;
 use super::range::DisplayRangeLimits;
 use super::standard::StandardTimings;
 use super::white_point::WhitePoint;
@@ -41,7 +41,7 @@ pub enum DisplayDescriptor {
     StdTimings(StandardTimings),
     Dcm(Color),
     Cvt3Byte(Cvt3),
-    EstablishedTiming3(Established3),
+    EstablishedTiming3(EstablishedTimings),
     Dummy,
     VendorReserved([u8; DESC_LEN]),
     Unknown([u8; DESC_LEN]),
@@ -74,7 +74,7 @@ impl Monitor {
             0xFA => DisplayDescriptor::StdTimings(StandardTimings::new(&self.raw, self.legacy)),
             0xF9 => DisplayDescriptor::Dcm(Color::parse(&self.raw)),
             0xF8 => DisplayDescriptor::Cvt3Byte(Cvt3::parse(&self.raw)),
-            0xF7 => DisplayDescriptor::EstablishedTiming3(Established3::parse(&self.raw)),
+            0xF7 => DisplayDescriptor::EstablishedTiming3(EstablishedTimings::parse(&self.raw)),
             0x10 => DisplayDescriptor::Dummy,
             0x00..=0x0F => DisplayDescriptor::VendorReserved(self.raw),
             _ => DisplayDescriptor::Unknown(self.raw),

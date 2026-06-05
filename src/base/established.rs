@@ -22,11 +22,11 @@ pub const ESTABLISHED_LEN: usize = 3;
 
 /// Parsed established timings and manufacturer-defined flags.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct EstablishedLegacy {
+pub struct EstablishedTimings {
     bytes: [u8; 3],
 }
 
-impl EstablishedLegacy {
+impl EstablishedTimings {
     /// Initialize established timings from base block bytes.
     ///
     /// Bytes:
@@ -45,7 +45,7 @@ impl EstablishedLegacy {
     }
 
     /// Supported established timings.
-    pub fn timings(&self) -> impl Iterator<Item = Dmt> {
+    pub fn iter(&self) -> impl Iterator<Item = Dmt> {
         let bytes = self.bytes;
         [
             flag_custom(bytes[0], 0x80, IBM_720X400_70),

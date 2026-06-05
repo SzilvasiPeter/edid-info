@@ -8,11 +8,11 @@ use crate::base::established::flag_dmt;
 use crate::common::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Established3 {
+pub struct EstablishedTimings {
     bytes: [u8; 6],
 }
 
-impl Established3 {
+impl EstablishedTimings {
     #[must_use]
     pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
         Self {
@@ -21,7 +21,7 @@ impl Established3 {
     }
 
     /// Supported established timings.
-    pub fn supported(&self) -> impl Iterator<Item = Dmt> {
+    pub fn iter(&self) -> impl Iterator<Item = Dmt> {
         let bytes = self.bytes;
         [
             flag_dmt(bytes[0], 0x80, 0x01),
