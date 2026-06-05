@@ -94,6 +94,7 @@ impl<'a> Base<'a> {
     #[must_use]
     pub fn validate(&self) -> Validation {
         let chroma_srgb = self.chroma().is_srgb();
+        let continous_frequency = self.basic().features().continous_frequency();
         let mono = matches!(
             self.basic().features().display(),
             DisplayType::Analog(AnalogType::MonoGray)
@@ -103,7 +104,7 @@ impl<'a> Base<'a> {
             .then(self.basic().validate(chroma_srgb))
             .then(self.chroma().validate(mono))
             .then(self.standard_timings().validate())
-            .then(self.descriptors().validate())
+            .then(self.descriptors().validate(continous_frequency))
             .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)
     }
 }

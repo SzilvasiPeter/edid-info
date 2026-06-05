@@ -10,7 +10,7 @@ fn parse_dtd_synthetic() {
 
     let out = Descriptors::new(&raw, false);
     match out.iter().nth(1) {
-        Some(Descriptor::Timing(timing)) => assert_eq!(timing.pixel_clock_khz(), 74_250),
+        Some(Some(Descriptor::Timing(timing))) => assert_eq!(timing.pixel_clock_khz(), 74_250),
         _ => panic!("slot 1 should parse as timing"),
     }
 }
@@ -18,12 +18,12 @@ fn parse_dtd_synthetic() {
 #[test]
 fn validate_rejects_missing_preferred_timing() {
     let raw = [0_u8; 128];
-    let validation = Descriptors::new(&raw, false).validate();
+    let validation = Descriptors::new(&raw, false).validate(false);
 
     assert_eq!(
-        validation.errors & (1 << (FailureKind::DescriptorFirstNotDetailedTiming as u8)),
-        1 << (FailureKind::DescriptorFirstNotDetailedTiming as u8),
+        validation.errors & (1 << (FailureKind::FirstDescriptorNotDetailedTiming as u8)),
+        1 << (FailureKind::FirstDescriptorNotDetailedTiming as u8),
         "{}",
-        FailureKind::DescriptorFirstNotDetailedTiming.message()
+        FailureKind::FirstDescriptorNotDetailedTiming.message()
     );
 }

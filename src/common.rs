@@ -45,19 +45,19 @@ pub enum FailureKind {
 
     // --- Descriptors ---
     /// The first descriptor is not a detailed timing descriptor.
-    DescriptorFirstNotDetailedTiming = 14,
+    FirstDescriptorNotDetailedTiming = 14,
     /// Missing Display Product Name (mandatory in 1.4).
     DescriptorMissingDisplayName = 2,
-    /// Missing Display Range Limits Descriptor (mandatory in 1.4).
-    DescriptorMissingRangeLimits = 3,
-    /// Invalid detailed timing descriptor ordering.
-    DescriptorOrdering = 9,
-    /// Monitor descriptor block has byte 2 nonzero.
-    DescriptorMonitorByte2NonZero = 10,
-    /// Monitor descriptor block has byte 4 nonzero.
-    DescriptorMonitorByte4NonZero = 11,
+    /// Range limits required for continuous frequency.
+    RangeLimitsRequired = 3,
+    /// Timing descriptors shall precede display descriptors.
+    DescriptorInvalidOrder = 9,
+    /// Unrecognized or invalid descriptor.
+    DescriptorInvalid = 34,
+    /// Monitor descriptor reserved byte is non-zero.
+    MonitorReservedByteNonZero = 10,
     /// Descriptor is all zeroes (Dummy Descriptor should be used).
-    DescriptorAllZeroes = 12,
+    DescriptorAllZeroes = 11,
 
     // --- Detailed Timing (DTD) ---
     /// Pixel clock is zero.
@@ -117,13 +117,13 @@ impl FailureKind {
             Self::BasicSrgbChromaMismatch => "sRGB signaled, but chromaticities do not match",
             Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
             Self::DescriptorMissingDisplayName => "Missing Display Product Name",
-            Self::DescriptorMissingRangeLimits => "Missing Display Range Limits Descriptor",
-            Self::DescriptorOrdering => "Invalid descriptor ordering",
-            Self::DescriptorMonitorByte2NonZero => "Monitor descriptor has non-zero byte 2",
-            Self::DescriptorMonitorByte4NonZero => "Monitor descriptor has non-zero byte 4",
+            Self::RangeLimitsRequired => "Range limits required for continuous frequency",
+            Self::DescriptorInvalidOrder => "Timing descriptors shall precede display descriptors",
+            Self::DescriptorInvalid => "Unrecognized or invalid descriptor",
+            Self::MonitorReservedByteNonZero => "Monitor descriptor reserved byte must be zero",
             Self::DescriptorAllZeroes => "Descriptor is all zeroes (use dummy instead)",
             Self::TimingPixelClockIsZero => "Pixel clock is zero",
-            Self::DescriptorFirstNotDetailedTiming => "First descriptor is not a detailed timing",
+            Self::FirstDescriptorNotDetailedTiming => "First descriptor is not a detailed timing",
             Self::RangeGtfNotContinuous => "GTF supported but continuous frequencies not supported",
             Self::RangeCvtNotContinuous => "CVT supported but continuous frequencies not supported",
             Self::RangeMaxClockNotSet => "Range limits missing max dotclock",

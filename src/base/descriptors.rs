@@ -14,6 +14,7 @@
 
 use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
+use crate::base::descriptor::monitor::DisplayDescriptor;
 use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation};
 
 pub const DESCRIPTORS_OFF: usize = 54;
@@ -42,30 +43,50 @@ impl Descriptors {
     }
 
     /// Returns an iterator over the parsed descriptors.
-    pub fn iter(&self) -> impl Iterator<Item = Descriptor> {
+    pub fn iter(&self) -> impl Iterator<Item = Option<Descriptor>> {
         let (chunks, remainder) = self.bytes.as_chunks::<DESC_LEN>();
         debug_assert!(remainder.is_empty());
 
-        chunks.iter().map(move |chunk| {
-            if chunk[0] == 0 && chunk[1] == 0 {
-                Descriptor::Display(Monitor::new(chunk, self.legacy))
-            } else {
-                Descriptor::Timing(DetailedTiming::new(chunk))
-            }
+        chunks.iter().map(move |chunk| match (chunk[0], chunk[1]) {
+            (0, 0) => Some(Descriptor::Display(Monitor::new(chunk, self.legacy))),
+            (0..=0xFF, 1..=0xFF) => Some(Descriptor::Timing(DetailedTiming::new(chunk))),
+            _ => None,
         })
     }
 
     /// Validates the descriptors.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub fn validate(&self, continous_frequency: bool) -> Validation {
         let mut validation = Validation::new();
         validation = validation.fail_if(
-            !matches!(self.iter().nth(0), Some(Descriptor::Timing(_))),
-            FailureKind::DescriptorFirstNotDetailedTiming,
+            !matches!(self.iter().nth(0), Some(Some(Descriptor::Timing(_)))),
+            FailureKind::FirstDescriptorNotDetailedTiming,
+        );
+        validation = validation.fail_if(
+            self.iter().any(|d| d.is_none()),
+            FailureKind::DescriptorInvalid,
+        );
+        validation = validation.fail_if(
+            self.iter()
+                .flatten()
+                .skip_while(|d| matches!(d, Descriptor::Timing(_)))
+                .any(|d| matches!(d, Descriptor::Timing(_))),
+            FailureKind::DescriptorInvalidOrder,
         );
 
-        for mode in self.iter() {
-            match mode {
+        let has_range = self.iter().flatten().any(|d| match d {
+            Descriptor::Display(m) => {
+                matches!(m.descriptor(), DisplayDescriptor::RangeLimits(_))
+            }
+            Descriptor::Timing(_) => false,
+        });
+        validation = validation.fail_if(
+            continous_frequency && !has_range,
+            FailureKind::RangeLimitsRequired,
+        );
+
+        for descriptor in self.iter().flatten() {
+            match descriptor {
                 Descriptor::Timing(timing) => validation = validation.then(timing.validate()),
                 Descriptor::Display(display) => validation = validation.then(display.validate()),
             }

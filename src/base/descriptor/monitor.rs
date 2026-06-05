@@ -10,7 +10,7 @@ use super::established::EstablishedTimings;
 use super::range::DisplayRangeLimits;
 use super::standard::StandardTimings;
 use super::white_point::WhitePoint;
-use crate::common::{DESC_LEN, Validation};
+use crate::common::{DESC_LEN, FailureKind, Validation};
 
 /// A descriptor containing ASCII text.
 ///
@@ -82,7 +82,18 @@ impl Monitor {
     }
 
     #[must_use]
-    pub const fn validate(&self) -> Validation {
-        Validation::new()
+    pub fn validate(&self) -> Validation {
+        let mut validation = Validation::new();
+        validation = validation.fail_if(
+            self.raw.iter().all(|&b| b == 0),
+            FailureKind::DescriptorAllZeroes,
+        );
+        validation = validation.fail_if(self.raw[2] != 0, FailureKind::MonitorReservedByteNonZero);
+        validation = validation.fail_if(
+            self.raw[3] != 0xFD && self.raw[4] != 0,
+            FailureKind::MonitorReservedByteNonZero,
+        );
+
+        validation
     }
 }

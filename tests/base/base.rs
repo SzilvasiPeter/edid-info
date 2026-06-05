@@ -41,7 +41,8 @@ fn parse_base_acer_ek221q_h() {
         .descriptors()
         .iter()
         .nth(1)
-        .expect("dtd mode 1 should exist");
+        .expect("dtd mode 1 should exist")
+        .expect("dtd mode 1 should be valid");
     match dtd {
         Descriptor::Timing(timing) => {
             let h = timing.horizontal();
