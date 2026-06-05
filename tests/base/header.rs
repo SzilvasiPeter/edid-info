@@ -44,11 +44,11 @@ fn parse_header_acer_ek221q_h() {
     assert_eq!(validation.errors, 0);
     assert_eq!(
         validation.warnings,
-        1 << (WarningKind::HeaderVersionDeprecated as u8),
+        1 << (WarningKind::VersionIsDeprecated as u8),
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -104,19 +104,19 @@ fn parse_header_cm_cm2400t() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderMfrInvalidBits as u8),
+        1 << (FailureKind::ManufacturerIdIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderMfrInvalidBits.message(),
-        "Invalid manufacturer ID bits"
+        FailureKind::ManufacturerIdIsInvalid.message(),
+        "Manufacturer ID contains invalid bits"
     );
     assert_eq!(
         validation.warnings,
-        1 << (WarningKind::HeaderVersionDeprecated as u8),
+        1 << (WarningKind::VersionIsDeprecated as u8),
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -145,11 +145,11 @@ fn parse_header_cs_1920x1080() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderMfrInvalidBits as u8),
+        1 << (FailureKind::ManufacturerIdIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderMfrInvalidBits.message(),
-        "Invalid manufacturer ID bits"
+        FailureKind::ManufacturerIdIsInvalid.message(),
+        "Manufacturer ID contains invalid bits"
     );
     assert_eq!(validation.warnings, 0);
 }
@@ -180,16 +180,16 @@ fn parse_header_lpl_lp154w01_zeroweek() {
     assert_eq!(validation.errors, 0);
     assert_eq!(
         validation.warnings,
-        (1 << (WarningKind::HeaderSerialInvalid as u8))
-            | (1 << (WarningKind::HeaderVersionDeprecated as u8)),
+        (1 << (WarningKind::SerialNumberIsZero as u8))
+            | (1 << (WarningKind::VersionIsDeprecated as u8)),
     );
     assert_eq!(
-        WarningKind::HeaderSerialInvalid.message(),
-        "Invalid serial number"
+        WarningKind::SerialNumberIsZero.message(),
+        "Serial number is zero"
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -218,25 +218,25 @@ fn parse_header_ms_hsd_1903_a00() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderMfrInvalidBits as u8),
+        1 << (FailureKind::ManufacturerIdIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderMfrInvalidBits.message(),
-        "Invalid manufacturer ID bits"
+        FailureKind::ManufacturerIdIsInvalid.message(),
+        "Manufacturer ID contains invalid bits"
     );
 
     assert_eq!(
         validation.warnings,
-        (1 << (WarningKind::HeaderSerialInvalid as u8))
-            | (1 << (WarningKind::HeaderVersionDeprecated as u8)),
+        (1 << (WarningKind::SerialNumberIsZero as u8))
+            | (1 << (WarningKind::VersionIsDeprecated as u8)),
     );
     assert_eq!(
-        WarningKind::HeaderSerialInvalid.message(),
-        "Invalid serial number"
+        WarningKind::SerialNumberIsZero.message(),
+        "Serial number is zero"
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -265,19 +265,19 @@ fn parse_header_tk_tianma() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderMfrInvalidBits as u8),
+        1 << (FailureKind::ManufacturerIdIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderMfrInvalidBits.message(),
-        "Invalid manufacturer ID bits"
+        FailureKind::ManufacturerIdIsInvalid.message(),
+        "Manufacturer ID contains invalid bits"
     );
     assert_eq!(
         validation.warnings,
-        1 << (WarningKind::HeaderSerialInvalid as u8),
+        1 << (WarningKind::SerialNumberIsZero as u8),
     );
     assert_eq!(
-        WarningKind::HeaderSerialInvalid.message(),
-        "Invalid serial number"
+        WarningKind::SerialNumberIsZero.message(),
+        "Serial number is zero"
     );
 }
 
@@ -306,29 +306,29 @@ fn parse_header_wg_unknown() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderMfrInvalidBits as u8),
+        1 << (FailureKind::ManufacturerIdIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderMfrInvalidBits.message(),
-        "Invalid manufacturer ID bits"
+        FailureKind::ManufacturerIdIsInvalid.message(),
+        "Manufacturer ID contains invalid bits"
     );
     assert_eq!(
         validation.warnings,
-        (1 << (WarningKind::HeaderProductInvalid as u8))
-            | (1 << (WarningKind::HeaderSerialInvalid as u8))
-            | (1 << (WarningKind::HeaderVersionDeprecated as u8)),
+        (1 << (WarningKind::ProductCodeIsZero as u8))
+            | (1 << (WarningKind::SerialNumberIsZero as u8))
+            | (1 << (WarningKind::VersionIsDeprecated as u8)),
     );
     assert_eq!(
-        WarningKind::HeaderProductInvalid.message(),
-        "Invalid product code"
+        WarningKind::ProductCodeIsZero.message(),
+        "Product code is zero"
     );
     assert_eq!(
-        WarningKind::HeaderSerialInvalid.message(),
-        "Invalid serial number"
+        WarningKind::SerialNumberIsZero.message(),
+        "Serial number is zero"
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -357,19 +357,19 @@ fn parse_header_phl_bad_date() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::HeaderWeekInvalid as u8),
+        1 << (FailureKind::ManufactureWeekIsInvalid as u8),
     );
     assert_eq!(
-        FailureKind::HeaderWeekInvalid.message(),
-        "Invalid week value"
+        FailureKind::ManufactureWeekIsInvalid.message(),
+        "Manufacture week value is invalid"
     );
     assert_eq!(
         validation.warnings,
-        1 << (WarningKind::HeaderVersionDeprecated as u8),
+        1 << (WarningKind::VersionIsDeprecated as u8),
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }
 
@@ -393,10 +393,10 @@ fn parse_header_tsb_model_year() {
     assert_eq!(validation.errors, 0);
     assert_eq!(
         validation.warnings,
-        1 << (WarningKind::HeaderVersionDeprecated as u8),
+        1 << (WarningKind::VersionIsDeprecated as u8),
     );
     assert_eq!(
-        WarningKind::HeaderVersionDeprecated.message(),
-        "Deprecated version"
+        WarningKind::VersionIsDeprecated.message(),
+        "Version is deprecated, use 1.4 or later"
     );
 }

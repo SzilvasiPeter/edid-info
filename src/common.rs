@@ -10,96 +10,42 @@ pub const DESC_LEN: usize = 18;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum FailureKind {
-    // TODO: Remove the module prefix after including the warnings in the validation steps
-    // --- Base & Footer ---
     /// Invalid checksum for the base block.
-    BaseChecksum = 0,
-    /// Extension count in footer does not match parsed blocks.
-    BaseExtCountMismatch = 1,
-
-    // --- Header ---
+    BaseChecksumMismatch = 0,
+    /// Specified extension count differs from actual.
+    ExtensionCountMismatch = 1,
     /// Manufacturer ID contains invalid bits.
-    HeaderMfrInvalidBits = 4,
-    /// Week value is invalid (greater than 54 and not 0xFF).
-    HeaderWeekInvalid = 5,
+    ManufacturerIdIsInvalid = 2,
+    /// Manufacture week value is invalid.
+    ManufactureWeekIsInvalid = 3,
     /// Major version is zero.
-    HeaderMajorInvalid = 6,
-
-    // --- Basic Parameters ---
-    /// Color Bit Depth set to reserved value.
-    BasicColorDepthReserved = 7,
-    /// Digital Video Interface Standard set to reserved value.
-    BasicInterfaceReserved = 8,
+    MajorVersionIsZero = 4,
+    /// Color bit depth set to reserved value.
+    ColorBitDepthIsReserved = 5,
+    /// Digital video interface set to reserved value.
+    VideoInterfaceIsReserved = 6,
     /// sRGB is signaled, but chromaticities do not match.
-    BasicSrgbChromaMismatch = 32,
-    /// Chromaticities match sRGB, but sRGB is not signaled.
-    BasicSrgbNotSignaled = 33,
-
-    // --- Standard Timing ---
+    StandardRgbChromaMismatch = 7,
     /// Standard timing horizontal pixels are outside 256–2288.
-    StdTimingHorizontalLimit = 35,
+    StdTimingHorizontalLimit = 8,
     /// Standard timing refresh rate exceeds 123 Hz.
-    StdTimingRefreshLimit = 36,
-    /// Standard timing empty slot uses invalid bytes.
-    StdTimingEmptyInvalid = 37,
-
-    // --- Descriptors ---
+    StdTimingRefreshLimit = 9,
+    /// Use 0x01 0x01 byte code for empty Standard Timings.
+    InvalidEmptyStdTiming = 10,
     /// The first descriptor is not a detailed timing descriptor.
-    FirstDescriptorNotDetailedTiming = 14,
-    /// Missing Display Product Name (mandatory in 1.4).
-    DescriptorMissingDisplayName = 2,
-    /// Range limits required for continuous frequency.
-    RangeLimitsRequired = 3,
+    FirstDescriptorNotDetailedTiming = 11,
     /// Timing descriptors shall precede display descriptors.
-    DescriptorInvalidOrder = 9,
+    InvalidDescriptorOrder = 12,
     /// Unrecognized or invalid descriptor.
-    DescriptorInvalid = 34,
+    InvalidDescriptor = 13,
     /// Monitor descriptor reserved byte is non-zero.
-    MonitorReservedByteNonZero = 10,
-    /// Descriptor is all zeroes (Dummy Descriptor should be used).
-    DescriptorAllZeroes = 11,
-
-    // --- Detailed Timing (DTD) ---
-    /// Pixel clock is zero.
-    TimingPixelClockIsZero = 13,
-
-    // --- Range Limits ---
-    /// GTF is supported, but continuous frequencies are not.
-    RangeGtfNotContinuous = 15,
-    /// CVT is supported, but continuous frequencies are not.
-    RangeCvtNotContinuous = 16,
-    /// Range limits descriptor missing max dotclock.
-    RangeMaxClockNotSet = 17,
-    /// CVT descriptor byte 14 reserved bits are non-zero.
-    RangeCvtReservedByte14 = 18,
-    /// CVT descriptor invalid preferred aspect ratio.
-    RangeCvtPrefAspectRatioInvalid = 19,
-    /// CVT descriptor byte 15 reserved bits are non-zero.
-    RangeCvtReservedByte15 = 20,
-    /// CVT descriptor byte 16 reserved bits are non-zero.
-    RangeCvtReservedByte16 = 21,
-
-    // --- CVT 3-Byte ---
-    /// CVT 3-byte timing descriptor has invalid version.
-    Cvt3ByteInvalidVersion = 22,
-    /// CVT 3-byte timing byte 0 is zero (reserved).
-    Cvt3ByteByte0Zero = 23,
-    /// CVT 3-byte timing byte 1 reserved bits are non-zero.
-    Cvt3ByteByte1Reserved = 24,
-    /// CVT 3-byte timing byte 2 reserved bit is non-zero.
-    Cvt3ByteByte2Reserved = 25,
-    /// CVT 3-byte timing byte 2 supports no vertical rates.
-    Cvt3ByteNoVerticalRates = 26,
-    /// CVT 3-byte timing preferred rate not supported.
-    Cvt3BytePrefRateNotSupported = 27,
-
-    // --- DCM ---
-    /// DCM descriptor has invalid version.
-    DcmInvalidVersion = 30,
-
-    // --- CTA extension ---
+    MonitorReservedByteIsNonZero = 14,
+    /// Descriptor is all zeroes, use Dummy Descriptor.
+    AllZeroDescriptor = 15,
+    /// Detailed timing descriptor Pixel clock is zero.
+    TimingPixelClockIsZero = 16,
     /// Invalid checksum for a CTA extension block.
-    CtaChecksum = 31,
+    CtaChecksumMismatch = 17,
 }
 
 impl FailureKind {
@@ -107,41 +53,24 @@ impl FailureKind {
     #[must_use]
     pub const fn message(&self) -> &'static str {
         match self {
-            Self::BaseChecksum => "Invalid base checksum",
-            Self::BaseExtCountMismatch => "Extension count does not match parsed blocks",
-            Self::HeaderMfrInvalidBits => "Invalid manufacturer ID bits",
-            Self::HeaderWeekInvalid => "Invalid week value",
-            Self::HeaderMajorInvalid => "Invalid major version",
-            Self::BasicColorDepthReserved => "Color bit depth is set to a reserved value",
-            Self::BasicInterfaceReserved => "Digital video interface is set to a reserved value",
-            Self::BasicSrgbChromaMismatch => "sRGB signaled, but chromaticities do not match",
-            Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
-            Self::DescriptorMissingDisplayName => "Missing Display Product Name",
-            Self::RangeLimitsRequired => "Range limits required for continuous frequency",
-            Self::DescriptorInvalidOrder => "Timing descriptors shall precede display descriptors",
-            Self::DescriptorInvalid => "Unrecognized or invalid descriptor",
-            Self::MonitorReservedByteNonZero => "Monitor descriptor reserved byte must be zero",
-            Self::DescriptorAllZeroes => "Descriptor is all zeroes (use dummy instead)",
-            Self::TimingPixelClockIsZero => "Pixel clock is zero",
+            Self::BaseChecksumMismatch => "Invalid base checksum",
+            Self::ExtensionCountMismatch => "Specified extension count differs from actual",
+            Self::ManufacturerIdIsInvalid => "Manufacturer ID contains invalid bits",
+            Self::ManufactureWeekIsInvalid => "Manufacture week value is invalid",
+            Self::MajorVersionIsZero => "Major version is zero",
+            Self::ColorBitDepthIsReserved => "Color bit depth set to reserved value",
+            Self::VideoInterfaceIsReserved => "Digital video interface set to reserved value",
+            Self::StandardRgbChromaMismatch => "sRGB is signaled, but chromaticities do not match",
+            Self::InvalidDescriptorOrder => "Timing descriptors shall precede display descriptors",
+            Self::InvalidDescriptor => "Unrecognized or invalid descriptor",
+            Self::MonitorReservedByteIsNonZero => "Monitor descriptor reserved byte must be zero",
+            Self::AllZeroDescriptor => "Descriptor is all zeroes, use Dummy Descriptor",
+            Self::TimingPixelClockIsZero => "Detailed timing descriptor Pixel clock is zero",
             Self::FirstDescriptorNotDetailedTiming => "First descriptor is not a detailed timing",
-            Self::RangeGtfNotContinuous => "GTF supported but continuous frequencies not supported",
-            Self::RangeCvtNotContinuous => "CVT supported but continuous frequencies not supported",
-            Self::RangeMaxClockNotSet => "Range limits missing max dotclock",
-            Self::RangeCvtReservedByte14 => "CVT descriptor byte 14 reserved bits are non-zero",
-            Self::RangeCvtPrefAspectRatioInvalid => "CVT descriptor invalid preferred aspect ratio",
-            Self::RangeCvtReservedByte15 => "CVT descriptor byte 15 reserved bits are non-zero",
-            Self::RangeCvtReservedByte16 => "CVT descriptor byte 16 reserved bits are non-zero",
-            Self::Cvt3ByteInvalidVersion => "CVT 3-byte timing descriptor has invalid version",
-            Self::Cvt3ByteByte0Zero => "CVT 3-byte timing byte 0 is zero (reserved)",
-            Self::Cvt3ByteByte1Reserved => "CVT 3-byte timing byte 1 reserved bits are non-zero",
-            Self::Cvt3ByteByte2Reserved => "CVT 3-byte timing byte 2 reserved bit is non-zero",
-            Self::Cvt3ByteNoVerticalRates => "CVT 3-byte timing byte 2 supports no vertical rates",
-            Self::Cvt3BytePrefRateNotSupported => "CVT 3-byte timing preferred rate not supported",
-            Self::DcmInvalidVersion => "DCM descriptor has invalid version",
             Self::StdTimingHorizontalLimit => "Standard timing horizontal pixels outside 256-2288",
             Self::StdTimingRefreshLimit => "Standard timing refresh rate exceeds 123 Hz",
-            Self::StdTimingEmptyInvalid => "Use 0x0101 as the invalid Standard Timings code",
-            Self::CtaChecksum => "Invalid CTA checksum",
+            Self::InvalidEmptyStdTiming => "Use 0x01 0x01 byte code for empty Standard Timings",
+            Self::CtaChecksumMismatch => "Invalid CTA checksum",
         }
     }
 }
@@ -150,39 +79,28 @@ impl FailureKind {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum WarningKind {
-    // TODO: Remove the module prefix after including the warnings in the validation steps
-    // --- Header ---
-    /// Manufacturer ID reserved bit (bit 15) is set.
-    HeaderMfrReservedSet = 0,
+    /// Manufacturer ID reserved bit is set.
+    ManufacturerIdReservedIsSet = 0,
     /// Product code is zero.
-    HeaderProductInvalid = 1,
+    ProductCodeIsZero = 1,
     /// Serial number is zero.
-    HeaderSerialInvalid = 2,
-    /// Version is deprecated.
-    HeaderVersionDeprecated = 3,
-
-    // --- Standard Timing ---
+    SerialNumberIsZero = 2,
+    /// Version is deprecated, use 1.4 or later.
+    VersionIsDeprecated = 3,
     /// Standard Timing has a dubious odd vertical resolution.
     StdTimingOddVertical = 4,
-
-    // --- Range Limits ---
-    /// GTF support is deprecated.
-    RangeGtfDeprecated = 5,
-    /// CVT block corrects dotclock by more than 9.75 MHz.
-    RangeCvtDotClockLargeCorrection = 6,
-    /// CVT block does not set preferred refresh rate.
-    RangeCvtNoPreferredRefresh = 7,
-
-    // --- Basic Parameters ---
-    /// Dubious image size (smaller than 10x10 cm).
-    BasicImageSizeDubious = 8,
+    /// Dubious image size (zero or suspiciously small).
+    DubiousImageSize = 5,
     /// sRGB is signaled, but the gamma is not 2.2.
-    BasicSrgbGammaInvalid = 9,
+    StandardRgbGammaMismatch = 6,
     /// Chromaticities match sRGB, but sRGB is not signaled.
-    BasicSrgbNotSignaled = 10,
-    // --- Chromaticity ---
+    StandardRgbNotSignaled = 7,
     /// Monochrome display has non-zero RGB chromaticities.
-    ChromaMonochromeRgbNonZero = 11,
+    MonochromeHasNonZeroRgb = 8,
+    /// Monitor name is missing.
+    MissingMonitorName = 9,
+    /// Range limits required for continuous frequency.
+    RangeLimitsRequired = 10,
 }
 
 impl WarningKind {
@@ -190,20 +108,17 @@ impl WarningKind {
     #[must_use]
     pub const fn message(&self) -> &'static str {
         match self {
-            Self::HeaderMfrReservedSet => "Manufacturer ID reserved bit is set",
-            Self::HeaderProductInvalid => "Invalid product code",
-            Self::HeaderSerialInvalid => "Invalid serial number",
-            Self::HeaderVersionDeprecated => "Deprecated version",
-            Self::StdTimingOddVertical => "Standard timing has odd vertical resolution",
-            Self::RangeGtfDeprecated => "GTF support is deprecated",
-            Self::RangeCvtDotClockLargeCorrection => "CVT dotclock correction exceeds 9.75 MHz",
-            Self::RangeCvtNoPreferredRefresh => "CVT block missing preferred refresh rate",
-            Self::BasicImageSizeDubious => "Dubious image size (zero or suspiciously small)",
-            Self::BasicSrgbGammaInvalid => "sRGB signaled, but gamma is not 2.2",
-            Self::BasicSrgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
-            Self::ChromaMonochromeRgbNonZero => {
-                "Monochrome display has non-zero RGB chromaticities"
-            }
+            Self::ManufacturerIdReservedIsSet => "Manufacturer ID reserved bit is set",
+            Self::ProductCodeIsZero => "Product code is zero",
+            Self::SerialNumberIsZero => "Serial number is zero",
+            Self::VersionIsDeprecated => "Version is deprecated, use 1.4 or later",
+            Self::StdTimingOddVertical => "Standard Timing has a dubious odd vertical resolution",
+            Self::DubiousImageSize => "Dubious image size (zero or suspiciously small)",
+            Self::StandardRgbGammaMismatch => "sRGB signaled, but gamma is not 2.2",
+            Self::StandardRgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
+            Self::MonochromeHasNonZeroRgb => "Monochrome display has non-zero RGB chromaticities",
+            Self::MissingMonitorName => "Monitor name is missing",
+            Self::RangeLimitsRequired => "Range limits required for continuous frequency",
         }
     }
 }

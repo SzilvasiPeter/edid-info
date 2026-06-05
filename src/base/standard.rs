@@ -50,7 +50,7 @@ impl StandardTimings {
         let mut validations = Validation::new();
         for chunk in self.bytes.chunks_exact(2) {
             let empty = chunk[0] == 0x00 && chunk[1] == 0x00;
-            validations = validations.fail_if(empty, FailureKind::StdTimingEmptyInvalid);
+            validations = validations.fail_if(empty, FailureKind::InvalidEmptyStdTiming);
             if !empty && let Some(mode) = parse_std(chunk[0], chunk[1], self.legacy) {
                 validations = validations.then(mode.validate());
             }

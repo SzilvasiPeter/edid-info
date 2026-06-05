@@ -88,6 +88,6 @@ impl<'a> Edid<'a> {
         let ext_num = base.footer().extension_count() as usize;
         Validation::new()
             .then(base.validate())
-            .fail_if(ext_num != self.ext_len, FailureKind::BaseExtCountMismatch)
+            .fail_if(ext_num != self.ext_len, FailureKind::ExtensionCountMismatch)
     }
 }

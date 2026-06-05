@@ -125,7 +125,7 @@ impl<'a> Cta<'a> {
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        Validation::new().fail_if(!checksum_ok(self.raw), FailureKind::CtaChecksum)
+        Validation::new().fail_if(!checksum_ok(self.raw), FailureKind::CtaChecksumMismatch)
     }
 
     /// Returns the end of the Data Block Collection (DBC).

@@ -280,12 +280,12 @@ impl Basic {
             && self.height_cm != 0
             && (self.width_cm < 10 || self.height_cm < 10);
         Validation::new()
-            .fail_if(bitdepth_reserved, FailureKind::BasicColorDepthReserved)
-            .fail_if(iface_reserved, FailureKind::BasicInterfaceReserved)
-            .fail_if(srgb && !chroma_srgb, FailureKind::BasicSrgbChromaMismatch)
-            .warn_if(!srgb && chroma_srgb, WarningKind::BasicSrgbNotSignaled)
-            .warn_if(srgb && gamma_warn, WarningKind::BasicSrgbGammaInvalid)
-            .warn_if(small_size, WarningKind::BasicImageSizeDubious)
+            .fail_if(bitdepth_reserved, FailureKind::ColorBitDepthIsReserved)
+            .fail_if(iface_reserved, FailureKind::VideoInterfaceIsReserved)
+            .fail_if(srgb && !chroma_srgb, FailureKind::StandardRgbChromaMismatch)
+            .warn_if(!srgb && chroma_srgb, WarningKind::StandardRgbNotSignaled)
+            .warn_if(srgb && gamma_warn, WarningKind::StandardRgbGammaMismatch)
+            .warn_if(small_size, WarningKind::DubiousImageSize)
     }
 }
 

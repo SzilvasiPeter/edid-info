@@ -153,7 +153,7 @@ impl DetailedTiming {
             )
             .warn_if(
                 self.physical().width() == 0 || self.physical().height() == 0,
-                WarningKind::BasicImageSizeDubious,
+                WarningKind::DubiousImageSize,
             )
     }
 }

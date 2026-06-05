@@ -105,6 +105,6 @@ impl<'a> Base<'a> {
             .then(self.chroma().validate(mono))
             .then(self.standard_timings().validate())
             .then(self.descriptors().validate(continous_frequency))
-            .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksum)
+            .fail_if(!checksum_ok(self.raw), FailureKind::BaseChecksumMismatch)
     }
 }

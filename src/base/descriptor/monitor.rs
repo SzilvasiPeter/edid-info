@@ -86,12 +86,13 @@ impl Monitor {
         let mut validation = Validation::new();
         validation = validation.fail_if(
             self.raw.iter().all(|&b| b == 0),
-            FailureKind::DescriptorAllZeroes,
+            FailureKind::AllZeroDescriptor,
         );
-        validation = validation.fail_if(self.raw[2] != 0, FailureKind::MonitorReservedByteNonZero);
+        validation =
+            validation.fail_if(self.raw[2] != 0, FailureKind::MonitorReservedByteIsNonZero);
         validation = validation.fail_if(
             self.raw[3] != 0xFD && self.raw[4] != 0,
-            FailureKind::MonitorReservedByteNonZero,
+            FailureKind::MonitorReservedByteIsNonZero,
         );
 
         validation

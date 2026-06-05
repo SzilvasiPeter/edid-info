@@ -15,7 +15,7 @@
 use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
 use crate::base::descriptor::monitor::DisplayDescriptor;
-use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation};
+use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, WarningKind};
 
 pub const DESCRIPTORS_OFF: usize = 54;
 pub const DESC_NUM: usize = 4;
@@ -64,14 +64,14 @@ impl Descriptors {
         );
         validation = validation.fail_if(
             self.iter().any(|d| d.is_none()),
-            FailureKind::DescriptorInvalid,
+            FailureKind::InvalidDescriptor,
         );
         validation = validation.fail_if(
             self.iter()
                 .flatten()
                 .skip_while(|d| matches!(d, Descriptor::Timing(_)))
                 .any(|d| matches!(d, Descriptor::Timing(_))),
-            FailureKind::DescriptorInvalidOrder,
+            FailureKind::InvalidDescriptorOrder,
         );
 
         let has_range = self.iter().flatten().any(|d| match d {
@@ -80,10 +80,18 @@ impl Descriptors {
             }
             Descriptor::Timing(_) => false,
         });
-        validation = validation.fail_if(
+        validation = validation.warn_if(
             continous_frequency && !has_range,
-            FailureKind::RangeLimitsRequired,
+            WarningKind::RangeLimitsRequired,
         );
+
+        let has_monitor_name = self.iter().flatten().any(|d| match d {
+            Descriptor::Display(m) => {
+                matches!(m.descriptor(), DisplayDescriptor::MonitorName(_))
+            }
+            Descriptor::Timing(_) => false,
+        });
+        validation = validation.warn_if(!has_monitor_name, WarningKind::MissingMonitorName);
 
         for descriptor in self.iter().flatten() {
             match descriptor {

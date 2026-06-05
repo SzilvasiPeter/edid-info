@@ -121,10 +121,7 @@ impl Chroma {
         let rgb_non_zero = !((self.red.x == 0 && self.red.y == 0)
             && (self.green.x == 0 && self.green.y == 0)
             && (self.blue.x == 0 && self.blue.y == 0));
-        Validation::new().warn_if(
-            mono && rgb_non_zero,
-            WarningKind::ChromaMonochromeRgbNonZero,
-        )
+        Validation::new().warn_if(mono && rgb_non_zero, WarningKind::MonochromeHasNonZeroRgb)
     }
 }
 

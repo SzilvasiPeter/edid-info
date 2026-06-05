@@ -113,12 +113,12 @@ fn validate_standard_rejects_zero_empty_slot() {
     assert!(!validation.is_valid());
     assert_eq!(
         validation.errors,
-        1 << (FailureKind::StdTimingEmptyInvalid as u8),
+        1 << (FailureKind::InvalidEmptyStdTiming as u8),
     );
     assert_eq!(validation.warnings, 0);
     assert_eq!(
-        FailureKind::StdTimingEmptyInvalid.message(),
-        "Use 0x0101 as the invalid Standard Timings code"
+        FailureKind::InvalidEmptyStdTiming.message(),
+        "Use 0x01 0x01 byte code for empty Standard Timings"
     );
 }
 

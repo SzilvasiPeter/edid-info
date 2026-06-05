@@ -136,7 +136,7 @@ impl Header {
     /// - **Failures**: Invalid manufacturer ID characters, invalid week number, or zero major version.
     /// - **Warnings**: Reserved manufacturer bits set, zero product/serial codes, or non-1.4 EDID versions.
     #[must_use]
-    pub const fn validate(&self) -> Validation {
+    pub fn validate(&self) -> Validation {
         const fn is_letter(code: u8) -> bool {
             code >= 1 && code <= 26
         }
@@ -145,22 +145,22 @@ impl Header {
         Validation::new()
             .fail_if(
                 !is_letter(m1) || !is_letter(m2) || !is_letter(m3),
-                FailureKind::HeaderMfrInvalidBits,
+                FailureKind::ManufacturerIdIsInvalid,
             )
             .fail_if(
                 self.week > 54 && self.week != WEEK_MODEL_YEAR_FLAG,
-                FailureKind::HeaderWeekInvalid,
+                FailureKind::ManufactureWeekIsInvalid,
             )
-            .fail_if(self.major == 0, FailureKind::HeaderMajorInvalid)
+            .fail_if(self.major == 0, FailureKind::MajorVersionIsZero)
             .warn_if(
                 self.manufacturer & 0b1000_0000_0000_0000 != 0,
-                WarningKind::HeaderMfrReservedSet,
+                WarningKind::ManufacturerIdReservedIsSet,
             )
-            .warn_if(self.product == 0, WarningKind::HeaderProductInvalid)
-            .warn_if(self.serial == 0, WarningKind::HeaderSerialInvalid)
+            .warn_if(self.product == 0, WarningKind::ProductCodeIsZero)
+            .warn_if(self.serial == 0, WarningKind::SerialNumberIsZero)
             .warn_if(
-                self.major != 1 || self.minor != 4,
-                WarningKind::HeaderVersionDeprecated,
+                self.version() < Version { major: 1, minor: 4 },
+                WarningKind::VersionIsDeprecated,
             )
     }
 }
