@@ -11,7 +11,7 @@ const ROL: &[u8] = include_bytes!("../../data/ROL_ROLSEN_C707N.edid");
 #[test]
 fn parse_range_limit_descriptor_acer_ek221q_h() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ACER[108 + i]);
-    let range = Monitor::parse(&range_raw, false);
+    let range = Monitor::new(&range_raw, false);
     let desc = range.descriptor();
     assert!(matches!(desc, DisplayDescriptor::RangeLimits(_)));
 
@@ -29,7 +29,7 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
 #[test]
 fn parse_range_limit_descriptor_asus_rog_pg27u() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    let range = Monitor::parse(&range_raw, false);
+    let range = Monitor::new(&range_raw, false);
 
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
@@ -46,7 +46,7 @@ fn parse_range_limit_descriptor_asus_rog_pg27u() {
 #[test]
 fn parse_range_secondary_gtf_phl_22pfl3606() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| PHL[90 + i]);
-    let range = Monitor::parse(&range_raw, false);
+    let range = Monitor::new(&range_raw, false);
 
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
@@ -73,7 +73,7 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
 #[test]
 fn parse_range_cvt_sdc_123yl01() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| SDC[72 + i]);
-    let range = Monitor::parse(&range_raw, false);
+    let range = Monitor::new(&range_raw, false);
 
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
@@ -112,7 +112,7 @@ fn parse_range_cvt_sdc_123yl01() {
 #[test]
 fn parse_range_limits_descriptor_rol_rolsen_c707n() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ROL[108 + i]);
-    let range = Monitor::parse(&range_raw, false);
+    let range = Monitor::new(&range_raw, false);
 
     let DisplayDescriptor::RangeLimits(vals) = range.descriptor() else {
         panic!()

@@ -14,7 +14,7 @@
 
 use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
-use crate::common::{BLOCK_LEN, DESC_LEN, Validation};
+use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation};
 
 pub const DESCRIPTORS_OFF: usize = 54;
 pub const DESC_NUM: usize = 4;
@@ -44,12 +44,14 @@ impl Descriptors {
 
     /// Returns an iterator over the parsed descriptors.
     pub fn iter(&self) -> impl Iterator<Item = Descriptor> {
-        self.bytes.chunks_exact(DESC_LEN).filter_map(move |chunk| {
-            let chunk: &[u8; DESC_LEN] = chunk.try_into().ok()?;
+        let (chunks, remainder) = self.bytes.as_chunks::<DESC_LEN>();
+        debug_assert!(remainder.is_empty());
+
+        chunks.iter().map(move |chunk| {
             if chunk[0] == 0 && chunk[1] == 0 {
-                Some(Descriptor::Display(Monitor::parse(chunk, self.legacy)))
+                Descriptor::Display(Monitor::new(chunk, self.legacy))
             } else {
-                Some(Descriptor::Timing(DetailedTiming::parse(chunk)))
+                Descriptor::Timing(DetailedTiming::new(chunk))
             }
         })
     }
@@ -58,6 +60,12 @@ impl Descriptors {
     #[must_use]
     pub fn validate(&self) -> Validation {
         let mut v = Validation::new();
+
+        v = v.fail_if(
+            !matches!(self.iter().nth(0), Some(Descriptor::Timing(_))),
+            FailureKind::DescriptorFirstNotDetailedTiming,
+        );
+
         for mode in self.iter() {
             match mode {
                 Descriptor::Timing(timing) => v = v.then(timing.validate()),

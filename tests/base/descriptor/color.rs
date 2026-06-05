@@ -6,14 +6,14 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 #[test]
 fn parse_color_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     assert!(!matches!(desc, DisplayDescriptor::Dcm(_)));
 }
 
 #[test]
 fn parse_color_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     assert!(!matches!(desc, DisplayDescriptor::Dcm(_)));
 }
 
@@ -35,7 +35,7 @@ fn parse_color_synthetic() {
     raw[16] = 0x60;
     raw[17] = 0x00;
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::Dcm(color) = desc {
         assert_eq!(color.red_a3(), 0x0010);
         assert_eq!(color.red_a2(), 0x0020);

@@ -55,7 +55,7 @@ pub struct Monitor {
 
 impl Monitor {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN], legacy: bool) -> Self {
+    pub const fn new(raw: &[u8; DESC_LEN], legacy: bool) -> Self {
         Self { raw: *raw, legacy }
     }
 

@@ -16,7 +16,7 @@ const VIT: &[u8] = include_bytes!("../../data/VIT_VT988.edid");
 fn parse_serial_descriptor_acer_ek221q_h() {
     let serial_raw: [u8; 18] = std::array::from_fn(|i| ACER[72 + i]);
     let base: [u8; BLOCK_LEN] = ACER[0..BLOCK_LEN].try_into().unwrap();
-    let serial = Monitor::parse(&serial_raw, is_legacy(&base));
+    let serial = Monitor::new(&serial_raw, is_legacy(&base));
     let desc = serial.descriptor();
     assert!(matches!(desc, DisplayDescriptor::SerialNumber(_)));
     if let DisplayDescriptor::SerialNumber(sn) = desc {
@@ -28,7 +28,7 @@ fn parse_serial_descriptor_acer_ek221q_h() {
 fn parse_serial_descriptor_asus_rog_pg27u() {
     let serial_raw: [u8; 18] = std::array::from_fn(|i| ASUS[72 + i]);
     let base: [u8; BLOCK_LEN] = ASUS[0..BLOCK_LEN].try_into().unwrap();
-    let serial = Monitor::parse(&serial_raw, is_legacy(&base));
+    let serial = Monitor::new(&serial_raw, is_legacy(&base));
     let desc = serial.descriptor();
     assert!(matches!(desc, DisplayDescriptor::SerialNumber(_)));
     if let DisplayDescriptor::SerialNumber(sn) = desc {
@@ -40,7 +40,7 @@ fn parse_serial_descriptor_asus_rog_pg27u() {
 fn parse_product_name_descriptor_acer_ek221q_h() {
     let name_raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
     let base: [u8; BLOCK_LEN] = ACER[0..BLOCK_LEN].try_into().unwrap();
-    let name = Monitor::parse(&name_raw, is_legacy(&base));
+    let name = Monitor::new(&name_raw, is_legacy(&base));
     let desc = name.descriptor();
     assert!(matches!(desc, DisplayDescriptor::MonitorName(_)));
     if let DisplayDescriptor::MonitorName(sn) = desc {
@@ -52,7 +52,7 @@ fn parse_product_name_descriptor_acer_ek221q_h() {
 fn parse_product_name_descriptor_asus_rog_pg27u() {
     let name_raw: [u8; 18] = std::array::from_fn(|i| ASUS[108 + i]);
     let base: [u8; BLOCK_LEN] = ASUS[0..BLOCK_LEN].try_into().unwrap();
-    let name = Monitor::parse(&name_raw, is_legacy(&base));
+    let name = Monitor::new(&name_raw, is_legacy(&base));
     let desc = name.descriptor();
     assert!(matches!(desc, DisplayDescriptor::MonitorName(_)));
     if let DisplayDescriptor::MonitorName(sn) = desc {
@@ -64,7 +64,7 @@ fn parse_product_name_descriptor_asus_rog_pg27u() {
 fn parse_text_descriptor_lenovo_lp156wf9_spk2() {
     let text_raw: [u8; 18] = std::array::from_fn(|i| LENOVO[108 + i]);
     let base: [u8; BLOCK_LEN] = LENOVO[0..BLOCK_LEN].try_into().unwrap();
-    let text = Monitor::parse(&text_raw, is_legacy(&base));
+    let text = Monitor::new(&text_raw, is_legacy(&base));
     let desc = text.descriptor();
     assert!(matches!(desc, DisplayDescriptor::Text(_)));
     if let DisplayDescriptor::Text(sn) = desc {
@@ -76,7 +76,7 @@ fn parse_text_descriptor_lenovo_lp156wf9_spk2() {
 fn parse_product_name_descriptor_rol_rolsen_c707n() {
     let name_raw: [u8; 18] = std::array::from_fn(|i| ROL[90 + i]);
     let base: [u8; BLOCK_LEN] = ROL[0..BLOCK_LEN].try_into().unwrap();
-    let name = Monitor::parse(&name_raw, is_legacy(&base));
+    let name = Monitor::new(&name_raw, is_legacy(&base));
     let desc = name.descriptor();
     assert!(matches!(desc, DisplayDescriptor::MonitorName(_)));
     if let DisplayDescriptor::MonitorName(sn) = desc {
@@ -88,7 +88,7 @@ fn parse_product_name_descriptor_rol_rolsen_c707n() {
 fn parse_std_timings2_descriptor_rol_rolsen_c707n() {
     let std_raw: [u8; 18] = std::array::from_fn(|i| ROL[72 + i]);
     let base: [u8; BLOCK_LEN] = ROL[0..BLOCK_LEN].try_into().unwrap();
-    let std = Monitor::parse(&std_raw, is_legacy(&base));
+    let std = Monitor::new(&std_raw, is_legacy(&base));
     let desc = std.descriptor();
     assert!(matches!(desc, DisplayDescriptor::StdTimings(_)));
 }
@@ -97,7 +97,7 @@ fn parse_std_timings2_descriptor_rol_rolsen_c707n() {
 fn parse_dcm_descriptor_vit_vt988() {
     let dcm_raw: [u8; 18] = std::array::from_fn(|i| VIT[108 + i]);
     let base: [u8; BLOCK_LEN] = VIT[0..BLOCK_LEN].try_into().unwrap();
-    let dcm = Monitor::parse(&dcm_raw, is_legacy(&base));
+    let dcm = Monitor::new(&dcm_raw, is_legacy(&base));
     let desc = dcm.descriptor();
     assert!(matches!(desc, DisplayDescriptor::Dcm(_)));
 }

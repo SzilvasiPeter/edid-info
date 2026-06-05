@@ -120,7 +120,7 @@ impl<'a> Cta<'a> {
         }
         let mut raw = [0; DESC_LEN];
         raw.copy_from_slice(&self.raw[off..end]);
-        Some(DetailedTiming::parse(&raw))
+        Some(DetailedTiming::new(&raw))
     }
 
     #[must_use]

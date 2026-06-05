@@ -19,7 +19,7 @@ fn parse_white_point_synthetic() {
     raw[16] = 0x00;
     raw[17] = 0x00;
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::WhitePoint(wp) = desc {
         let first = wp.first().expect("first point");
         assert_eq!(first.index(), 1);
@@ -51,7 +51,7 @@ fn parse_white_point_single_point() {
     raw[8] = 0x00;
     raw[9] = 0x40;
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::WhitePoint(wp) = desc {
         assert!(wp.first().is_some());
         assert!(wp.second().is_none());
@@ -70,7 +70,7 @@ fn parse_white_point_gamma() {
     raw[8] = 0x00;
     raw[9] = 0x64;
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::WhitePoint(wp) = desc {
         let first = wp.first().expect("first point");
         assert_eq!(first.gamma_raw(), 0x64);

@@ -44,6 +44,8 @@ pub enum FailureKind {
     StdTimingEmptyInvalid = 37,
 
     // --- Descriptors ---
+    /// The first descriptor is not a detailed timing descriptor.
+    DescriptorFirstNotDetailedTiming = 14,
     /// Missing Display Product Name (mandatory in 1.4).
     DescriptorMissingDisplayName = 2,
     /// Missing Display Range Limits Descriptor (mandatory in 1.4).
@@ -60,8 +62,6 @@ pub enum FailureKind {
     // --- Detailed Timing (DTD) ---
     /// Pixel clock is zero.
     TimingPixelClockIsZero = 13,
-    /// Missing preferred timing.
-    TimingMissingPreferred = 14,
 
     // --- Range Limits ---
     /// GTF is supported, but continuous frequencies are not.
@@ -123,7 +123,7 @@ impl FailureKind {
             Self::DescriptorMonitorByte4NonZero => "Monitor descriptor has non-zero byte 4",
             Self::DescriptorAllZeroes => "Descriptor is all zeroes (use dummy instead)",
             Self::TimingPixelClockIsZero => "Pixel clock is zero",
-            Self::TimingMissingPreferred => "Missing preferred timing",
+            Self::DescriptorFirstNotDetailedTiming => "First descriptor is not a detailed timing",
             Self::RangeGtfNotContinuous => "GTF supported but continuous frequencies not supported",
             Self::RangeCvtNotContinuous => "CVT supported but continuous frequencies not supported",
             Self::RangeMaxClockNotSet => "Range limits missing max dotclock",

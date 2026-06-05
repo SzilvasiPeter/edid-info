@@ -55,128 +55,105 @@ pub enum AnalogSource {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
-    pixel_clock_khz: u32,
-    horizontal: Timing,
-    vertical: Timing,
-    physical: Size,
-    interlaced: bool,
-    stereo: Stereo,
-    signal: SyncSignal,
+    raw: [u8; DESC_LEN],
 }
 
 impl DetailedTiming {
     #[must_use]
-    pub const fn parse(raw: &[u8; DESC_LEN]) -> Self {
-        let h_active = pack_bits(get_bits(raw[4], 4, 7), raw[2], 8);
-        let h_blank = pack_bits(get_bits(raw[4], 0, 3), raw[3], 8);
-        let h_front = pack_bits(get_bits(raw[11], 6, 7), raw[8], 8);
-        let h_sync = pack_bits(get_bits(raw[11], 4, 5), raw[9], 8);
-        let h_border = raw[15];
-
-        let v_active = pack_bits(get_bits(raw[7], 4, 7), raw[5], 8);
-        let v_blank = pack_bits(get_bits(raw[7], 0, 3), raw[6], 8);
-        let v_front = pack_bits(get_bits(raw[11], 2, 3), get_bits(raw[10], 4, 7), 4);
-        let v_sync = pack_bits(get_bits(raw[11], 0, 1), get_bits(raw[10], 0, 3), 4);
-        let v_border = raw[16];
-
-        let width_mm = pack_bits(get_bits(raw[14], 4, 7), raw[12], 8);
-        let height_mm = pack_bits(get_bits(raw[14], 0, 3), raw[13], 8);
-        Self {
-            pixel_clock_khz: u16::from_le_bytes([raw[0], raw[1]]) as u32 * 10,
-            horizontal: Timing::new(h_active, h_blank, h_front, h_sync, h_border),
-            vertical: Timing::new(v_active, v_blank, v_front, v_sync, v_border),
-            physical: Size::new(width_mm, height_mm),
-            interlaced: is_set(raw[17], 7),
-            stereo: parse_stereo(raw[17]),
-            signal: parse_signal(raw[17]),
-        }
+    pub const fn new(raw: &[u8; DESC_LEN]) -> Self {
+        Self { raw: *raw }
     }
 
     #[must_use]
     pub const fn pixel_clock_khz(&self) -> u32 {
-        self.pixel_clock_khz
+        u16::from_le_bytes([self.raw[0], self.raw[1]]) as u32 * 10
     }
 
     #[must_use]
-    pub const fn horizontal(&self) -> &Timing {
-        &self.horizontal
+    pub const fn horizontal(&self) -> Timing {
+        let h_active = pack_bits(get_bits(self.raw[4], 4, 7), self.raw[2], 8);
+        let h_blank = pack_bits(get_bits(self.raw[4], 0, 3), self.raw[3], 8);
+        let h_front = pack_bits(get_bits(self.raw[11], 6, 7), self.raw[8], 8);
+        let h_sync = pack_bits(get_bits(self.raw[11], 4, 5), self.raw[9], 8);
+        Timing::new(h_active, h_blank, h_front, h_sync, self.raw[15])
     }
 
     #[must_use]
-    pub const fn vertical(&self) -> &Timing {
-        &self.vertical
+    pub const fn vertical(&self) -> Timing {
+        let raw = self.raw;
+        let v_active = pack_bits(get_bits(raw[7], 4, 7), raw[5], 8);
+        let v_blank = pack_bits(get_bits(raw[7], 0, 3), raw[6], 8);
+        let v_front = pack_bits(get_bits(raw[11], 2, 3), get_bits(raw[10], 4, 7), 4);
+        let v_sync = pack_bits(get_bits(raw[11], 0, 1), get_bits(raw[10], 0, 3), 4);
+        Timing::new(v_active, v_blank, v_front, v_sync, raw[16])
     }
 
     #[must_use]
     pub const fn physical(&self) -> Size {
-        self.physical
+        let width_mm = pack_bits(get_bits(self.raw[14], 4, 7), self.raw[12], 8);
+        let height_mm = pack_bits(get_bits(self.raw[14], 0, 3), self.raw[13], 8);
+        Size::new(width_mm, height_mm)
     }
 
     #[must_use]
     pub const fn interlaced(&self) -> bool {
-        self.interlaced
+        is_set(self.raw[17], 7)
     }
 
     #[must_use]
     pub const fn stereo(&self) -> Stereo {
-        self.stereo
+        let raw = self.raw[17];
+        match ((raw >> 5) & 0b11, raw & 0b0000_0001) {
+            (0b01, 0) => Stereo::FieldSeqRight,
+            (0b10, 0) => Stereo::FieldSeqLeft,
+            (0b01, 1) => Stereo::TwoWayRightEven,
+            (0b10, 1) => Stereo::TwoWayLeftEven,
+            (0b11, 0) => Stereo::FourWay,
+            (0b11, 1) => Stereo::SideBySide,
+            _ => Stereo::None,
+        }
     }
 
     #[must_use]
     pub const fn signal(&self) -> SyncSignal {
-        self.signal
+        const fn polarity(bit: bool) -> Polarity {
+            let pos = Polarity::Positive;
+            let neg = Polarity::Negative;
+            if bit { pos } else { neg }
+        }
+
+        let raw = self.raw[17];
+        let b1 = is_set(raw, 1);
+        let b2 = is_set(raw, 2);
+        let rgb = AnalogSource::Rgb;
+        let green = AnalogSource::GreenOnly;
+        match (raw >> 3) & 0b11 {
+            0b00 | 0b01 => SyncSignal::AnalogComposite {
+                bipolar: is_set(raw, 3),
+                serrations: b2,
+                source: if b1 { rgb } else { green },
+            },
+            0b10 => SyncSignal::DigitalComposite {
+                serrations: b2,
+                h_polarity: polarity(b1),
+            },
+            _ => SyncSignal::DigitalSeparate(SyncPolarity {
+                horizontal: polarity(b1),
+                vertical: polarity(b2),
+            }),
+        }
     }
 
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new()
             .fail_if(
-                self.pixel_clock_khz == 0,
+                self.pixel_clock_khz() == 0,
                 FailureKind::TimingPixelClockIsZero,
             )
             .warn_if(
-                self.physical.width() == 0 || self.physical.height() == 0,
+                self.physical().width() == 0 || self.physical().height() == 0,
                 WarningKind::BasicImageSizeDubious,
             )
-    }
-}
-
-const fn parse_stereo(raw: u8) -> Stereo {
-    match ((raw >> 5) & 0b11, raw & 0b0000_0001) {
-        (0b01, 0) => Stereo::FieldSeqRight,
-        (0b10, 0) => Stereo::FieldSeqLeft,
-        (0b01, 1) => Stereo::TwoWayRightEven,
-        (0b10, 1) => Stereo::TwoWayLeftEven,
-        (0b11, 0) => Stereo::FourWay,
-        (0b11, 1) => Stereo::SideBySide,
-        _ => Stereo::None,
-    }
-}
-
-const fn parse_signal(raw: u8) -> SyncSignal {
-    const fn polarity(bit: bool) -> Polarity {
-        let pos = Polarity::Positive;
-        let neg = Polarity::Negative;
-        if bit { pos } else { neg }
-    }
-
-    let b1 = is_set(raw, 1);
-    let b2 = is_set(raw, 2);
-    let rgb = AnalogSource::Rgb;
-    let green = AnalogSource::GreenOnly;
-    match (raw >> 3) & 0b11 {
-        0b00 | 0b01 => SyncSignal::AnalogComposite {
-            bipolar: is_set(raw, 3),
-            serrations: b2,
-            source: if b1 { rgb } else { green },
-        },
-        0b10 => SyncSignal::DigitalComposite {
-            serrations: b2,
-            h_polarity: polarity(b1),
-        },
-        _ => SyncSignal::DigitalSeparate(SyncPolarity {
-            horizontal: polarity(b1),
-            vertical: polarity(b2),
-        }),
     }
 }

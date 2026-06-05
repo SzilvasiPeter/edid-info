@@ -19,7 +19,7 @@ fn parse_std2_synthetic() {
     raw[16] = 0x06;
     raw[17] = 0xFF;
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::StdTimings(std2) = desc {
         assert_eq!(std2.iter().count(), 6);
     } else {
@@ -36,7 +36,7 @@ fn parse_std2_empty_modes() {
         raw[6 + i * 2] = 0x01;
     }
 
-    let desc = Monitor::parse(&raw, false).descriptor();
+    let desc = Monitor::new(&raw, false).descriptor();
     if let DisplayDescriptor::StdTimings(std2) = desc {
         assert_eq!(std2.iter().count(), 0);
     } else {
