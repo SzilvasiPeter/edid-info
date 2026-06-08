@@ -2,9 +2,11 @@ use edid_info::base::basic::{
     AnalogType, Basic, BitDepth, DigitalType, DisplayType, InputKind, Interface, Level, ScreenSize,
 };
 use edid_info::base::chroma::Chroma;
-use edid_info::common::Size;
+use edid_info::common::{AspectRatio, Size};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
+const A630: &[u8] = include_bytes!("../data/A630C928B60C_landscape");
+const CF24: &[u8] = include_bytes!("../data/CF24D4B470D2_portrait");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 const PHL: &[u8] = include_bytes!("../data/PHL_221V8.edid");
 const ROL: &[u8] = include_bytes!("../data/ROL_ROLSEN_C707N.edid");
@@ -49,6 +51,84 @@ fn parse_basic_acer_ek221q_h() {
     assert!(validation.is_valid());
     assert_eq!(validation.errors, 0);
     assert_eq!(validation.warnings, 0);
+}
+
+#[test]
+fn parse_basic_a630c928b60c_landscape() {
+    assert_eq!(A630.len(), 256);
+    let raw = base(A630);
+    let out = Basic::new(&raw);
+
+    let InputKind::Analog {
+        level,
+        blank_to_black,
+        separate_sync,
+        composite_sync,
+        sync_on_green,
+        serrated_sync,
+    } = out.video_input().kind()
+    else {
+        panic!("expected analog input");
+    };
+    assert_eq!(level, Level::V700_300);
+    assert!(!blank_to_black);
+    assert!(separate_sync);
+    assert!(composite_sync);
+    assert!(sync_on_green);
+    assert!(!serrated_sync);
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Aspect(AspectRatio::new(178, 100))
+    );
+    assert_eq!(out.gamma(), Some(220));
+    assert!(out.features().dpms().standby);
+    assert!(out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
+    assert_eq!(
+        out.features().display(),
+        DisplayType::Analog(AnalogType::Rgb)
+    );
+    assert!(out.features().standard_rgb());
+    assert!(out.features().preferred_timing_native());
+    assert!(out.features().continous_frequency());
+
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
+    assert!(validation.is_valid());
+    assert_eq!(validation.errors, 0);
+    assert_eq!(validation.warnings, 0);
+}
+
+#[test]
+fn parse_basic_cf24d4b470d2_portrait() {
+    let raw = base(CF24);
+    let out = Basic::new(&raw);
+
+    assert_eq!(
+        out.video_input().kind(),
+        InputKind::Digital {
+            depth: BitDepth::B8,
+            iface: Interface::HdmiA,
+        }
+    );
+    assert_eq!(
+        out.screen_size(),
+        ScreenSize::Aspect(AspectRatio::new(100, 100))
+    );
+    assert_eq!(out.gamma(), Some(220));
+    assert!(out.features().dpms().standby);
+    assert!(out.features().dpms().suspend);
+    assert!(out.features().dpms().active_off);
+    assert_eq!(
+        out.features().display(),
+        DisplayType::Digital(DigitalType::Rgb444Y444Y422)
+    );
+    assert!(!out.features().standard_rgb());
+    assert!(out.features().preferred_timing_native());
+    assert!(out.features().continous_frequency());
+
+    let validation = out.validate(Chroma::new(&raw).is_srgb());
+    assert!(validation.is_valid());
+    assert_eq!(validation.errors, 0);
 }
 
 #[test]
