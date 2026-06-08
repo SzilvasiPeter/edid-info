@@ -33,7 +33,10 @@ fn parse_basic_acer_ek221q_h() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(480, 260))
+        ScreenSize::Dimensions(Size {
+            width: 480,
+            height: 260,
+        })
     );
     assert_eq!(out.gamma(), Some(220));
     assert!(out.features().dpms().standby);
@@ -145,7 +148,10 @@ fn parse_basic_asus_rog_pg27u() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(600, 340))
+        ScreenSize::Dimensions(Size {
+            width: 600,
+            height: 340,
+        })
     );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().dpms().standby);
@@ -183,7 +189,10 @@ fn parse_basic_phl_221v8() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(480, 270))
+        ScreenSize::Dimensions(Size {
+            width: 480,
+            height: 270,
+        })
     );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().dpms().standby);
@@ -221,7 +230,10 @@ fn parse_basic_rol_rolsen_c707n() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(300, 220))
+        ScreenSize::Dimensions(Size {
+            width: 300,
+            height: 220,
+        })
     );
     assert_eq!(out.gamma(), Some(280));
     assert!(out.features().dpms().standby);
@@ -259,7 +271,10 @@ fn parse_basic_tsb_tv() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(890, 500))
+        ScreenSize::Dimensions(Size {
+            width: 890,
+            height: 500,
+        })
     );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().dpms().standby);
@@ -297,7 +312,10 @@ fn parse_basic_vit_vt988() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(340, 270))
+        ScreenSize::Dimensions(Size {
+            width: 340,
+            height: 270,
+        })
     );
     assert_eq!(out.gamma(), None);
     assert!(out.features().dpms().standby);
@@ -335,7 +353,10 @@ fn parse_basic_wg_unknown() {
     );
     assert_eq!(
         out.screen_size(),
-        ScreenSize::Dimensions(Size::new(380, 300))
+        ScreenSize::Dimensions(Size {
+            width: 380,
+            height: 300,
+        })
     );
     assert_eq!(out.gamma(), Some(220));
     assert!(!out.features().dpms().standby);

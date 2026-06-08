@@ -239,7 +239,10 @@ impl Basic {
             (0, 0) => ScreenSize::Undefined,
             (w, 0) => ScreenSize::Aspect(AspectRatio::new(w as u16 + 99, 100)),
             (0, h) => ScreenSize::Aspect(AspectRatio::new(100, h as u16 + 99)),
-            (w, h) => ScreenSize::Dimensions(Size::new(w as u16 * 10, h as u16 * 10)),
+            (w, h) => ScreenSize::Dimensions(Size {
+                width: w as u16 * 10,
+                height: h as u16 * 10,
+            }),
         }
     }
 
@@ -297,7 +300,7 @@ impl core::fmt::Display for Basic {
         write!(f, "Input: {input}, ")?;
         match size {
             ScreenSize::Dimensions(s) => {
-                write!(f, "Size: {}x{} mm", s.width(), s.height())?;
+                write!(f, "Size: {}x{} mm", s.width, s.height)?;
             }
             ScreenSize::Aspect(ratio) => {
                 write!(f, "Aspect: {}:{}", ratio.width(), ratio.height())?;

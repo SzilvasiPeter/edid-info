@@ -24,7 +24,10 @@ fn parse_base_acer_ek221q_h() {
     assert_eq!(out.header().manufacturer(), ['A', 'C', 'R']);
     assert_eq!(
         out.basic().screen_size(),
-        ScreenSize::Dimensions(Size::new(480, 260))
+        ScreenSize::Dimensions(Size {
+            width: 480,
+            height: 260,
+        })
     );
     assert_eq!(out.chroma().white().x(), 321);
     assert!(out.established_timings().iter().any(|d| d.id == 0x24));
@@ -88,7 +91,10 @@ fn parse_base_asus_rog_pg27u() {
 
     assert_eq!(
         base.basic().screen_size(),
-        ScreenSize::Dimensions(Size::new(600, 340))
+        ScreenSize::Dimensions(Size {
+            width: 600,
+            height: 340,
+        })
     );
     assert_eq!(base.basic().gamma(), Some(220));
 

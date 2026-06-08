@@ -92,7 +92,10 @@ impl DetailedTiming {
     pub const fn physical(&self) -> Size {
         let width_mm = pack_bits(get_bits(self.raw[14], 4, 7), self.raw[12], 8);
         let height_mm = pack_bits(get_bits(self.raw[14], 0, 3), self.raw[13], 8);
-        Size::new(width_mm, height_mm)
+        Size {
+            width: width_mm,
+            height: height_mm,
+        }
     }
 
     #[must_use]
@@ -152,7 +155,7 @@ impl DetailedTiming {
                 FailureKind::TimingPixelClockIsZero,
             )
             .warn_if(
-                self.physical().width() == 0 || self.physical().height() == 0,
+                self.physical().width == 0 || self.physical().height == 0,
                 WarningKind::DubiousImageSize,
             )
     }

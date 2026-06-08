@@ -207,28 +207,8 @@ impl core::fmt::Display for Version {
 /// Physical dimensions in millimeters.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Size {
-    width: u16,
-    height: u16,
-}
-
-impl Size {
-    /// Creates a new size in millimeters.
-    #[must_use]
-    pub const fn new(width: u16, height: u16) -> Self {
-        Self { width, height }
-    }
-
-    /// Returns the width in millimeters.
-    #[must_use]
-    pub const fn width(&self) -> u16 {
-        self.width
-    }
-
-    /// Returns the height in millimeters.
-    #[must_use]
-    pub const fn height(&self) -> u16 {
-        self.height
-    }
+    pub width: u16,
+    pub height: u16,
 }
 
 /// Aspect ratio represented as a width:height ratio.
