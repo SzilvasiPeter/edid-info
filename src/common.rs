@@ -36,16 +36,14 @@ pub enum FailureKind {
     FirstDescriptorNotDetailedTiming = 11,
     /// Timing descriptors shall precede display descriptors.
     InvalidDescriptorOrder = 12,
-    /// Unrecognized or invalid descriptor.
-    InvalidDescriptor = 13,
     /// Monitor descriptor reserved byte is non-zero.
-    MonitorReservedByteIsNonZero = 14,
+    MonitorReservedByteIsNonZero = 13,
     /// Descriptor is all zeroes, use Dummy Descriptor.
-    AllZeroDescriptor = 15,
+    AllZeroDescriptor = 14,
     /// Detailed timing descriptor Pixel clock is zero.
-    TimingPixelClockIsZero = 16,
+    TimingPixelClockIsZero = 15,
     /// Invalid checksum for a CTA extension block.
-    CtaChecksumMismatch = 17,
+    CtaChecksumMismatch = 16,
 }
 
 impl FailureKind {
@@ -62,7 +60,6 @@ impl FailureKind {
             Self::VideoInterfaceIsReserved => "Digital video interface set to reserved value",
             Self::StandardRgbChromaMismatch => "sRGB is signaled, but chromaticities do not match",
             Self::InvalidDescriptorOrder => "Timing descriptors shall precede display descriptors",
-            Self::InvalidDescriptor => "Unrecognized or invalid descriptor",
             Self::MonitorReservedByteIsNonZero => "Monitor descriptor reserved byte must be zero",
             Self::AllZeroDescriptor => "Descriptor is all zeroes, use Dummy Descriptor",
             Self::TimingPixelClockIsZero => "Detailed timing descriptor Pixel clock is zero",
