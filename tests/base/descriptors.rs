@@ -50,3 +50,20 @@ fn validate_rejects_timing_after_display_descriptor() {
         FailureKind::InvalidDescriptorOrder.message()
     );
 }
+
+#[test]
+fn parse_dtd_low_pixel_clock() {
+    let mut raw = [0_u8; 128];
+    let off = DESCRIPTORS_OFF;
+    // Set low pixel clock: LSB = 1, MSB = 0 (represents 10 kHz pixel clock)
+    raw[off] = 1;
+    raw[off + 1] = 0;
+
+    let out = Descriptors::new(&raw, false);
+    match out.iter().next() {
+        Some(Some(Descriptor::Timing(timing))) => {
+            assert_eq!(timing.pixel_clock_khz(), 10);
+        }
+        _ => panic!("first slot should parse as timing descriptor despite MSB being zero"),
+    }
+}

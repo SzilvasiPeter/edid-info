@@ -21,54 +21,77 @@ use crate::common::{
     DESC_LEN, FailureKind, Polarity, Size, SyncPolarity, Timing, Validation, WarningKind,
 };
 
+/// Stereo viewing support modes.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Stereo {
+    /// Normal display, no stereo.
     None,
+    /// Field sequential, right image when sync = 1.
     FieldSeqRight,
+    /// Field sequential, left image when sync = 1.
     FieldSeqLeft,
+    /// 2-way interleaved, right image on even lines.
     TwoWayRightEven,
+    /// 2-way interleaved, left image on even lines.
     TwoWayLeftEven,
+    /// 4-way interleaved.
     FourWay,
+    /// Side-by-side interleaved.
     SideBySide,
 }
 
-// TODO: Add documentations for the enum and its fields
+/// Sync signal interface definition.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SyncSignal {
+    /// Analog composite sync signal.
     AnalogComposite {
+        /// Uses bipolar sync signal.
         bipolar: bool,
+        /// Includes V-sync serrations.
         serrations: bool,
+        /// Signal sync source channel.
         source: AnalogSource,
     },
+    /// Digital composite sync signal.
     DigitalComposite {
+        /// Includes V-sync serrations.
         serrations: bool,
+        /// Horizontal sync polarity.
         h_polarity: Polarity,
     },
+    /// Digital separate sync signal with polarities.
     DigitalSeparate(SyncPolarity),
 }
 
+/// Sync source channel for analog composite.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AnalogSource {
+    /// Sync on green channel only.
     GreenOnly,
+    /// Sync on all RGB channels.
     Rgb,
 }
 
+/// Detailed Timing Descriptor (DTD) parser.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DetailedTiming {
     raw: [u8; DESC_LEN],
 }
 
 impl DetailedTiming {
+    /// Creates a new detailed timing descriptor.
     #[must_use]
     pub const fn new(raw: &[u8; DESC_LEN]) -> Self {
         Self { raw: *raw }
     }
 
+    /// Pixel clock frequency in kHz.
     #[must_use]
     pub const fn pixel_clock_khz(&self) -> u32 {
         u16::from_le_bytes([self.raw[0], self.raw[1]]) as u32 * 10
     }
 
+    /// Horizontal scan timing parameters.
     #[must_use]
     pub const fn horizontal(&self) -> Timing {
         let h_active = pack_bits(get_bits(self.raw[4], 4, 7), self.raw[2], 8);
@@ -78,6 +101,7 @@ impl DetailedTiming {
         Timing::new(h_active, h_blank, h_front, h_sync, self.raw[15])
     }
 
+    /// Vertical scan timing parameters.
     #[must_use]
     pub const fn vertical(&self) -> Timing {
         let raw = self.raw;
@@ -88,6 +112,7 @@ impl DetailedTiming {
         Timing::new(v_active, v_blank, v_front, v_sync, raw[16])
     }
 
+    /// Physical display dimensions in millimeters.
     #[must_use]
     pub const fn physical(&self) -> Size {
         let width_mm = pack_bits(get_bits(self.raw[14], 4, 7), self.raw[12], 8);
@@ -98,11 +123,13 @@ impl DetailedTiming {
         }
     }
 
+    /// Whether the video interface is interlaced.
     #[must_use]
     pub const fn interlaced(&self) -> bool {
         is_set(self.raw[17], 7)
     }
 
+    /// Stereo viewing support mode.
     #[must_use]
     pub const fn stereo(&self) -> Stereo {
         let raw = self.raw[17];
@@ -117,6 +144,7 @@ impl DetailedTiming {
         }
     }
 
+    /// Sync signal interface configuration.
     #[must_use]
     pub const fn signal(&self) -> SyncSignal {
         const fn polarity(bit: bool) -> Polarity {
@@ -147,16 +175,18 @@ impl DetailedTiming {
         }
     }
 
+    /// Validates the detailed timing parameters.
     #[must_use]
     pub const fn validate(&self) -> Validation {
+        let width = self.physical().width;
+        let height = self.physical().height;
         Validation::new()
             .fail_if(
                 self.pixel_clock_khz() == 0,
                 FailureKind::TimingPixelClockIsZero,
             )
-            .warn_if(
-                self.physical().width == 0 || self.physical().height == 0,
-                WarningKind::DubiousImageSize,
-            )
+            // Warn if only one dimension is zero. Both dimensions being zero is a
+            // valid configuration for projectors with undefined screen sizes.
+            .warn_if((width == 0) != (height == 0), WarningKind::DubiousImageSize)
     }
 }

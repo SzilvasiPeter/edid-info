@@ -91,3 +91,47 @@ fn test_interlaced_stereo_parsing() {
     assert!(dtd3.interlaced());
     assert_eq!(dtd3.stereo(), Stereo::None);
 }
+
+#[test]
+fn test_projector_and_zero_image_size_validation() {
+    use edid_info::common::WarningKind;
+
+    // Both zero (projector) -> valid, no DubiousImageSize warning
+    let mut raw = [0_u8; 18];
+    raw[0] = 1; // pixel clock LSB to make it non-zero
+    raw[1] = 1; // pixel clock MSB
+    // raw[12..=14] are 0, so physical width and height are 0.
+    let dtd = DetailedTiming::new(&raw);
+    let validation = dtd.validate();
+    assert_eq!(
+        validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+        0,
+        "both image sizes zero (projector) should not warn"
+    );
+
+    // Only width zero -> triggers warning
+    let mut raw_width_zero = [0_u8; 18];
+    raw_width_zero[0] = 1;
+    raw_width_zero[1] = 1;
+    raw_width_zero[13] = 10; // height = 10
+    let dtd = DetailedTiming::new(&raw_width_zero);
+    let validation = dtd.validate();
+    assert_ne!(
+        validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+        0,
+        "only width zero should warn"
+    );
+
+    // Only height zero -> triggers warning
+    let mut raw_height_zero = [0_u8; 18];
+    raw_height_zero[0] = 1;
+    raw_height_zero[1] = 1;
+    raw_height_zero[12] = 10; // width = 10
+    let dtd = DetailedTiming::new(&raw_height_zero);
+    let validation = dtd.validate();
+    assert_ne!(
+        validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+        0,
+        "only height zero should warn"
+    );
+}

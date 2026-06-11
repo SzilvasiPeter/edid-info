@@ -49,8 +49,7 @@ impl Descriptors {
 
         chunks.iter().map(move |chunk| match (chunk[0], chunk[1]) {
             (0, 0) => Some(Descriptor::Display(Monitor::new(chunk, self.legacy))),
-            (0..=0xFF, 1..=0xFF) => Some(Descriptor::Timing(DetailedTiming::new(chunk))),
-            _ => None,
+            _ => Some(Descriptor::Timing(DetailedTiming::new(chunk))),
         })
     }
 
