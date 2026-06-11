@@ -43,13 +43,13 @@ impl Descriptors {
     }
 
     /// Returns an iterator over the parsed descriptors.
-    pub fn iter(&self) -> impl Iterator<Item = Option<Descriptor>> {
+    pub fn iter(&self) -> impl Iterator<Item = Descriptor> {
         let (chunks, remainder) = self.bytes.as_chunks::<DESC_LEN>();
         debug_assert!(remainder.is_empty());
 
         chunks.iter().map(move |chunk| match (chunk[0], chunk[1]) {
-            (0, 0) => Some(Descriptor::Display(Monitor::new(chunk, self.legacy))),
-            _ => Some(Descriptor::Timing(DetailedTiming::new(chunk))),
+            (0, 0) => Descriptor::Display(Monitor::new(chunk, self.legacy)),
+            _ => Descriptor::Timing(DetailedTiming::new(chunk)),
         })
     }
 
@@ -58,22 +58,17 @@ impl Descriptors {
     pub fn validate(&self, continous_frequency: bool) -> Validation {
         let mut validation = Validation::new();
         validation = validation.fail_if(
-            !matches!(self.iter().nth(0), Some(Some(Descriptor::Timing(_)))),
+            !matches!(self.iter().nth(0), Some(Descriptor::Timing(_))),
             FailureKind::FirstDescriptorNotDetailedTiming,
         );
         validation = validation.fail_if(
-            self.iter().any(|d| d.is_none()),
-            FailureKind::InvalidDescriptor,
-        );
-        validation = validation.fail_if(
             self.iter()
-                .flatten()
                 .skip_while(|d| matches!(d, Descriptor::Timing(_)))
                 .any(|d| matches!(d, Descriptor::Timing(_))),
             FailureKind::InvalidDescriptorOrder,
         );
 
-        let has_range = self.iter().flatten().any(|d| match d {
+        let has_range = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
                 matches!(m.descriptor(), DisplayDescriptor::RangeLimits(_))
             }
@@ -84,7 +79,7 @@ impl Descriptors {
             WarningKind::RangeLimitsRequired,
         );
 
-        let has_monitor_name = self.iter().flatten().any(|d| match d {
+        let has_monitor_name = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
                 matches!(m.descriptor(), DisplayDescriptor::MonitorName(_))
             }
@@ -92,7 +87,7 @@ impl Descriptors {
         });
         validation = validation.warn_if(!has_monitor_name, WarningKind::MissingMonitorName);
 
-        for descriptor in self.iter().flatten() {
+        for descriptor in self.iter() {
             match descriptor {
                 Descriptor::Timing(timing) => validation = validation.then(timing.validate()),
                 Descriptor::Display(display) => validation = validation.then(display.validate()),

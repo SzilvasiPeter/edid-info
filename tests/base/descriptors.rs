@@ -12,7 +12,7 @@ fn parse_dtd_synthetic() {
 
     let out = Descriptors::new(&raw, false);
     match out.iter().nth(1) {
-        Some(Some(Descriptor::Timing(timing))) => assert_eq!(timing.pixel_clock_khz(), 74_250),
+        Some(Descriptor::Timing(timing)) => assert_eq!(timing.pixel_clock_khz(), 74_250),
         _ => panic!("slot 1 should parse as timing"),
     }
 }
@@ -61,7 +61,7 @@ fn parse_dtd_low_pixel_clock() {
 
     let out = Descriptors::new(&raw, false);
     match out.iter().next() {
-        Some(Some(Descriptor::Timing(timing))) => {
+        Some(Descriptor::Timing(timing)) => {
             assert_eq!(timing.pixel_clock_khz(), 10);
         }
         _ => panic!("first slot should parse as timing descriptor despite MSB being zero"),
