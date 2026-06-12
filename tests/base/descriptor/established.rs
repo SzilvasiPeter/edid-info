@@ -7,12 +7,12 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 fn parse_std3_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
     let desc = Monitor::new(&raw, false).descriptor();
-    assert!(!matches!(desc, DisplayDescriptor::EstablishedTiming3(_)));
+    assert!(!matches!(desc, DisplayDescriptor::EstTimings(_)));
 }
 
 #[test]
 fn parse_std3_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
     let desc = Monitor::new(&raw, false).descriptor();
-    assert!(!matches!(desc, DisplayDescriptor::EstablishedTiming3(_)));
+    assert!(!matches!(desc, DisplayDescriptor::EstTimings(_)));
 }

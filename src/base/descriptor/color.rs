@@ -64,13 +64,13 @@ impl Point {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct WhitePoint {
+pub struct ColorPoint {
     first: Option<Point>,
     second: Option<Point>,
     pad: [u8; 3],
 }
 
-impl WhitePoint {
+impl ColorPoint {
     #[must_use]
     pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
         let first = Point::parse([raw[5], raw[6], raw[7], raw[8], raw[9]]);

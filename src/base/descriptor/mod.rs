@@ -18,6 +18,7 @@
 //! | 0xF8 | CVT 3-Byte | CVT timing codes |
 //! | 0xF7 | Established Timing III | Additional established timings |
 //! | 0x00–0x0F | Vendor Reserved | Vendor-specific data |
+pub mod color;
 pub mod cvt3;
 pub mod dcm;
 pub mod dtd;
@@ -25,4 +26,3 @@ pub mod established;
 pub mod monitor;
 pub mod range;
 pub mod standard;
-pub mod white_point;

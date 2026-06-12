@@ -67,3 +67,27 @@ fn parse_dtd_low_pixel_clock() {
         _ => panic!("first slot should parse as timing descriptor despite MSB being zero"),
     }
 }
+
+#[test]
+fn validate_rejects_undefined_descriptor() {
+    let mut raw = [0_u8; 128];
+    // First slot: valid DTD (pixel clock non-zero)
+    raw[DESCRIPTORS_OFF] = 1;
+    raw[DESCRIPTORS_OFF + 1] = 1;
+
+    // Second slot: display descriptor (first two bytes 0), tag 0x11 (undefined)
+    let off = DESCRIPTORS_OFF + DESC_LEN;
+    raw[off] = 0;
+    raw[off + 1] = 0;
+    raw[off + 2] = 0; // reserved byte 2
+    raw[off + 3] = 0x11; // undefined tag
+
+    let validation = Descriptors::new(&raw, false).validate(false);
+
+    assert_eq!(
+        validation.errors & (1 << (FailureKind::UndefinedDescriptor as u8)),
+        1 << (FailureKind::UndefinedDescriptor as u8),
+        "{}",
+        FailureKind::UndefinedDescriptor.message()
+    );
+}

@@ -37,7 +37,7 @@ pub mod video;
 
 use crate::base::descriptor::dtd::DetailedTiming;
 use crate::bit::is_set;
-use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, checksum_ok};
+use crate::common::{BLOCK_LEN, DESC_LEN};
 
 use block::DataBlockIter;
 
@@ -121,11 +121,6 @@ impl<'a> Cta<'a> {
         let mut raw = [0; DESC_LEN];
         raw.copy_from_slice(&self.raw[off..end]);
         Some(DetailedTiming::new(&raw))
-    }
-
-    #[must_use]
-    pub const fn validate(&self) -> Validation {
-        Validation::new().fail_if(!checksum_ok(self.raw), FailureKind::CtaChecksumMismatch)
     }
 
     /// Returns the end of the Data Block Collection (DBC).

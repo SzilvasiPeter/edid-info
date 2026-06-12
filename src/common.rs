@@ -42,8 +42,8 @@ pub enum FailureKind {
     AllZeroDescriptor = 14,
     /// Detailed timing descriptor Pixel clock is zero.
     TimingPixelClockIsZero = 15,
-    /// Invalid checksum for a CTA extension block.
-    CtaChecksumMismatch = 16,
+    /// Undefined display descriptor tag.
+    UndefinedDescriptor = 16,
 }
 
 impl FailureKind {
@@ -67,7 +67,7 @@ impl FailureKind {
             Self::StdTimingHorizontalLimit => "Standard timing horizontal pixels outside 256-2288",
             Self::StdTimingRefreshLimit => "Standard timing refresh rate exceeds 123 Hz",
             Self::InvalidEmptyStdTiming => "Use 0x01 0x01 byte code for empty Standard Timings",
-            Self::CtaChecksumMismatch => "Invalid CTA checksum",
+            Self::UndefinedDescriptor => "Undefined display descriptor tag",
         }
     }
 }
@@ -98,6 +98,8 @@ pub enum WarningKind {
     MissingMonitorName = 9,
     /// Range limits required for continuous frequency.
     RangeLimitsRequired = 10,
+    /// GTF is deprecated, use CVT timing formula.
+    GtfIsDeprecated = 11,
 }
 
 impl WarningKind {
@@ -116,6 +118,7 @@ impl WarningKind {
             Self::MonochromeHasNonZeroRgb => "Monochrome display has non-zero RGB chromaticities",
             Self::MissingMonitorName => "Monitor name is missing",
             Self::RangeLimitsRequired => "Range limits required for continuous frequency",
+            Self::GtfIsDeprecated => "GTF is deprecated, use CVT instead",
         }
     }
 }

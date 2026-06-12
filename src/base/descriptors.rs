@@ -17,16 +17,23 @@ use super::descriptor::monitor::Monitor;
 use crate::base::descriptor::monitor::DisplayDescriptor;
 use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, WarningKind};
 
+/// Byte offset of the first descriptor block in the EDID base block.
 pub const DESCRIPTORS_OFF: usize = 54;
+/// Number of descriptor blocks in the EDID base block.
 pub const DESC_NUM: usize = 4;
+/// Total size of all descriptor blocks in bytes.
 pub const DTD_SIZE: usize = DESC_NUM * DESC_LEN;
 
+/// A descriptor which can either be a Detailed Timing Descriptor (DTD) or a Monitor Display Descriptor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Descriptor {
+    /// Detailed Timing Descriptor (DTD).
     Timing(DetailedTiming),
+    /// Monitor Display Descriptor.
     Display(Monitor),
 }
 
+/// Collection of the four descriptor blocks in the EDID base block.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Descriptors {
     bytes: [u8; DTD_SIZE],
@@ -68,6 +75,14 @@ impl Descriptors {
             FailureKind::InvalidDescriptorOrder,
         );
 
+        let has_undefined = self.iter().any(|d| match d {
+            Descriptor::Display(m) => {
+                matches!(m.descriptor(), DisplayDescriptor::Undefined(_))
+            }
+            Descriptor::Timing(_) => false,
+        });
+        validation = validation.fail_if(has_undefined, FailureKind::UndefinedDescriptor);
+
         let has_range = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
                 matches!(m.descriptor(), DisplayDescriptor::RangeLimits(_))
@@ -81,7 +96,7 @@ impl Descriptors {
 
         let has_monitor_name = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
-                matches!(m.descriptor(), DisplayDescriptor::MonitorName(_))
+                matches!(m.descriptor(), DisplayDescriptor::ProductName(_))
             }
             Descriptor::Timing(_) => false,
         });
