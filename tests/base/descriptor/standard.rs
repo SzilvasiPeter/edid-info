@@ -19,11 +19,11 @@ fn parse_std2_synthetic() {
     raw[16] = 0x06;
     raw[17] = 0xFF;
 
-    let desc = Monitor::new(&raw, false).descriptor();
-    if let DisplayDescriptor::StdTimings(std2) = desc {
+    let monitor = Monitor::new(&raw, false);
+    if let DisplayDescriptor::StdTimings(std2) = monitor.descriptor() {
         assert_eq!(std2.iter().count(), 6);
     } else {
-        panic!("expected StdTimings2, got {desc:?}");
+        panic!("expected StdTimings2, got {:?}", monitor.descriptor());
     }
 }
 #[test]
@@ -36,10 +36,10 @@ fn parse_std2_empty_modes() {
         raw[6 + i * 2] = 0x01;
     }
 
-    let desc = Monitor::new(&raw, false).descriptor();
-    if let DisplayDescriptor::StdTimings(std2) = desc {
+    let monitor = Monitor::new(&raw, false);
+    if let DisplayDescriptor::StdTimings(std2) = monitor.descriptor() {
         assert_eq!(std2.iter().count(), 0);
     } else {
-        panic!("expected StdTimings2, got {desc:?}");
+        panic!("expected StdTimings2, got {:?}", monitor.descriptor());
     }
 }

@@ -14,7 +14,7 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Timing formula type |
 
-use crate::common::{AspectRatio, DESC_LEN};
+use crate::common::AspectRatio;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VideoTimingSupport {
@@ -46,7 +46,7 @@ pub struct GtfSecondaryCurve {
 
 impl GtfSecondaryCurve {
     #[must_use]
-    pub const fn parse(data: [u8; 7]) -> Self {
+    pub const fn parse(data: &[u8]) -> Self {
         Self {
             start_khz: u16::from_le_bytes([data[1], 0]) * 2,
             c_x2: data[2],
@@ -111,7 +111,7 @@ pub struct CvtSupport {
 
 impl CvtSupport {
     #[must_use]
-    pub fn parse(data: [u8; 7]) -> Self {
+    pub fn parse(data: &[u8]) -> Self {
         let top = data[0];
         let major = (top >> 4) & 0x0F;
         let minor = top & 0x0F;
@@ -237,6 +237,7 @@ impl CvtSupport {
     }
 }
 
+// TODO: Store raw bytes for memory efficiency, and for later reserved byte validation
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DisplayRangeLimits {
     v_min_hz: u16,
@@ -250,21 +251,20 @@ pub struct DisplayRangeLimits {
 
 impl DisplayRangeLimits {
     #[must_use]
-    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
-        let (v_min_hz, v_max_hz) = adjust(raw[5], raw[6], raw[4] & 0b11);
-        let (h_min_khz, h_max_khz) = adjust(raw[7], raw[8], (raw[4] >> 2) & 0b11);
-        let mut data = [0; 7];
-        data.copy_from_slice(&raw[11..DESC_LEN]);
-        let (timing_support, timing_data) = match raw[10] {
+    pub(super) fn parse(offsets: u8, raw: &[u8; 13]) -> Self {
+        let (v_min_hz, v_max_hz) = adjust(raw[0], raw[1], offsets & 0b11);
+        let (h_min_khz, h_max_khz) = adjust(raw[2], raw[3], (offsets >> 2) & 0b11);
+        let pixel_mhz = u16::from(raw[4]) * 10;
+        let (timing_support, timing_data) = match raw[5] {
             0x00 => (VideoTimingSupport::DefaultGtf, VideoTimingData::None),
             0x01 => (VideoTimingSupport::NoInformation, VideoTimingData::None),
             0x02 => (
                 VideoTimingSupport::SecondaryGtf,
-                VideoTimingData::GtfSecondaryCurve(GtfSecondaryCurve::parse(data)),
+                VideoTimingData::GtfSecondaryCurve(GtfSecondaryCurve::parse(&raw[6..])),
             ),
             0x04 => (
                 VideoTimingSupport::Cvt,
-                VideoTimingData::CvtSupport(CvtSupport::parse(data)),
+                VideoTimingData::CvtSupport(CvtSupport::parse(&raw[6..])),
             ),
             v => (VideoTimingSupport::Reserved(v), VideoTimingData::None),
         };
@@ -273,7 +273,7 @@ impl DisplayRangeLimits {
             v_max_hz,
             h_min_khz,
             h_max_khz,
-            pixel_mhz: u16::from(raw[9]) * 10,
+            pixel_mhz,
             timing_support,
             timing_data,
         }

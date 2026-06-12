@@ -19,8 +19,8 @@ fn parse_white_point_synthetic() {
     raw[16] = 0x00;
     raw[17] = 0x00;
 
-    let desc = Monitor::new(&raw, false).descriptor();
-    if let DisplayDescriptor::ColorPoint(wp) = desc {
+    let monitor = Monitor::new(&raw, false);
+    if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
         assert_eq!(first.index(), 1);
         assert_eq!(first.x_raw(), 0x200);
@@ -37,7 +37,7 @@ fn parse_white_point_synthetic() {
 
         assert_eq!(wp.pad(), [0x00, 0x00, 0x00]);
     } else {
-        panic!("expected WhitePoint, got {desc:?}");
+        panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }
 }
 
@@ -51,12 +51,12 @@ fn parse_white_point_single_point() {
     raw[8] = 0x00;
     raw[9] = 0x40;
 
-    let desc = Monitor::new(&raw, false).descriptor();
-    if let DisplayDescriptor::ColorPoint(wp) = desc {
+    let monitor = Monitor::new(&raw, false);
+    if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         assert!(wp.first().is_some());
         assert!(wp.second().is_none());
     } else {
-        panic!("expected WhitePoint, got {desc:?}");
+        panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }
 }
 
@@ -70,12 +70,12 @@ fn parse_white_point_gamma() {
     raw[8] = 0x00;
     raw[9] = 0x64;
 
-    let desc = Monitor::new(&raw, false).descriptor();
-    if let DisplayDescriptor::ColorPoint(wp) = desc {
+    let monitor = Monitor::new(&raw, false);
+    if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
         assert_eq!(first.gamma_raw(), 0x64);
         assert!((first.gamma() - 2.0).abs() < 0.01);
     } else {
-        panic!("expected WhitePoint, got {desc:?}");
+        panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }
 }

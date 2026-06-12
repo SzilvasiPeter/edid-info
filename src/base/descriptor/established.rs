@@ -5,7 +5,6 @@
 
 use crate::base::dmt::Dmt;
 use crate::base::established::flag_dmt;
-use crate::common::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EstablishedTimings {
@@ -13,10 +12,9 @@ pub struct EstablishedTimings {
 }
 
 impl EstablishedTimings {
-    #[must_use]
-    pub(super) const fn parse(raw: &[u8; DESC_LEN]) -> Self {
+    pub(super) const fn parse(raw: &[u8; 13]) -> Self {
         Self {
-            bytes: [raw[6], raw[7], raw[8], raw[9], raw[10], raw[11]],
+            bytes: [raw[1], raw[2], raw[3], raw[4], raw[5], raw[6]],
         }
     }
 

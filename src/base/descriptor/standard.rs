@@ -5,7 +5,6 @@
 //! Contains 6 timing entries (12 bytes total).
 
 use crate::base::standard::{StandardTiming, parse_std};
-use crate::common::DESC_LEN;
 
 const MODE_NUM: usize = 6;
 const MODE_LEN: usize = MODE_NUM * 2;
@@ -17,10 +16,8 @@ pub struct StandardTimings {
 }
 
 impl StandardTimings {
-    #[must_use]
-    pub(super) fn new(raw: &[u8; DESC_LEN], legacy: bool) -> Self {
-        let mut bytes = [0u8; MODE_LEN];
-        bytes.copy_from_slice(&raw[5..17]);
+    pub(super) fn new(raw: &[u8; 13], legacy: bool) -> Self {
+        let bytes: [u8; MODE_LEN] = raw[..12].try_into().map_or([0; MODE_LEN], |arr| arr);
         Self { bytes, legacy }
     }
 

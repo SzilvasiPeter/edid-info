@@ -12,7 +12,6 @@
 //! | 2    | Refresh rate flags + preferred rate |
 
 use crate::common::AspectRatio;
-use crate::common::DESC_LEN;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PrefRate {
@@ -123,13 +122,12 @@ pub struct Cvt3 {
 }
 
 impl Cvt3 {
-    #[must_use]
-    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
+    pub(super) fn parse(raw: &[u8; 13]) -> Self {
         Self {
-            mode1: Mode::parse([raw[6], raw[7], raw[8]]),
-            mode2: Mode::parse([raw[9], raw[10], raw[11]]),
-            mode3: Mode::parse([raw[12], raw[13], raw[14]]),
-            mode4: Mode::parse([raw[15], raw[16], raw[17]]),
+            mode1: Mode::parse([raw[1], raw[2], raw[3]]),
+            mode2: Mode::parse([raw[4], raw[5], raw[6]]),
+            mode3: Mode::parse([raw[7], raw[8], raw[9]]),
+            mode4: Mode::parse([raw[10], raw[11], raw[12]]),
         }
     }
 

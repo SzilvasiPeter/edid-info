@@ -15,15 +15,15 @@ use crate::common::{DESC_LEN, FailureKind, Validation, WarningKind};
 ///
 /// Used for Serial Number, Monitor Name, and other text fields.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct DescriptorString {
-    raw: [u8; 13],
+pub struct DescriptorString<'a> {
+    raw: &'a [u8; 13],
 }
 
-impl DescriptorString {
+impl DescriptorString<'_> {
     /// Returns the text as a string slice, trimmed of trailing whitespace and nulls.
     #[must_use]
     pub fn text(&self) -> &str {
-        core::str::from_utf8(&self.raw)
+        core::str::from_utf8(self.raw)
             .unwrap_or("")
             .trim_end_matches(['\0', '\n', ' '])
     }
@@ -31,15 +31,15 @@ impl DescriptorString {
 
 /// Display metadata descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DisplayDescriptor {
+pub enum DisplayDescriptor<'a> {
     /// Tag 0xFF: Display Product Serial Number.
-    SerialNumber(DescriptorString),
+    SerialNumber(DescriptorString<'a>),
     /// Tag 0xFE: Alphanumeric Data String (ASCII).
-    DataString(DescriptorString),
+    DataString(DescriptorString<'a>),
     /// Tag 0xFD: Display Range Limits (GTF/CVT timing parameters).
     RangeLimits(DisplayRangeLimits),
     /// Tag 0xFC: Display Product Name.
-    ProductName(DescriptorString),
+    ProductName(DescriptorString<'a>),
     /// Tag 0xFB: Color Point Data (white point coordinates).
     ColorPoint(ColorPoint),
     /// Tag 0xFA: Standard Timing Identifications.
@@ -53,9 +53,9 @@ pub enum DisplayDescriptor {
     /// Tag 0x10: Dummy Descriptor.
     Dummy,
     /// Tags 0x00–0x0F: Manufacturer Specified Display Descriptors.
-    VendorReserved([u8; DESC_LEN]),
+    VendorReserved(&'a [u8; 13]),
     /// Tags 0x11–0xF6: Reserved / Undefined.
-    Undefined([u8; DESC_LEN]),
+    Undefined(&'a [u8; 13]),
 }
 
 /// An 18-byte Monitor Descriptor parser.
@@ -74,24 +74,23 @@ impl Monitor {
 
     /// Parses and returns the inner display descriptor type and its associated data.
     #[must_use]
-    pub fn descriptor(&self) -> DisplayDescriptor {
-        let mut data = [0u8; 13];
-        data.copy_from_slice(&self.raw[5..DESC_LEN]);
-        let text = DescriptorString { raw: data };
+    pub fn descriptor(&self) -> DisplayDescriptor<'_> {
+        let payload: &[u8; 13] = self.raw[5..DESC_LEN].try_into().map_or(&[0; 13], |arr| arr);
+        let text = DescriptorString { raw: payload };
 
         match self.raw[3] {
             0xFF => DisplayDescriptor::SerialNumber(text),
             0xFE => DisplayDescriptor::DataString(text),
-            0xFD => DisplayDescriptor::RangeLimits(DisplayRangeLimits::parse(&self.raw)),
+            0xFD => DisplayDescriptor::RangeLimits(DisplayRangeLimits::parse(self.raw[4], payload)),
             0xFC => DisplayDescriptor::ProductName(text),
-            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(&self.raw)),
-            0xFA => DisplayDescriptor::StdTimings(StandardTimings::new(&self.raw, self.legacy)),
-            0xF9 => DisplayDescriptor::Dcm(Color::parse(&self.raw)),
-            0xF8 => DisplayDescriptor::Cvt3Byte(Cvt3::parse(&self.raw)),
-            0xF7 => DisplayDescriptor::EstTimings(EstablishedTimings::parse(&self.raw)),
+            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(payload)),
+            0xFA => DisplayDescriptor::StdTimings(StandardTimings::new(payload, self.legacy)),
+            0xF9 => DisplayDescriptor::Dcm(Color::parse(payload)),
+            0xF8 => DisplayDescriptor::Cvt3Byte(Cvt3::parse(payload)),
+            0xF7 => DisplayDescriptor::EstTimings(EstablishedTimings::parse(payload)),
             0x10 => DisplayDescriptor::Dummy,
-            0x00..=0x0F => DisplayDescriptor::VendorReserved(self.raw),
-            0x11..=0xF6 => DisplayDescriptor::Undefined(self.raw),
+            0x00..=0x0F => DisplayDescriptor::VendorReserved(payload),
+            0x11..=0xF6 => DisplayDescriptor::Undefined(payload),
         }
     }
 

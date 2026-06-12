@@ -11,8 +11,6 @@
 //! - Byte 3: White point y coordinate (10-bit)
 //! - Byte 4: Gamma (value - 1.0, scaled by 100)
 
-use crate::common::DESC_LEN;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Point {
     index: u8,
@@ -72,10 +70,10 @@ pub struct ColorPoint {
 
 impl ColorPoint {
     #[must_use]
-    pub(super) fn parse(raw: &[u8; DESC_LEN]) -> Self {
-        let first = Point::parse([raw[5], raw[6], raw[7], raw[8], raw[9]]);
-        let second = Point::parse([raw[10], raw[11], raw[12], raw[13], raw[14]]);
-        let pad = [raw[15], raw[16], raw[17]];
+    pub(super) fn parse(raw: &[u8; 13]) -> Self {
+        let first = Point::parse([raw[0], raw[1], raw[2], raw[3], raw[4]]);
+        let second = Point::parse([raw[5], raw[6], raw[7], raw[8], raw[9]]);
+        let pad = [raw[10], raw[11], raw[12]];
         Self { first, second, pad }
     }
 
