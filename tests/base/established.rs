@@ -1,4 +1,4 @@
-use edid_info::base::established::EstablishedTimings;
+use edid_info::base::established::EstTimings;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
@@ -10,7 +10,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 #[test]
 fn parse_established_acer_ek221q_h() {
     let raw = base(ACER);
-    let out = EstablishedTimings::new(&raw);
+    let out = EstTimings::new(&raw);
     let list: Vec<_> = out.iter().map(|d| d.id).collect();
 
     assert_ids(
@@ -26,7 +26,7 @@ fn parse_established_acer_ek221q_h() {
 #[test]
 fn parse_established_asus_rog_pg27u() {
     let raw = base(ASUS);
-    let out = EstablishedTimings::new(&raw);
+    let out = EstTimings::new(&raw);
     let list: Vec<_> = out.iter().map(|d| d.id).collect();
 
     assert_ids(&list, &[0x04, 0x09, 0x10]);

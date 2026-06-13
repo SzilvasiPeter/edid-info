@@ -10,12 +10,12 @@ const MODE_NUM: usize = 6;
 const MODE_LEN: usize = MODE_NUM * 2;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct StandardTimings {
+pub struct StdTimings {
     bytes: [u8; MODE_LEN],
     legacy: bool,
 }
 
-impl StandardTimings {
+impl StdTimings {
     pub(super) fn new(raw: &[u8; 13], legacy: bool) -> Self {
         let bytes: [u8; MODE_LEN] = raw[..12].try_into().map_or([0; MODE_LEN], |arr| arr);
         Self { bytes, legacy }

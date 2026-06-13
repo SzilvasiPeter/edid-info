@@ -22,11 +22,11 @@ pub const ESTABLISHED_LEN: usize = 3;
 
 /// Parsed established timings and manufacturer-defined flags.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct EstablishedTimings {
+pub struct EstTimings {
     bytes: [u8; 3],
 }
 
-impl EstablishedTimings {
+impl EstTimings {
     /// Initialize established timings from base block bytes.
     ///
     /// Bytes:

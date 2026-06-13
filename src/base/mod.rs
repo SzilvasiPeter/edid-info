@@ -66,15 +66,15 @@ impl<'a> Base<'a> {
 
     /// Returns the established timing bitmap (common legacy video timings).
     #[must_use]
-    pub const fn established_timings(&self) -> established::EstablishedTimings {
-        established::EstablishedTimings::new(self.raw)
+    pub const fn established_timings(&self) -> established::EstTimings {
+        established::EstTimings::new(self.raw)
     }
 
     /// Returns the standard timing information.
     #[must_use]
-    pub fn standard_timings(&self) -> standard::StandardTimings {
+    pub fn standard_timings(&self) -> standard::StdTimings {
         let legacy = self.header().version() < Version { major: 1, minor: 3 };
-        standard::StandardTimings::new(self.raw, legacy)
+        standard::StdTimings::new(self.raw, legacy)
     }
 
     /// Returns the display timing and monitor descriptors.

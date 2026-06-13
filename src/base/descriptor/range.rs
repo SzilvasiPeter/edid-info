@@ -239,7 +239,7 @@ impl CvtSupport {
 
 // TODO: Store raw bytes for memory efficiency, and for later reserved byte validation
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct DisplayRangeLimits {
+pub struct RangeLimits {
     v_min_hz: u16,
     v_max_hz: u16,
     h_min_khz: u16,
@@ -249,7 +249,7 @@ pub struct DisplayRangeLimits {
     timing_data: VideoTimingData,
 }
 
-impl DisplayRangeLimits {
+impl RangeLimits {
     #[must_use]
     pub(super) fn parse(offsets: u8, raw: &[u8; 13]) -> Self {
         let (v_min_hz, v_max_hz) = adjust(raw[0], raw[1], offsets & 0b11);

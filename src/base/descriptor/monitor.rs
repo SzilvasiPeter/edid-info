@@ -5,25 +5,25 @@
 
 use super::color::ColorPoint;
 use super::cvt3::Cvt3;
-use super::dcm::Color;
-use super::established::EstablishedTimings;
-use super::range::DisplayRangeLimits;
-use super::standard::StandardTimings;
+use super::dcm::Dcm;
+use super::established::EstTimings;
+use super::range::RangeLimits;
+use super::standard::StdTimings;
 use crate::common::{DESC_LEN, FailureKind, Validation, WarningKind};
 
 /// A descriptor containing ASCII text.
 ///
 /// Used for Serial Number, Monitor Name, and other text fields.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct DescriptorString<'a> {
-    raw: &'a [u8; 13],
+pub struct DescriptorString {
+    raw: [u8; 13],
 }
 
-impl DescriptorString<'_> {
+impl DescriptorString {
     /// Returns the text as a string slice, trimmed of trailing whitespace and nulls.
     #[must_use]
     pub fn text(&self) -> &str {
-        core::str::from_utf8(self.raw)
+        core::str::from_utf8(&self.raw)
             .unwrap_or("")
             .trim_end_matches(['\0', '\n', ' '])
     }
@@ -31,31 +31,31 @@ impl DescriptorString<'_> {
 
 /// Display metadata descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DisplayDescriptor<'a> {
+pub enum DisplayDescriptor {
     /// Tag 0xFF: Display Product Serial Number.
-    SerialNumber(DescriptorString<'a>),
+    SerialNumber(DescriptorString),
     /// Tag 0xFE: Alphanumeric Data String (ASCII).
-    DataString(DescriptorString<'a>),
+    DataString(DescriptorString),
     /// Tag 0xFD: Display Range Limits (GTF/CVT timing parameters).
-    RangeLimits(DisplayRangeLimits),
+    RangeLimits(RangeLimits),
     /// Tag 0xFC: Display Product Name.
-    ProductName(DescriptorString<'a>),
+    ProductName(DescriptorString),
     /// Tag 0xFB: Color Point Data (white point coordinates).
     ColorPoint(ColorPoint),
     /// Tag 0xFA: Standard Timing Identifications.
-    StdTimings(StandardTimings),
+    StdTimings(StdTimings),
     /// Tag 0xF9: Display Color Management (DCM) Data.
-    Dcm(Color),
+    Dcm(Dcm),
     /// Tag 0xF8: CVT 3 Byte Timing Codes.
-    Cvt3Byte(Cvt3),
+    Cvt3(Cvt3),
     /// Tag 0xF7: Established Timings III.
-    EstTimings(EstablishedTimings),
+    EstTimings(EstTimings),
     /// Tag 0x10: Dummy Descriptor.
     Dummy,
     /// Tags 0x00–0x0F: Manufacturer Specified Display Descriptors.
-    VendorReserved(&'a [u8; 13]),
+    VendorReserved([u8; 13]),
     /// Tags 0x11–0xF6: Reserved / Undefined.
-    Undefined(&'a [u8; 13]),
+    Undefined([u8; 13]),
 }
 
 /// An 18-byte Monitor Descriptor parser.
@@ -74,20 +74,20 @@ impl Monitor {
 
     /// Parses and returns the inner display descriptor type and its associated data.
     #[must_use]
-    pub fn descriptor(&self) -> DisplayDescriptor<'_> {
-        let payload: &[u8; 13] = self.raw[5..DESC_LEN].try_into().map_or(&[0; 13], |arr| arr);
+    pub fn descriptor(&self) -> DisplayDescriptor {
+        let payload: [u8; 13] = self.raw[5..DESC_LEN].try_into().unwrap_or([0; 13]);
         let text = DescriptorString { raw: payload };
 
         match self.raw[3] {
             0xFF => DisplayDescriptor::SerialNumber(text),
             0xFE => DisplayDescriptor::DataString(text),
-            0xFD => DisplayDescriptor::RangeLimits(DisplayRangeLimits::parse(self.raw[4], payload)),
+            0xFD => DisplayDescriptor::RangeLimits(RangeLimits::parse(self.raw[4], &payload)),
             0xFC => DisplayDescriptor::ProductName(text),
-            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(payload)),
-            0xFA => DisplayDescriptor::StdTimings(StandardTimings::new(payload, self.legacy)),
-            0xF9 => DisplayDescriptor::Dcm(Color::parse(payload)),
-            0xF8 => DisplayDescriptor::Cvt3Byte(Cvt3::parse(payload)),
-            0xF7 => DisplayDescriptor::EstTimings(EstablishedTimings::parse(payload)),
+            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(&payload)),
+            0xFA => DisplayDescriptor::StdTimings(StdTimings::new(&payload, self.legacy)),
+            0xF9 => DisplayDescriptor::Dcm(Dcm::parse(&payload)),
+            0xF8 => DisplayDescriptor::Cvt3(Cvt3::parse(&payload)),
+            0xF7 => DisplayDescriptor::EstTimings(EstTimings::parse(&payload)),
             0x10 => DisplayDescriptor::Dummy,
             0x00..=0x0F => DisplayDescriptor::VendorReserved(payload),
             0x11..=0xF6 => DisplayDescriptor::Undefined(payload),

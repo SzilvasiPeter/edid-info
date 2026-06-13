@@ -4,7 +4,7 @@
 //! Uses tag 0xF9 and version 0x03.
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Color {
+pub struct Dcm {
     red_a3: u16,
     red_a2: u16,
     green_a3: u16,
@@ -13,7 +13,7 @@ pub struct Color {
     blue_a2: u16,
 }
 
-impl Color {
+impl Dcm {
     pub(super) const fn parse(raw: &[u8; 13]) -> Self {
         Self {
             red_a3: u16::from_le_bytes([raw[1], raw[2]]),

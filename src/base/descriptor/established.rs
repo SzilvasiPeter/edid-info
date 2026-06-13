@@ -7,11 +7,11 @@ use crate::base::dmt::Dmt;
 use crate::base::established::flag_dmt;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct EstablishedTimings {
+pub struct EstTimings {
     bytes: [u8; 6],
 }
 
-impl EstablishedTimings {
+impl EstTimings {
     pub(super) const fn parse(raw: &[u8; 13]) -> Self {
         Self {
             bytes: [raw[1], raw[2], raw[3], raw[4], raw[5], raw[6]],

@@ -22,12 +22,12 @@ pub const STANDARD_LEN: usize = 16;
 
 /// Standard Timing information for the base block.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct StandardTimings {
+pub struct StdTimings {
     bytes: [u8; STANDARD_LEN],
     legacy: bool,
 }
 
-impl StandardTimings {
+impl StdTimings {
     /// Initialize the standard timings from base block bytes.
     /// If the EDID version is less than 1.3, use legacy mode.
     #[must_use]

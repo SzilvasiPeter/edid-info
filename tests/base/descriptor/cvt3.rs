@@ -9,20 +9,14 @@ const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 fn parse_cvt3_not_present_acer_ek221q_h() {
     let raw: [u8; 18] = std::array::from_fn(|i| ACER[90 + i]);
     let monitor = Monitor::new(&raw, false);
-    assert!(!matches!(
-        monitor.descriptor(),
-        DisplayDescriptor::Cvt3Byte(_)
-    ));
+    assert!(!matches!(monitor.descriptor(), DisplayDescriptor::Cvt3(_)));
 }
 
 #[test]
 fn parse_cvt3_not_present_asus_rog_pg27u() {
     let raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
     let monitor = Monitor::new(&raw, false);
-    assert!(!matches!(
-        monitor.descriptor(),
-        DisplayDescriptor::Cvt3Byte(_)
-    ));
+    assert!(!matches!(monitor.descriptor(), DisplayDescriptor::Cvt3(_)));
 }
 
 #[test]
@@ -44,7 +38,7 @@ fn parse_cvt3_synthetic() {
     raw[17] = 0b0111_0000;
 
     let monitor = Monitor::new(&raw, false);
-    if let DisplayDescriptor::Cvt3Byte(cvt3) = monitor.descriptor() {
+    if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
         let mode1 = cvt3.mode1();
         assert_eq!(mode1.addr_lines(), 0);
         assert_eq!(mode1.aspect(), AspectRatio::new(4, 3));
@@ -84,7 +78,7 @@ fn parse_mode_v_lines() {
     raw[8] = 0b0000_0000;
 
     let monitor = Monitor::new(&raw, false);
-    if let DisplayDescriptor::Cvt3Byte(cvt3) = monitor.descriptor() {
+    if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
         let mode1 = cvt3.mode1();
         assert_eq!(mode1.addr_lines(), 9);
         assert_eq!(mode1.v_lines(), 20);
@@ -103,7 +97,7 @@ fn parse_mode_h_pixels() {
     raw[8] = 0b0000_0000;
 
     let monitor = Monitor::new(&raw, false);
-    if let DisplayDescriptor::Cvt3Byte(cvt3) = monitor.descriptor() {
+    if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
         let mode1 = cvt3.mode1();
         assert_eq!(mode1.h_pixels(), 24);
     } else {

@@ -1,4 +1,4 @@
-use edid_info::base::{dmt::find_std, standard::StandardTimings};
+use edid_info::base::{dmt::find_std, standard::StdTimings};
 use edid_info::common::{AspectRatio, FailureKind};
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
@@ -12,7 +12,7 @@ fn base(raw: &[u8]) -> [u8; 128] {
 fn parse_standard_acer_ek221q_h() {
     let raw = base(ACER);
     let timings = |i| {
-        StandardTimings::new(&raw, false).iter().nth(i).map(|t| {
+        StdTimings::new(&raw, false).iter().nth(i).map(|t| {
             (
                 t.horizontal_active(),
                 t.vertical_active(),
@@ -37,7 +37,7 @@ fn parse_standard_acer_ek221q_h() {
 fn parse_standard_asus_rog_pg27u() {
     let raw = base(ASUS);
     let timings = |i| {
-        StandardTimings::new(&raw, false).iter().nth(i).map(|t| {
+        StdTimings::new(&raw, false).iter().nth(i).map(|t| {
             (
                 t.horizontal_active(),
                 t.vertical_active(),
@@ -61,7 +61,7 @@ fn parse_standard_asus_rog_pg27u() {
 fn parse_standard_timing_code() {
     let raw = base(ACER);
 
-    let code = StandardTimings::new(&raw, false)
+    let code = StdTimings::new(&raw, false)
         .iter()
         .next()
         .map(|t| t.standard_timing_code());
@@ -84,10 +84,7 @@ fn parse_standard_timing_codes_find_dmt_entries() {
     ];
 
     let mut count = 0;
-    for (timing, expected_id) in StandardTimings::new(&raw, false)
-        .iter()
-        .zip(expected_dmt_ids)
-    {
+    for (timing, expected_id) in StdTimings::new(&raw, false).iter().zip(expected_dmt_ids) {
         count += 1;
         let dmt = find_std(timing.standard_timing_code());
         assert_eq!(dmt.map(|dmt| dmt.id), expected_id);
@@ -108,7 +105,7 @@ fn validate_standard_rejects_zero_empty_slot() {
     raw[38] = 0x00;
     raw[39] = 0x00;
 
-    let validation = StandardTimings::new(&raw, false).validate();
+    let validation = StdTimings::new(&raw, false).validate();
 
     assert!(!validation.is_valid());
     assert_eq!(
@@ -129,7 +126,7 @@ fn validate_standard_rejects_too_small_horizontal() {
     raw[38] = 0x00;
     raw[39] = 0x40;
 
-    let validation = StandardTimings::new(&raw, false).validate();
+    let validation = StdTimings::new(&raw, false).validate();
 
     assert!(!validation.is_valid());
     assert_eq!(
