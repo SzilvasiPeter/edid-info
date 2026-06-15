@@ -55,33 +55,25 @@ impl<'a> Edid<'a> {
     }
 
     /// Returns the base block.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the internal buffer is shorter than 128 bytes.
-    /// This should never happen because `Edid::parse` validates the length.
     #[must_use]
+    #[allow(clippy::missing_panics_doc, reason = "The array length was validated.")]
     pub fn base(&self) -> Base<'a> {
-        let base_raw: &'a [u8; BLOCK_LEN] = self.raw[..BLOCK_LEN].try_into().unwrap();
-        Base::new(base_raw)
+        let base: &'a [u8; BLOCK_LEN] = self.raw[..BLOCK_LEN].try_into().unwrap();
+        Base::new(base)
     }
 
     /// Returns an iterator over all available extension blocks.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the internal buffer is shorter than expected.
-    /// This should never happen because `Edid::parse` validates the length.
+    #[allow(clippy::missing_panics_doc, reason = "The array length was validated.")]
     pub fn extensions(&self) -> impl Iterator<Item = Extension<'_>> + '_ {
         let ext_len = self.ext_len;
         (0..ext_len).map(move |i| {
-            let off = BLOCK_LEN * (i + 1);
-            let block: &[u8; BLOCK_LEN] = self.raw[off..off + BLOCK_LEN].try_into().unwrap();
+            let offset = BLOCK_LEN * (i + 1);
+            let block: &[u8; BLOCK_LEN] = self.raw[offset..offset + BLOCK_LEN].try_into().unwrap();
             Extension::parse(block)
         })
     }
 
-    /// Validates the all (base and extension(s) blocks) EDID data.
+    /// Validates all (base and extension(s) blocks) EDID data.
     #[must_use]
     pub fn validate(&self) -> Validation {
         let base = self.base();
