@@ -55,3 +55,19 @@ fn parse_edid_invalid_length() {
         Err(ParseError::InvalidLen)
     ));
 }
+
+#[test]
+fn parse_edid_bad_header() {
+    let bad = [0u8; 128];
+    assert!(matches!(Edid::parse(&bad), Err(ParseError::BadHeader)));
+}
+
+#[test]
+fn parse_edid_ext_count_too_large() {
+    let mut large = vec![0u8; 128 * 66];
+    large[..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]);
+    assert!(matches!(
+        Edid::parse(&large),
+        Err(ParseError::ExtCountTooLarge)
+    ));
+}
