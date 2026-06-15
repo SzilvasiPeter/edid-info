@@ -14,311 +14,272 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Timing formula type |
 
-use crate::common::AspectRatio;
+use crate::common::{AspectRatio, FailureKind, Validation, WarningKind};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VideoTimingSupport {
-    // TODO: raise validation warning/error when basic display parameters byte 24, bit 0 is *not* set
     DefaultGtf,
-    NoInformation,
-    SecondaryGtf,
-    // TODO: raise validation warning/error when basic display parameters byte 24, bit 0 is *not* set
-    Cvt,
+    RangeLimitsOnly,
+    SecondaryGtf(GtfSecondaryCurve),
+    Cvt(CvtSupport),
     Reserved(u8),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum VideoTimingData {
-    None,
-    GtfSecondaryCurve(GtfSecondaryCurve),
-    CvtSupport(CvtSupport),
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GtfSecondaryCurve {
-    // TODO: add better name for fields
-    start_khz: u16,
-    c_x2: u8,
-    m: u16,
-    k: u8,
-    j_x2: u8,
+    raw: [u8; 7],
 }
 
 impl GtfSecondaryCurve {
     #[must_use]
-    pub const fn parse(data: &[u8]) -> Self {
-        Self {
-            start_khz: u16::from_le_bytes([data[1], 0]) * 2,
-            c_x2: data[2],
-            m: u16::from_le_bytes([data[3], data[4]]),
-            k: data[5],
-            j_x2: data[6],
-        }
+    pub const fn new(raw: [u8; 7]) -> Self {
+        Self { raw }
     }
 
     #[must_use]
     pub const fn start_khz(&self) -> u16 {
-        self.start_khz
+        (self.raw[1] as u16) * 2
     }
 
     #[must_use]
     pub const fn c_x2(&self) -> u8 {
-        self.c_x2
+        self.raw[2]
     }
 
     #[must_use]
     pub const fn m(&self) -> u16 {
-        self.m
+        u16::from_le_bytes([self.raw[3], self.raw[4]])
     }
 
     #[must_use]
     pub const fn k(&self) -> u8 {
-        self.k
+        self.raw[5]
     }
 
     #[must_use]
     pub const fn j_x2(&self) -> u8 {
-        self.j_x2
+        self.raw[6]
     }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[allow(clippy::struct_excessive_bools, reason = "Spec-aligned EDID bitfields")]
 pub struct CvtSupport {
-    // TODO: add better name for fields
-    // TODO: Use the Version from the common module.
-    major: u8,
-    minor: u8,
-    additional_pixel_clock_precision: u8,
-    max_active: Option<u16>,
-    // TODO: Use list of AspectRatio
-    ar_4_3: bool,
-    ar_16_9: bool,
-    ar_16_10: bool,
-    ar_5_4: bool,
-    ar_15_9: bool,
-    preferred_aspect: Option<AspectRatio>,
-    // BlankingSupport
-    reduced_blanking: bool,
-    standard_blanking: bool,
-    // TODO: Refactor the bitmaps as ScalingSupport struct
-    h_shrink: bool,
-    h_stretch: bool,
-    v_shrink: bool,
-    v_stretch: bool,
-    pref_v_hz: u8,
+    raw: [u8; 7],
 }
 
 impl CvtSupport {
     #[must_use]
-    pub fn parse(data: &[u8]) -> Self {
-        let top = data[0];
-        let major = (top >> 4) & 0x0F;
-        let minor = top & 0x0F;
-        let msb = data[1] & 0b11;
-        let lsb = data[2];
-        let max_active = if lsb == 0 {
-            None
+    pub const fn new(raw: [u8; 7]) -> Self {
+        Self { raw }
+    }
+
+    #[must_use]
+    pub const fn major(&self) -> u8 {
+        (self.raw[0] >> 4) & 0x0F
+    }
+
+    #[must_use]
+    pub const fn minor(&self) -> u8 {
+        self.raw[0] & 0x0F
+    }
+
+    #[must_use]
+    pub const fn add_clock_0_25_mhz(&self) -> u8 {
+        self.raw[1] >> 2
+    }
+
+    #[must_use]
+    pub const fn max_active(&self) -> u16 {
+        let msb = self.raw[1] & 0b11;
+        let lsb = self.raw[2];
+        if msb == 0 && lsb == 0 {
+            0
         } else {
-            Some(((u16::from(msb)) << 8) | u16::from(lsb))
-        };
-        let pref = match (data[4] >> 5) & 0b111 {
+            ((msb as u16) << 8 | lsb as u16) * 8
+        }
+    }
+
+    #[must_use]
+    pub const fn ar_4_3(&self) -> bool {
+        (self.raw[3] & 0b1000_0000) != 0
+    }
+
+    #[must_use]
+    pub const fn ar_16_9(&self) -> bool {
+        (self.raw[3] & 0b0100_0000) != 0
+    }
+
+    #[must_use]
+    pub const fn ar_16_10(&self) -> bool {
+        (self.raw[3] & 0b0010_0000) != 0
+    }
+
+    #[must_use]
+    pub const fn ar_5_4(&self) -> bool {
+        (self.raw[3] & 0b0001_0000) != 0
+    }
+
+    #[must_use]
+    pub const fn ar_15_9(&self) -> bool {
+        (self.raw[3] & 0b0000_1000) != 0
+    }
+
+    #[must_use]
+    pub const fn preferred_aspect(&self) -> Option<AspectRatio> {
+        match (self.raw[4] >> 5) & 0b111 {
             0b000 => Some(AspectRatio::new(4, 3)),
             0b001 => Some(AspectRatio::new(16, 9)),
             0b010 => Some(AspectRatio::new(16, 10)),
             0b011 => Some(AspectRatio::new(5, 4)),
             0b100 => Some(AspectRatio::new(15, 9)),
             _ => None,
-        };
-        Self {
-            major,
-            minor,
-            additional_pixel_clock_precision: data[1] >> 2,
-            max_active,
-            ar_4_3: (data[3] & 0b1000_0000) != 0,
-            ar_16_9: (data[3] & 0b0100_0000) != 0,
-            ar_16_10: (data[3] & 0b0010_0000) != 0,
-            ar_5_4: (data[3] & 0b0001_0000) != 0,
-            ar_15_9: (data[3] & 0b0000_1000) != 0,
-            preferred_aspect: pref,
-            reduced_blanking: (data[4] & 0b0001_0000) != 0,
-            standard_blanking: (data[4] & 0b0000_1000) != 0,
-            h_shrink: (data[5] & 0b1000_0000) != 0,
-            h_stretch: (data[5] & 0b0100_0000) != 0,
-            v_shrink: (data[5] & 0b0010_0000) != 0,
-            v_stretch: (data[5] & 0b0001_0000) != 0,
-            pref_v_hz: data[6],
         }
-    }
-
-    #[must_use]
-    pub const fn major(&self) -> u8 {
-        self.major
-    }
-
-    #[must_use]
-    pub const fn minor(&self) -> u8 {
-        self.minor
-    }
-
-    #[must_use]
-    pub const fn add_clock_0_25_mhz(&self) -> u8 {
-        self.additional_pixel_clock_precision
-    }
-
-    #[must_use]
-    pub const fn max_active(&self) -> Option<u16> {
-        self.max_active
-    }
-
-    #[must_use]
-    pub const fn ar_4_3(&self) -> bool {
-        self.ar_4_3
-    }
-
-    #[must_use]
-    pub const fn ar_16_9(&self) -> bool {
-        self.ar_16_9
-    }
-
-    #[must_use]
-    pub const fn ar_16_10(&self) -> bool {
-        self.ar_16_10
-    }
-
-    #[must_use]
-    pub const fn ar_5_4(&self) -> bool {
-        self.ar_5_4
-    }
-
-    #[must_use]
-    pub const fn ar_15_9(&self) -> bool {
-        self.ar_15_9
-    }
-
-    #[must_use]
-    pub const fn preferred_aspect(&self) -> Option<AspectRatio> {
-        self.preferred_aspect
     }
 
     #[must_use]
     pub const fn rb(&self) -> bool {
-        self.reduced_blanking
+        (self.raw[4] & 0b0001_0000) != 0
     }
 
     #[must_use]
     pub const fn std_blank(&self) -> bool {
-        self.standard_blanking
+        (self.raw[4] & 0b0000_1000) != 0
     }
 
     #[must_use]
     pub const fn h_shrink(&self) -> bool {
-        self.h_shrink
+        (self.raw[5] & 0b1000_0000) != 0
     }
 
     #[must_use]
     pub const fn h_stretch(&self) -> bool {
-        self.h_stretch
+        (self.raw[5] & 0b0100_0000) != 0
     }
 
     #[must_use]
     pub const fn v_shrink(&self) -> bool {
-        self.v_shrink
+        (self.raw[5] & 0b0010_0000) != 0
     }
 
     #[must_use]
     pub const fn v_stretch(&self) -> bool {
-        self.v_stretch
+        (self.raw[5] & 0b0001_0000) != 0
     }
 
     #[must_use]
     pub const fn pref_v_hz(&self) -> u8 {
-        self.pref_v_hz
+        self.raw[6]
     }
 }
 
-// TODO: Store raw bytes for memory efficiency, and for later reserved byte validation
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RangeLimits {
-    v_min_hz: u16,
-    v_max_hz: u16,
-    h_min_khz: u16,
-    h_max_khz: u16,
-    pixel_mhz: u16,
-    timing_support: VideoTimingSupport,
-    timing_data: VideoTimingData,
+    offsets: u8,
+    raw: [u8; 13],
 }
 
 impl RangeLimits {
     #[must_use]
-    pub(super) fn parse(offsets: u8, raw: &[u8; 13]) -> Self {
-        let (v_min_hz, v_max_hz) = adjust(raw[0], raw[1], offsets & 0b11);
-        let (h_min_khz, h_max_khz) = adjust(raw[2], raw[3], (offsets >> 2) & 0b11);
-        let pixel_mhz = u16::from(raw[4]) * 10;
-        let (timing_support, timing_data) = match raw[5] {
-            0x00 => (VideoTimingSupport::DefaultGtf, VideoTimingData::None),
-            0x01 => (VideoTimingSupport::NoInformation, VideoTimingData::None),
-            0x02 => (
-                VideoTimingSupport::SecondaryGtf,
-                VideoTimingData::GtfSecondaryCurve(GtfSecondaryCurve::parse(&raw[6..])),
-            ),
-            0x04 => (
-                VideoTimingSupport::Cvt,
-                VideoTimingData::CvtSupport(CvtSupport::parse(&raw[6..])),
-            ),
-            v => (VideoTimingSupport::Reserved(v), VideoTimingData::None),
-        };
-        Self {
-            v_min_hz,
-            v_max_hz,
-            h_min_khz,
-            h_max_khz,
-            pixel_mhz,
-            timing_support,
-            timing_data,
-        }
+    pub(super) const fn parse(offsets: u8, raw: &[u8; 13]) -> Self {
+        Self { offsets, raw: *raw }
     }
 
     #[must_use]
     pub const fn v_min_hz(&self) -> u16 {
-        self.v_min_hz
+        adjust(self.raw[0], self.raw[1], self.offsets & 0b11).0
     }
 
     #[must_use]
     pub const fn v_max_hz(&self) -> u16 {
-        self.v_max_hz
+        adjust(self.raw[0], self.raw[1], self.offsets & 0b11).1
     }
 
     #[must_use]
     pub const fn h_min_khz(&self) -> u16 {
-        self.h_min_khz
+        adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11).0
     }
 
     #[must_use]
     pub const fn h_max_khz(&self) -> u16 {
-        self.h_max_khz
+        adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11).1
     }
 
     #[must_use]
     pub const fn pixel_mhz(&self) -> u16 {
-        self.pixel_mhz
+        (self.raw[4] as u16) * 10
     }
 
     #[must_use]
     pub const fn timing(&self) -> VideoTimingSupport {
-        self.timing_support
+        let raw = [
+            self.raw[6],
+            self.raw[7],
+            self.raw[8],
+            self.raw[9],
+            self.raw[10],
+            self.raw[11],
+            self.raw[12],
+        ];
+        match self.raw[5] {
+            0x00 => VideoTimingSupport::DefaultGtf,
+            0x01 => VideoTimingSupport::RangeLimitsOnly,
+            0x02 => VideoTimingSupport::SecondaryGtf(GtfSecondaryCurve { raw }),
+            0x04 => VideoTimingSupport::Cvt(CvtSupport { raw }),
+            v => VideoTimingSupport::Reserved(v),
+        }
     }
 
+    /// Validates the range limits descriptor against the VESA specification.
     #[must_use]
-    pub const fn timing_data(&self) -> VideoTimingData {
-        self.timing_data
+    pub const fn validate(&self, cont_freq: bool) -> Validation {
+        let mut validation = Validation::new();
+        validation = validation.fail_if(
+            matches!(
+                self.offsets,
+                0x01 | 0x04..=0x07 | 0x09 | 0x0D | 0x10..=0xFF
+            ),
+            FailureKind::RangeLimitsReservedByte,
+        );
+        validation = validation.fail_if(
+            self.raw[0] == 0
+                || self.raw[1] == 0
+                || self.raw[2] == 0
+                || self.raw[3] == 0
+                || self.raw[4] == 0,
+            FailureKind::RangeLimitsReservedByte,
+        );
+
+        let (v_min, v_max) = adjust(self.raw[0], self.raw[1], self.offsets & 0b11);
+        let (h_min, h_max) = adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11);
+        validation = validation.fail_if(
+            v_min > v_max || h_min > h_max,
+            FailureKind::RangeLimitsMinExceedsMax,
+        );
+
+        let needs_cont_freq = matches!(
+            self.timing(),
+            VideoTimingSupport::DefaultGtf
+                | VideoTimingSupport::SecondaryGtf(_)
+                | VideoTimingSupport::Cvt(_)
+        );
+        validation = validation.fail_if(
+            needs_cont_freq && !cont_freq,
+            FailureKind::GtfAndCvtRequiresContFreq,
+        );
+
+        validation = validation.warn_if(
+            matches!(self.timing(), VideoTimingSupport::Reserved(_)),
+            WarningKind::VideoTimingSupportReserved,
+        );
+
+        validation
     }
 }
 
-fn adjust(min: u8, max: u8, mode: u8) -> (u16, u16) {
+const fn adjust(min: u8, max: u8, mode: u8) -> (u16, u16) {
     match mode {
-        0b10 => (u16::from(min), u16::from(max) + 255),
-        0b11 => (u16::from(min) + 255, u16::from(max) + 255),
-        _ => (u16::from(min), u16::from(max)),
+        0b10 => (min as u16, max as u16 + 255),
+        0b11 => (min as u16 + 255, max as u16 + 255),
+        _ => (min as u16, max as u16),
     }
 }

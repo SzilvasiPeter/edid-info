@@ -107,7 +107,7 @@ fn parse_dcm_descriptor_vit_vt988() {
 fn test_gtf_is_deprecated_warning() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ACER[108 + i]);
     let range = Monitor::new(&range_raw, false);
-    let validation = range.validate();
+    let validation = range.validate(false);
 
     assert_ne!(
         validation.warnings & (1 << (WarningKind::GtfIsDeprecated as u8)),
@@ -119,7 +119,7 @@ fn test_gtf_is_deprecated_warning() {
     // Let's verify a non-GTF (e.g., CVT or NoInformation) does not raise this warning
     let range_raw_cvt: [u8; 18] = std::array::from_fn(|i| SDC[72 + i]);
     let range_cvt = Monitor::new(&range_raw_cvt, false);
-    let validation_cvt = range_cvt.validate();
+    let validation_cvt = range_cvt.validate(false);
 
     assert_eq!(
         validation_cvt.warnings & (1 << (WarningKind::GtfIsDeprecated as u8)),

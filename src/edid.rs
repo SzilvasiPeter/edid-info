@@ -65,8 +65,7 @@ impl<'a> Edid<'a> {
     /// Returns an iterator over all available extension blocks.
     #[allow(clippy::missing_panics_doc, reason = "The array length was validated.")]
     pub fn extensions(&self) -> impl Iterator<Item = Extension<'_>> + '_ {
-        let ext_len = self.ext_len;
-        (0..ext_len).map(move |i| {
+        (0..self.ext_len).map(move |i| {
             let offset = BLOCK_LEN * (i + 1);
             let block: &[u8; BLOCK_LEN] = self.raw[offset..offset + BLOCK_LEN].try_into().unwrap();
             Extension::parse(block)

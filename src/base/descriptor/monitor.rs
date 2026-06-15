@@ -96,21 +96,23 @@ impl Monitor {
 
     /// Validates the monitor descriptor according to the VESA specification.
     #[must_use]
-    pub fn validate(&self) -> Validation {
+    pub fn validate(&self, continuous_frequency: bool) -> Validation {
+        let raw = self.raw;
         let mut validation = Validation::new();
-        validation = validation.fail_if(
-            self.raw.iter().all(|&b| b == 0),
-            FailureKind::AllZeroDescriptor,
-        );
-        validation =
-            validation.fail_if(self.raw[2] != 0, FailureKind::MonitorReservedByteIsNonZero);
-        validation = validation.fail_if(
-            self.raw[3] != 0xFD && self.raw[4] != 0,
-            FailureKind::MonitorReservedByteIsNonZero,
-        );
-        if self.raw[3] == 0xFD {
-            let is_gtf = self.raw[10] == 0x00 || self.raw[10] == 0x02;
-            validation = validation.warn_if(is_gtf, WarningKind::GtfIsDeprecated);
+        validation = validation
+            .fail_if(raw.iter().all(|&b| b == 0), FailureKind::AllZeroDescriptor)
+            .fail_if(
+                raw[2] != 0 || (raw[3] != 0xFD && raw[4] != 0),
+                FailureKind::MonitorReservedByteIsNonZero,
+            );
+
+        let is_gtf = raw[3] == 0xFD && (raw[10] == 0x00 || raw[10] == 0x02);
+        validation = validation.warn_if(is_gtf, WarningKind::GtfIsDeprecated);
+
+        if raw[3] == 0xFD {
+            let payload: [u8; 13] = raw[5..DESC_LEN].try_into().unwrap_or([0; 13]);
+            let range = RangeLimits::parse(raw[4], &payload);
+            validation = validation.then(range.validate(continuous_frequency));
         }
 
         validation

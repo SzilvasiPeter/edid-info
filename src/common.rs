@@ -44,6 +44,12 @@ pub enum FailureKind {
     TimingPixelClockIsZero = 15,
     /// Undefined display descriptor tag.
     UndefinedDescriptor = 16,
+    /// Range limits contains reserved byte values.
+    RangeLimitsReservedByte = 17,
+    /// Range limits minimum exceeds maximum.
+    RangeLimitsMinExceedsMax = 18,
+    /// GTF and CVT requires continuous frequency display.
+    GtfAndCvtRequiresContFreq = 19,
 }
 
 impl FailureKind {
@@ -68,6 +74,9 @@ impl FailureKind {
             Self::StdTimingRefreshLimit => "Standard timing refresh rate exceeds 123 Hz",
             Self::InvalidEmptyStdTiming => "Use 0x01 0x01 byte code for empty Standard Timings",
             Self::UndefinedDescriptor => "Undefined display descriptor tag",
+            Self::RangeLimitsReservedByte => "Range limits contains reserved byte values",
+            Self::RangeLimitsMinExceedsMax => "Range limits minimum exceeds maximum",
+            Self::GtfAndCvtRequiresContFreq => "GTF and CVT requires continous frequency display",
         }
     }
 }
@@ -100,6 +109,8 @@ pub enum WarningKind {
     RangeLimitsRequired = 10,
     /// GTF is deprecated, use CVT timing formula.
     GtfIsDeprecated = 11,
+    /// Video timing support contains a reserved value.
+    VideoTimingSupportReserved = 12,
 }
 
 impl WarningKind {
@@ -117,8 +128,9 @@ impl WarningKind {
             Self::StandardRgbNotSignaled => "Chromaticities match sRGB, but sRGB not signaled",
             Self::MonochromeHasNonZeroRgb => "Monochrome display has non-zero RGB chromaticities",
             Self::MissingMonitorName => "Monitor name is missing",
-            Self::RangeLimitsRequired => "Range limits required for continuous frequency",
+            Self::RangeLimitsRequired => "Range limits required for continous frequency",
             Self::GtfIsDeprecated => "GTF is deprecated, use CVT instead",
+            Self::VideoTimingSupportReserved => "Video timing support is set to a reserved value",
         }
     }
 }

@@ -1,5 +1,5 @@
 use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
-use edid_info::base::descriptor::range::{VideoTimingData, VideoTimingSupport};
+use edid_info::base::descriptor::range::VideoTimingSupport;
 use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -22,7 +22,6 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
         assert_eq!(range.h_max_khz(), 120);
         assert_eq!(range.pixel_mhz(), 250);
         assert_eq!(range.timing(), VideoTimingSupport::DefaultGtf);
-        assert_eq!(range.timing_data(), VideoTimingData::None);
     }
 }
 
@@ -39,8 +38,7 @@ fn parse_range_limit_descriptor_asus_rog_pg27u() {
     assert_eq!(range.h_min_khz(), 52);
     assert_eq!(range.h_max_khz(), 322);
     assert_eq!(range.pixel_mhz(), 1270);
-    assert_eq!(range.timing(), VideoTimingSupport::NoInformation);
-    assert_eq!(range.timing_data(), VideoTimingData::None);
+    assert_eq!(range.timing(), VideoTimingSupport::RangeLimitsOnly);
 }
 
 #[test]
@@ -57,9 +55,8 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
     assert_eq!(range.h_max_khz(), 68);
     assert_eq!(range.pixel_mhz(), 150);
 
-    assert_eq!(range.timing(), VideoTimingSupport::SecondaryGtf);
-    match range.timing_data() {
-        VideoTimingData::GtfSecondaryCurve(sgtf) => {
+    match range.timing() {
+        VideoTimingSupport::SecondaryGtf(sgtf) => {
             assert_eq!(sgtf.start_khz(), 64);
             assert_eq!(sgtf.c_x2(), 32);
             assert_eq!(sgtf.m(), 8224);
@@ -84,13 +81,12 @@ fn parse_range_cvt_sdc_123yl01() {
     assert_eq!(range.h_max_khz(), 0);
     assert_eq!(range.pixel_mhz(), 340);
 
-    assert_eq!(range.timing(), VideoTimingSupport::Cvt);
-    match range.timing_data() {
-        VideoTimingData::CvtSupport(cvt) => {
+    match range.timing() {
+        VideoTimingSupport::Cvt(cvt) => {
             assert_eq!(cvt.major(), 0);
             assert_eq!(cvt.minor(), 10);
             assert_eq!(cvt.add_clock_0_25_mhz(), 5);
-            assert_eq!(cvt.max_active(), Some(20));
+            assert_eq!(cvt.max_active(), 160);
             assert!(!cvt.ar_4_3());
             assert!(!cvt.ar_16_9());
             assert!(!cvt.ar_16_10());
@@ -123,5 +119,4 @@ fn parse_range_limits_descriptor_rol_rolsen_c707n() {
     assert_eq!(vals.h_max_khz(), 88);
     assert_eq!(vals.pixel_mhz(), 180);
     assert_eq!(vals.timing(), VideoTimingSupport::DefaultGtf);
-    assert_eq!(vals.timing_data(), VideoTimingData::None);
 }

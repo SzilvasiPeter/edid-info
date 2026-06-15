@@ -62,7 +62,7 @@ impl Descriptors {
 
     /// Validates the descriptors.
     #[must_use]
-    pub fn validate(&self, continous_frequency: bool) -> Validation {
+    pub fn validate(&self, cont_freq: bool) -> Validation {
         let mut validation = Validation::new();
         validation = validation.fail_if(
             !matches!(self.iter().nth(0), Some(Descriptor::Timing(_))),
@@ -89,10 +89,7 @@ impl Descriptors {
             }
             Descriptor::Timing(_) => false,
         });
-        validation = validation.warn_if(
-            continous_frequency && !has_range,
-            WarningKind::RangeLimitsRequired,
-        );
+        validation = validation.warn_if(cont_freq && !has_range, WarningKind::RangeLimitsRequired);
 
         let has_monitor_name = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
@@ -104,8 +101,8 @@ impl Descriptors {
 
         for descriptor in self.iter() {
             match descriptor {
-                Descriptor::Timing(timing) => validation = validation.then(timing.validate()),
-                Descriptor::Display(display) => validation = validation.then(display.validate()),
+                Descriptor::Timing(t) => validation = validation.then(t.validate()),
+                Descriptor::Display(d) => validation = validation.then(d.validate(cont_freq)),
             }
         }
         validation
