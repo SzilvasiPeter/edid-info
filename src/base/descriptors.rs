@@ -15,6 +15,7 @@
 use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
 use crate::base::descriptor::monitor::DisplayDescriptor;
+use crate::base::descriptor::range::VideoTimingSupport;
 use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, WarningKind};
 
 /// Byte offset of the first descriptor block in the EDID base block.
@@ -83,6 +84,25 @@ impl Descriptors {
         });
         validation = validation.fail_if(has_undefined, FailureKind::UndefinedDescriptor);
 
+        let has_gtf_or_cvt = self.iter().any(|d| {
+            let Descriptor::Display(m) = d else {
+                return false;
+            };
+            let DisplayDescriptor::RangeLimits(r) = m.descriptor() else {
+                return false;
+            };
+            matches!(
+                r.timing(),
+                VideoTimingSupport::DefaultGtf
+                    | VideoTimingSupport::SecondaryGtf(_)
+                    | VideoTimingSupport::Cvt(_)
+            )
+        });
+        validation = validation.fail_if(
+            has_gtf_or_cvt && !cont_freq,
+            FailureKind::GtfAndCvtRequiresContFreq,
+        );
+
         let has_range = self.iter().any(|d| match d {
             Descriptor::Display(m) => {
                 matches!(m.descriptor(), DisplayDescriptor::RangeLimits(_))
@@ -102,7 +122,7 @@ impl Descriptors {
         for descriptor in self.iter() {
             match descriptor {
                 Descriptor::Timing(t) => validation = validation.then(t.validate()),
-                Descriptor::Display(d) => validation = validation.then(d.validate(cont_freq)),
+                Descriptor::Display(d) => validation = validation.then(d.validate()),
             }
         }
         validation

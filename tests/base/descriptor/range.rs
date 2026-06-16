@@ -1,5 +1,5 @@
 use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
-use edid_info::base::descriptor::range::VideoTimingSupport;
+use edid_info::base::descriptor::range::{Scaling, VideoTimingSupport};
 use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -83,22 +83,17 @@ fn parse_range_cvt_sdc_123yl01() {
 
     match range.timing() {
         VideoTimingSupport::Cvt(cvt) => {
-            assert_eq!(cvt.major(), 0);
-            assert_eq!(cvt.minor(), 10);
+            assert_eq!(cvt.version().major, 0);
+            assert_eq!(cvt.version().minor, 10);
             assert_eq!(cvt.add_clock_0_25_mhz(), 5);
             assert_eq!(cvt.max_active(), 160);
-            assert!(!cvt.ar_4_3());
-            assert!(!cvt.ar_16_9());
-            assert!(!cvt.ar_16_10());
-            assert!(cvt.ar_5_4());
-            assert!(!cvt.ar_15_9());
+            let ars: Vec<_> = cvt.aspect_ratios().collect();
+            assert_eq!(ars, vec![AspectRatio::new(5, 4)]);
             assert_eq!(cvt.preferred_aspect(), Some(AspectRatio::new(4, 3)));
-            assert!(cvt.rb());
-            assert!(!cvt.std_blank());
-            assert!(!cvt.h_shrink());
-            assert!(!cvt.h_stretch());
-            assert!(!cvt.v_shrink());
-            assert!(cvt.v_stretch());
+            assert!(cvt.blanking().reduced);
+            assert!(!cvt.blanking().standard);
+            assert_eq!(cvt.horizontal_scaling(), Scaling::None);
+            assert_eq!(cvt.vertical_scaling(), Scaling::Stretch);
             assert_eq!(cvt.pref_v_hz(), 20);
         }
         _ => panic!("Expected Cvt timing"),

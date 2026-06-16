@@ -9,7 +9,7 @@ use super::dcm::Dcm;
 use super::established::EstTimings;
 use super::range::RangeLimits;
 use super::standard::StdTimings;
-use crate::common::{DESC_LEN, FailureKind, Validation, WarningKind};
+use crate::common::{DESC_LEN, FailureKind, Validation};
 
 /// A descriptor containing ASCII text.
 ///
@@ -81,7 +81,7 @@ impl Monitor {
         match self.raw[3] {
             0xFF => DisplayDescriptor::SerialNumber(text),
             0xFE => DisplayDescriptor::DataString(text),
-            0xFD => DisplayDescriptor::RangeLimits(RangeLimits::parse(self.raw[4], &payload)),
+            0xFD => DisplayDescriptor::RangeLimits(RangeLimits::new(self.raw[4], &payload)),
             0xFC => DisplayDescriptor::ProductName(text),
             0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(&payload)),
             0xFA => DisplayDescriptor::StdTimings(StdTimings::new(&payload, self.legacy)),
@@ -96,25 +96,16 @@ impl Monitor {
 
     /// Validates the monitor descriptor according to the VESA specification.
     #[must_use]
-    pub fn validate(&self, continuous_frequency: bool) -> Validation {
+    pub fn validate(&self) -> Validation {
         let raw = self.raw;
-        let mut validation = Validation::new();
-        validation = validation
+        Validation::new()
             .fail_if(raw.iter().all(|&b| b == 0), FailureKind::AllZeroDescriptor)
             .fail_if(
                 raw[2] != 0 || (raw[3] != 0xFD && raw[4] != 0),
                 FailureKind::MonitorReservedByteIsNonZero,
-            );
-
-        let is_gtf = raw[3] == 0xFD && (raw[10] == 0x00 || raw[10] == 0x02);
-        validation = validation.warn_if(is_gtf, WarningKind::GtfIsDeprecated);
-
-        if raw[3] == 0xFD {
-            let payload: [u8; 13] = raw[5..DESC_LEN].try_into().unwrap_or([0; 13]);
-            let range = RangeLimits::parse(raw[4], &payload);
-            validation = validation.then(range.validate(continuous_frequency));
-        }
-
-        validation
+            )
+        // TODO: If the descriptor can validate, call it.
+        // It should be simply a `self.descriptor().validate()` call.
+        // Implement trait or similar to handle descriptor validation.
     }
 }
