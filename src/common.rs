@@ -60,6 +60,10 @@ pub enum FailureKind {
     GtfAndCvtRequiresContFreq = 23,
     /// Range limits offset byte contains a reserved value.
     RangeLimitsOffsetReserved = 24,
+    /// CVT standard version is zero (major nibble is 0).
+    CvtVersionZero = 25,
+    /// CVT preferred vertical refresh rate is zero (reserved).
+    CvtPreferredRateZero = 26,
 }
 
 impl FailureKind {
@@ -92,6 +96,8 @@ impl FailureKind {
             Self::RangeLimitsMinExceedsMax => "Range limits minimum exceeds maximum",
             Self::GtfAndCvtRequiresContFreq => "GTF and CVT requires continous frequency display",
             Self::RangeLimitsOffsetReserved => "Range limits offset byte contains reserved value",
+            Self::CvtVersionZero => "CVT standard version major nibble is zero",
+            Self::CvtPreferredRateZero => "CVT preferred vertical refresh rate is zero (reserved)",
         }
     }
 }
@@ -130,6 +136,16 @@ pub enum WarningKind {
     RangeLimitsExpectedLineFeed = 13,
     /// Expected spaces for Default GTF or Range Limits Only.
     RangeLimitsExpectedSpaces = 14,
+    /// CVT supported aspect ratios reserved bits are non-zero.
+    CvtReservedAspectBits = 15,
+    /// CVT blanking reserved bits are non-zero.
+    CvtReservedBlankingBits = 16,
+    /// CVT scaling reserved bits are non-zero.
+    CvtReservedScalingBits = 17,
+    /// CVT preferred aspect ratio is a reserved value.
+    CvtPreferredAspectReserved = 18,
+    /// GTF secondary curve reserved byte is non-zero.
+    GtfSecondaryReservedByte = 19,
 }
 
 impl WarningKind {
@@ -152,6 +168,11 @@ impl WarningKind {
             Self::VideoTimingSupportReserved => "Video timing support is set to a reserved value",
             Self::RangeLimitsExpectedLineFeed => "Expected line feed for range limits/default GTF",
             Self::RangeLimitsExpectedSpaces => "Expected spaces for range limits/default GTF",
+            Self::CvtReservedAspectBits => "CVT supported aspect ratios reserved bits are non-zero",
+            Self::CvtReservedBlankingBits => "CVT blanking reserved bits are non-zero",
+            Self::CvtReservedScalingBits => "CVT scaling reserved bits are non-zero",
+            Self::CvtPreferredAspectReserved => "CVT preferred aspect ratio is a reserved value",
+            Self::GtfSecondaryReservedByte => "GTF secondary curve reserved byte is non-zero",
         }
     }
 }

@@ -15,8 +15,8 @@ use crate::common::{AspectRatio, FailureKind, Validation, Version, WarningKind};
 pub enum VideoTimingSupport {
     DefaultGtf,
     RangeLimitsOnly,
-    SecondaryGtf(GtfSecondaryCurve),
-    Cvt(CvtSupport),
+    GtfSecondaryCurve(GtfSecondaryCurve),
+    Cvt(Cvt),
     Reserved(u8),
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -75,8 +75,8 @@ impl RangeLimits {
         match self.raw[5] {
             0x00 => VideoTimingSupport::DefaultGtf,
             0x01 => VideoTimingSupport::RangeLimitsOnly,
-            0x02 => VideoTimingSupport::SecondaryGtf(GtfSecondaryCurve { raw }),
-            0x04 => VideoTimingSupport::Cvt(CvtSupport { raw }),
+            0x02 => VideoTimingSupport::GtfSecondaryCurve(GtfSecondaryCurve { raw }),
+            0x04 => VideoTimingSupport::Cvt(Cvt { raw }),
             v => VideoTimingSupport::Reserved(v),
         }
     }
@@ -84,50 +84,53 @@ impl RangeLimits {
     /// Validates the range limits descriptor against the VESA specification.
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        let mut valid = Validation::new();
-        valid = valid.fail_if(
-            matches!(
-                self.offsets,
-                0x01 | 0x04..=0x07 | 0x09 | 0x0D | 0x10..=0xFF
-            ),
-            FailureKind::RangeLimitsOffsetReserved,
-        );
-        valid = valid.fail_if(self.raw[0] == 0, FailureKind::RangeLimitsVerticalMinZero);
-        valid = valid.fail_if(self.raw[1] == 0, FailureKind::RangeLimitsVerticalMaxZero);
-        valid = valid.fail_if(self.raw[2] == 0, FailureKind::RangeLimitsHorizontalMinZero);
-        valid = valid.fail_if(self.raw[3] == 0, FailureKind::RangeLimitsHorizontalMaxZero);
-        valid = valid.fail_if(self.raw[4] == 0, FailureKind::RangeLimitsMaxPixelClockZero);
-        let v = self.vertical_hz();
-        let h = self.horizontal_khz();
-        valid = valid.fail_if(
-            v.min > v.max || h.min > h.max,
-            FailureKind::RangeLimitsMinExceedsMax,
-        );
+        let mut validation = Validation::new();
+        let reserved_offset =
+            matches!(self.offsets, 0x01 | 0x04..=0x07 | 0x09 | 0x0D | 0x10..=0xFF);
+        let (v, h) = (self.vertical_hz(), self.horizontal_khz());
+        validation = validation
+            .fail_if(reserved_offset, FailureKind::RangeLimitsOffsetReserved)
+            .fail_if(self.raw[0] == 0, FailureKind::RangeLimitsVerticalMinZero)
+            .fail_if(self.raw[1] == 0, FailureKind::RangeLimitsVerticalMaxZero)
+            .fail_if(self.raw[2] == 0, FailureKind::RangeLimitsHorizontalMinZero)
+            .fail_if(self.raw[3] == 0, FailureKind::RangeLimitsHorizontalMaxZero)
+            .fail_if(self.raw[4] == 0, FailureKind::RangeLimitsMaxPixelClockZero)
+            .fail_if(
+                v.min > v.max || h.min > h.max,
+                FailureKind::RangeLimitsMinExceedsMax,
+            );
 
-        valid = valid.warn_if(
-            matches!(self.timing(), VideoTimingSupport::Reserved(_)),
-            WarningKind::VideoTimingSupportReserved,
-        );
-        valid = valid.warn_if(
-            matches!(self.raw[5], 0x00 | 0x02),
-            WarningKind::GtfIsDeprecated,
-        );
-        valid = valid.warn_if(
-            matches!(self.raw[5], 0x00 | 0x01) && self.raw[6] != 0x0A,
-            WarningKind::RangeLimitsExpectedLineFeed,
-        );
-        valid = valid.warn_if(
-            matches!(self.raw[5], 0x00 | 0x01)
-                && (self.raw[7] != 0x20
-                    || self.raw[8] != 0x20
-                    || self.raw[9] != 0x20
-                    || self.raw[10] != 0x20
-                    || self.raw[11] != 0x20
-                    || self.raw[12] != 0x20),
-            WarningKind::RangeLimitsExpectedSpaces,
-        );
+        validation = validation
+            .warn_if(
+                matches!(self.timing(), VideoTimingSupport::Reserved(_)),
+                WarningKind::VideoTimingSupportReserved,
+            )
+            .warn_if(
+                matches!(self.raw[5], 0x00 | 0x02),
+                WarningKind::GtfIsDeprecated,
+            )
+            .warn_if(
+                matches!(self.raw[5], 0x00 | 0x01) && self.raw[6] != 0x0A,
+                WarningKind::RangeLimitsExpectedLineFeed,
+            )
+            .warn_if(
+                matches!(self.raw[5], 0x00 | 0x01)
+                    && (self.raw[7] != 0x20
+                        || self.raw[8] != 0x20
+                        || self.raw[9] != 0x20
+                        || self.raw[10] != 0x20
+                        || self.raw[11] != 0x20
+                        || self.raw[12] != 0x20),
+                WarningKind::RangeLimitsExpectedSpaces,
+            );
 
-        valid
+        validation = validation.then(match self.timing() {
+            VideoTimingSupport::Cvt(cvt) => cvt.validate(),
+            VideoTimingSupport::GtfSecondaryCurve(gtf) => gtf.validate(),
+            _ => Validation::new(),
+        });
+
+        validation
     }
 }
 
@@ -148,8 +151,8 @@ impl GtfSecondaryCurve {
     }
 
     #[must_use]
-    pub const fn c_x2(&self) -> u8 {
-        self.raw[2]
+    pub const fn c(&self) -> f32 {
+        (self.raw[2] as f32) / 2.0
     }
 
     #[must_use]
@@ -163,8 +166,13 @@ impl GtfSecondaryCurve {
     }
 
     #[must_use]
-    pub const fn j_x2(&self) -> u8 {
-        self.raw[6]
+    pub const fn j(&self) -> f32 {
+        (self.raw[6] as f32) / 2.0
+    }
+
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        Validation::new().warn_if(self.raw[0] != 0, WarningKind::GtfSecondaryReservedByte)
     }
 }
 
@@ -175,11 +183,11 @@ pub struct Blanking {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct CvtSupport {
+pub struct Cvt {
     raw: [u8; 7],
 }
 
-impl CvtSupport {
+impl Cvt {
     #[must_use]
     pub const fn new(raw: [u8; 7]) -> Self {
         Self { raw }
@@ -193,12 +201,12 @@ impl CvtSupport {
     }
 
     #[must_use]
-    pub const fn add_clock_0_25_mhz(&self) -> u8 {
-        self.raw[1] >> 2
+    pub const fn pixel_clock_precision_khz(&self) -> u16 {
+        ((self.raw[1] >> 2) as u16) * 250
     }
 
     #[must_use]
-    pub const fn max_active(&self) -> u16 {
+    pub const fn max_horizontal_active(&self) -> u16 {
         let msb = self.raw[1] & 0b11;
         let lsb = self.raw[2];
         u16::from_be_bytes([msb, lsb]) * 8
@@ -260,6 +268,29 @@ impl CvtSupport {
     #[must_use]
     pub const fn preferred_vertical_hz(&self) -> u8 {
         self.raw[6]
+    }
+
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        Validation::new()
+            .fail_if(self.raw[0] & 0xF0 == 0, FailureKind::CvtVersionZero)
+            .fail_if(self.raw[6] == 0, FailureKind::CvtPreferredRateZero)
+            .warn_if(
+                self.raw[3] & 0b0000_0111 != 0,
+                WarningKind::CvtReservedAspectBits,
+            )
+            .warn_if(
+                self.preferred_aspect().is_none(),
+                WarningKind::CvtPreferredAspectReserved,
+            )
+            .warn_if(
+                self.raw[4] & 0b0000_0111 != 0,
+                WarningKind::CvtReservedBlankingBits,
+            )
+            .warn_if(
+                self.raw[5] & 0b0000_1111 != 0,
+                WarningKind::CvtReservedScalingBits,
+            )
     }
 }
 

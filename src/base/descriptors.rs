@@ -94,7 +94,7 @@ impl Descriptors {
             matches!(
                 r.timing(),
                 VideoTimingSupport::DefaultGtf
-                    | VideoTimingSupport::SecondaryGtf(_)
+                    | VideoTimingSupport::GtfSecondaryCurve(_)
                     | VideoTimingSupport::Cvt(_)
             )
         });

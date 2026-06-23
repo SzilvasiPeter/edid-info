@@ -49,12 +49,12 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
     assert_eq!(range.max_pixel_clock_mhz(), 150);
 
     match range.timing() {
-        VideoTimingSupport::SecondaryGtf(sgtf) => {
+        VideoTimingSupport::GtfSecondaryCurve(sgtf) => {
             assert_eq!(sgtf.start_khz(), 64);
-            assert_eq!(sgtf.c_x2(), 32);
+            assert!((sgtf.c() - 16.0).abs() < f32::EPSILON);
             assert_eq!(sgtf.m(), 8224);
             assert_eq!(sgtf.k(), 32);
-            assert_eq!(sgtf.j_x2(), 32);
+            assert!((sgtf.j() - 16.0).abs() < f32::EPSILON);
         }
         _ => panic!("Expected GtfSecondaryCurve timing"),
     }
@@ -76,8 +76,8 @@ fn parse_range_cvt_sdc_123yl01() {
         VideoTimingSupport::Cvt(cvt) => {
             assert_eq!(cvt.version().major, 0);
             assert_eq!(cvt.version().minor, 10);
-            assert_eq!(cvt.add_clock_0_25_mhz(), 5);
-            assert_eq!(cvt.max_active(), 160);
+            assert_eq!(cvt.pixel_clock_precision_khz(), 1250);
+            assert_eq!(cvt.max_horizontal_active(), 160);
             let ars: Vec<_> = cvt.aspect_ratios().collect();
             assert_eq!(ars, vec![AspectRatio::new(5, 4)]);
             assert_eq!(cvt.preferred_aspect(), Some(AspectRatio::new(4, 3)));
