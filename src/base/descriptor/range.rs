@@ -1,24 +1,33 @@
-//! Specifies the supported vertical and horizontal frequency ranges, maximum pixel clock, and timing formula type (GTF, CVT).
-//!
-//! # Range Descriptor Structure (tag 0xFD)
+//! Display Range Limits & Additional Timing descriptor (tag 0xFD).
 //!
 //! | Byte | Description |
 //! |------|-------------|
+//! | 4    | Offsets for rate over-255 extensions |
 //! | 5    | Minimum vertical rate (Hz) |
 //! | 6    | Maximum vertical rate (Hz) |
 //! | 7    | Minimum horizontal rate (kHz) |
 //! | 8    | Maximum horizontal rate (kHz) |
 //! | 9    | Maximum pixel clock (×10 MHz) |
+//! | 10   | Video timing support flag (00h=GTF, 01h=limits only, 02h=GTF secondary, 04h=CVT) |
+//! | 11–17 | Timing-specific data (GTF secondary curve or CVT parameters) |
 use crate::common::{AspectRatio, FailureKind, Validation, Version, WarningKind};
 
+/// Video timing formula indicated by byte 10 of the range descriptor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VideoTimingSupport {
+    /// Default GTF is supported (C=40, M=600, K=128, J=20).
     DefaultGtf,
+    /// No additional timing formula; only range limits.
     RangeLimitsOnly,
+    /// GTF secondary curve is supported.
     GtfSecondaryCurve(GtfSecondaryCurve),
+    /// CVT (Coordinated Video Timing) is supported.
     Cvt(Cvt),
+    /// Reserved value — do not use.
     Reserved(u8),
 }
+
+/// Display scaling capability.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Scaling {
     None,
@@ -27,12 +36,14 @@ pub enum Scaling {
     Both,
 }
 
+/// Minimum and maximum rate.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RateRange {
     pub min: u16,
     pub max: u16,
 }
 
+/// Parsed display range limits.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RangeLimits {
     offsets: u8,
@@ -44,23 +55,27 @@ impl RangeLimits {
         Self { offsets, raw: *raw }
     }
 
+    /// Minimum and maximum vertical refresh rate in Hz.
     #[must_use]
     pub const fn vertical_hz(&self) -> RateRange {
         let (min, max) = adjust(self.raw[0], self.raw[1], self.offsets & 0b11);
         RateRange { min, max }
     }
 
+    /// Minimum and maximum horizontal scan rate in kHz.
     #[must_use]
     pub const fn horizontal_khz(&self) -> RateRange {
         let (min, max) = adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11);
         RateRange { min, max }
     }
 
+    /// Maximum pixel clock in MHz.
     #[must_use]
     pub const fn max_pixel_clock_mhz(&self) -> u16 {
         (self.raw[4] as u16) * 10
     }
 
+    /// Video timing formula type.
     #[must_use]
     pub const fn timing(&self) -> VideoTimingSupport {
         let raw = [
@@ -134,65 +149,77 @@ impl RangeLimits {
     }
 }
 
+/// GTF secondary curve parameters.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GtfSecondaryCurve {
     raw: [u8; 7],
 }
 
 impl GtfSecondaryCurve {
+    /// Raw byte constructor.
     #[must_use]
     pub const fn new(raw: [u8; 7]) -> Self {
         Self { raw }
     }
 
+    /// Start break frequency for the secondary curve in kHz.
     #[must_use]
     pub const fn start_khz(&self) -> u16 {
         (self.raw[1] as u16) * 2
     }
 
+    /// Extended offset constant C (%).
     #[must_use]
     pub const fn c(&self) -> f32 {
         (self.raw[2] as f32) / 2.0
     }
 
+    /// Extended gradient constant M (%/kHz).
     #[must_use]
     pub const fn m(&self) -> u16 {
         u16::from_le_bytes([self.raw[3], self.raw[4]])
     }
 
+    /// Blanking time scaling factor K.
     #[must_use]
     pub const fn k(&self) -> u8 {
         self.raw[5]
     }
 
+    /// Scaling factor weighting J (%).
     #[must_use]
     pub const fn j(&self) -> f32 {
         (self.raw[6] as f32) / 2.0
     }
 
+    /// Warns if the reserved byte 11 is non-zero.
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new().warn_if(self.raw[0] != 0, WarningKind::GtfSecondaryReservedByte)
     }
 }
 
+/// CVT blanking support flags.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Blanking {
     pub reduced: bool,
     pub standard: bool,
 }
 
+/// CVT timing parameters.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Cvt {
     raw: [u8; 7],
 }
 
 impl Cvt {
+    /// Raw byte constructor.
     #[must_use]
     pub const fn new(raw: [u8; 7]) -> Self {
         Self { raw }
     }
 
+    /// CVT standard version.
     #[must_use]
     pub const fn version(&self) -> Version {
         let major = (self.raw[0] >> 4) & 0x0F;
@@ -200,11 +227,13 @@ impl Cvt {
         Version { major, minor }
     }
 
+    /// Additional pixel clock precision in kHz.
     #[must_use]
     pub const fn pixel_clock_precision_khz(&self) -> u16 {
         ((self.raw[1] >> 2) as u16) * 250
     }
 
+    /// Maximum horizontal active pixels.
     #[must_use]
     pub const fn max_horizontal_active(&self) -> u16 {
         let msb = self.raw[1] & 0b11;
@@ -212,6 +241,7 @@ impl Cvt {
         u16::from_be_bytes([msb, lsb]) * 8
     }
 
+    /// Supported aspect ratios.
     pub fn aspect_ratios(&self) -> impl Iterator<Item = AspectRatio> {
         let bits = self.raw[3];
         [
@@ -225,6 +255,7 @@ impl Cvt {
         .filter_map(move |(mask, ar)| (bits & mask != 0).then_some(ar))
     }
 
+    /// Preferred aspect ratio.
     #[must_use]
     pub const fn preferred_aspect(&self) -> Option<AspectRatio> {
         match (self.raw[4] >> 5) & 0b111 {
@@ -237,6 +268,7 @@ impl Cvt {
         }
     }
 
+    /// CVT blanking support.
     #[must_use]
     pub const fn blanking(&self) -> Blanking {
         Blanking {
@@ -245,6 +277,7 @@ impl Cvt {
         }
     }
 
+    /// Horizontal scaling support.
     #[must_use]
     pub const fn horizontal_scaling(&self) -> Scaling {
         match (self.raw[5] >> 6) & 0b11 {
@@ -255,6 +288,7 @@ impl Cvt {
         }
     }
 
+    /// Vertical scaling support.
     #[must_use]
     pub const fn vertical_scaling(&self) -> Scaling {
         match (self.raw[5] >> 4) & 0b11 {
@@ -265,11 +299,13 @@ impl Cvt {
         }
     }
 
+    /// Preferred vertical refresh rate in Hz.
     #[must_use]
     pub const fn preferred_vertical_hz(&self) -> u8 {
         self.raw[6]
     }
 
+    /// Validates CVT parameters against the VESA specification.
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new()
