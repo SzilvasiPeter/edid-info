@@ -1,5 +1,5 @@
 use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
-use edid_info::base::descriptor::range::{Scaling, VideoTimingSupport};
+use edid_info::base::descriptor::range::{RateRange, Scaling, VideoTimingSupport};
 use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -16,11 +16,9 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
     assert!(matches!(desc, DisplayDescriptor::RangeLimits(_)));
 
     if let DisplayDescriptor::RangeLimits(range) = desc {
-        assert_eq!(range.v_min_hz(), 48);
-        assert_eq!(range.v_max_hz(), 100);
-        assert_eq!(range.h_min_khz(), 24);
-        assert_eq!(range.h_max_khz(), 120);
-        assert_eq!(range.pixel_mhz(), 250);
+        assert_eq!(range.vertical_hz(), RateRange { min: 48, max: 100 });
+        assert_eq!(range.horizontal_khz(), RateRange { min: 24, max: 120 });
+        assert_eq!(range.max_pixel_clock_mhz(), 250);
         assert_eq!(range.timing(), VideoTimingSupport::DefaultGtf);
     }
 }
@@ -29,15 +27,12 @@ fn parse_range_limit_descriptor_acer_ek221q_h() {
 fn parse_range_limit_descriptor_asus_rog_pg27u() {
     let range_raw: [u8; 18] = std::array::from_fn(|i| ASUS[90 + i]);
     let range = Monitor::new(&range_raw, false);
-
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
     };
-    assert_eq!(range.v_min_hz(), 24);
-    assert_eq!(range.v_max_hz(), 144);
-    assert_eq!(range.h_min_khz(), 52);
-    assert_eq!(range.h_max_khz(), 322);
-    assert_eq!(range.pixel_mhz(), 1270);
+    assert_eq!(range.vertical_hz(), RateRange { min: 24, max: 144 });
+    assert_eq!(range.horizontal_khz(), RateRange { min: 52, max: 322 });
+    assert_eq!(range.max_pixel_clock_mhz(), 1270);
     assert_eq!(range.timing(), VideoTimingSupport::RangeLimitsOnly);
 }
 
@@ -49,11 +44,9 @@ fn parse_range_secondary_gtf_phl_22pfl3606() {
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
     };
-    assert_eq!(range.v_min_hz(), 55);
-    assert_eq!(range.v_max_hz(), 76);
-    assert_eq!(range.h_min_khz(), 15);
-    assert_eq!(range.h_max_khz(), 68);
-    assert_eq!(range.pixel_mhz(), 150);
+    assert_eq!(range.vertical_hz(), RateRange { min: 55, max: 76 });
+    assert_eq!(range.horizontal_khz(), RateRange { min: 15, max: 68 });
+    assert_eq!(range.max_pixel_clock_mhz(), 150);
 
     match range.timing() {
         VideoTimingSupport::SecondaryGtf(sgtf) => {
@@ -75,11 +68,9 @@ fn parse_range_cvt_sdc_123yl01() {
     let DisplayDescriptor::RangeLimits(range) = range.descriptor() else {
         panic!()
     };
-    assert_eq!(range.v_min_hz(), 48);
-    assert_eq!(range.v_max_hz(), 60);
-    assert_eq!(range.h_min_khz(), 0);
-    assert_eq!(range.h_max_khz(), 0);
-    assert_eq!(range.pixel_mhz(), 340);
+    assert_eq!(range.vertical_hz(), RateRange { min: 48, max: 60 });
+    assert_eq!(range.horizontal_khz(), RateRange { min: 0, max: 0 });
+    assert_eq!(range.max_pixel_clock_mhz(), 340);
 
     match range.timing() {
         VideoTimingSupport::Cvt(cvt) => {
@@ -94,7 +85,7 @@ fn parse_range_cvt_sdc_123yl01() {
             assert!(!cvt.blanking().standard);
             assert_eq!(cvt.horizontal_scaling(), Scaling::None);
             assert_eq!(cvt.vertical_scaling(), Scaling::Stretch);
-            assert_eq!(cvt.pref_v_hz(), 20);
+            assert_eq!(cvt.preferred_vertical_hz(), 20);
         }
         _ => panic!("Expected Cvt timing"),
     }
@@ -108,10 +99,8 @@ fn parse_range_limits_descriptor_rol_rolsen_c707n() {
     let DisplayDescriptor::RangeLimits(vals) = range.descriptor() else {
         panic!()
     };
-    assert_eq!(vals.v_min_hz(), 50);
-    assert_eq!(vals.v_max_hz(), 90);
-    assert_eq!(vals.h_min_khz(), 30);
-    assert_eq!(vals.h_max_khz(), 88);
-    assert_eq!(vals.pixel_mhz(), 180);
+    assert_eq!(vals.vertical_hz(), RateRange { min: 50, max: 90 });
+    assert_eq!(vals.horizontal_khz(), RateRange { min: 30, max: 88 });
+    assert_eq!(vals.max_pixel_clock_mhz(), 180);
     assert_eq!(vals.timing(), VideoTimingSupport::DefaultGtf);
 }

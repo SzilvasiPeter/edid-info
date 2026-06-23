@@ -52,6 +52,8 @@ edid.base().footer()      // Extension count, checksum
 ## Implementation References
 
 - **Extended Display Identification Data (EDID) Wikipedia**: https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
+- **VESA E-EDID Standard**: https://glenwing.github.io/docs/VESA-EEDID-A2.pdf
+- **VESA Display Monitoring Timing (DMT 1.13)**: https://glenwing.github.io/docs/VESA-DMT-1.13.pdf
 - **General Timing Formula (GTF 1.1)**: https://glenwing.github.io/docs/VESA-GTF-1.1.pdf
 - **Coordinated Video Timings (CVT 1.2)**: https://glenwing.github.io/docs/VESA-CVT-1.2.pdf
 - **CTA‐861‐G Specification**: https://web.archive.org/web/20171201033424/https://standards.cta.tech/kwspub/published_docs/CTA-861-G_FINAL_revised_2017.pdf

@@ -28,6 +28,12 @@ pub enum Scaling {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RateRange {
+    pub min: u16,
+    pub max: u16,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RangeLimits {
     offsets: u8,
     raw: [u8; 13],
@@ -39,27 +45,19 @@ impl RangeLimits {
     }
 
     #[must_use]
-    pub const fn v_min_hz(&self) -> u16 {
-        adjust(self.raw[0], self.raw[1], self.offsets & 0b11).0
+    pub const fn vertical_hz(&self) -> RateRange {
+        let (min, max) = adjust(self.raw[0], self.raw[1], self.offsets & 0b11);
+        RateRange { min, max }
     }
 
     #[must_use]
-    pub const fn v_max_hz(&self) -> u16 {
-        adjust(self.raw[0], self.raw[1], self.offsets & 0b11).1
+    pub const fn horizontal_khz(&self) -> RateRange {
+        let (min, max) = adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11);
+        RateRange { min, max }
     }
 
     #[must_use]
-    pub const fn h_min_khz(&self) -> u16 {
-        adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11).0
-    }
-
-    #[must_use]
-    pub const fn h_max_khz(&self) -> u16 {
-        adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11).1
-    }
-
-    #[must_use]
-    pub const fn pixel_mhz(&self) -> u16 {
+    pub const fn max_pixel_clock_mhz(&self) -> u16 {
         (self.raw[4] as u16) * 10
     }
 
@@ -86,41 +84,50 @@ impl RangeLimits {
     /// Validates the range limits descriptor against the VESA specification.
     #[must_use]
     pub const fn validate(&self) -> Validation {
-        let mut validation = Validation::new();
-        // TODO: Use more specific failure kind on the reserved byte failures for better error diagnositc.
-        validation = validation.fail_if(
+        let mut valid = Validation::new();
+        valid = valid.fail_if(
             matches!(
                 self.offsets,
                 0x01 | 0x04..=0x07 | 0x09 | 0x0D | 0x10..=0xFF
             ),
-            FailureKind::RangeLimitsReservedByte,
+            FailureKind::RangeLimitsOffsetReserved,
         );
-        validation = validation.fail_if(
-            self.raw[0] == 0
-                || self.raw[1] == 0
-                || self.raw[2] == 0
-                || self.raw[3] == 0
-                || self.raw[4] == 0,
-            FailureKind::RangeLimitsReservedByte,
-        );
-
-        let (v_min, v_max) = adjust(self.raw[0], self.raw[1], self.offsets & 0b11);
-        let (h_min, h_max) = adjust(self.raw[2], self.raw[3], (self.offsets >> 2) & 0b11);
-        validation = validation.fail_if(
-            v_min > v_max || h_min > h_max,
+        valid = valid.fail_if(self.raw[0] == 0, FailureKind::RangeLimitsVerticalMinZero);
+        valid = valid.fail_if(self.raw[1] == 0, FailureKind::RangeLimitsVerticalMaxZero);
+        valid = valid.fail_if(self.raw[2] == 0, FailureKind::RangeLimitsHorizontalMinZero);
+        valid = valid.fail_if(self.raw[3] == 0, FailureKind::RangeLimitsHorizontalMaxZero);
+        valid = valid.fail_if(self.raw[4] == 0, FailureKind::RangeLimitsMaxPixelClockZero);
+        let v = self.vertical_hz();
+        let h = self.horizontal_khz();
+        valid = valid.fail_if(
+            v.min > v.max || h.min > h.max,
             FailureKind::RangeLimitsMinExceedsMax,
         );
 
-        validation = validation.warn_if(
+        valid = valid.warn_if(
             matches!(self.timing(), VideoTimingSupport::Reserved(_)),
             WarningKind::VideoTimingSupportReserved,
         );
-        validation = validation.warn_if(
+        valid = valid.warn_if(
             matches!(self.raw[5], 0x00 | 0x02),
             WarningKind::GtfIsDeprecated,
         );
+        valid = valid.warn_if(
+            matches!(self.raw[5], 0x00 | 0x01) && self.raw[6] != 0x0A,
+            WarningKind::RangeLimitsExpectedLineFeed,
+        );
+        valid = valid.warn_if(
+            matches!(self.raw[5], 0x00 | 0x01)
+                && (self.raw[7] != 0x20
+                    || self.raw[8] != 0x20
+                    || self.raw[9] != 0x20
+                    || self.raw[10] != 0x20
+                    || self.raw[11] != 0x20
+                    || self.raw[12] != 0x20),
+            WarningKind::RangeLimitsExpectedSpaces,
+        );
 
-        validation
+        valid
     }
 }
 
@@ -251,7 +258,7 @@ impl CvtSupport {
     }
 
     #[must_use]
-    pub const fn pref_v_hz(&self) -> u8 {
+    pub const fn preferred_vertical_hz(&self) -> u8 {
         self.raw[6]
     }
 }

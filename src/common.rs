@@ -44,12 +44,22 @@ pub enum FailureKind {
     TimingPixelClockIsZero = 15,
     /// Undefined display descriptor tag.
     UndefinedDescriptor = 16,
-    /// Range limits contains reserved byte values.
-    RangeLimitsReservedByte = 17,
+    /// Range limits minimum vertical rate is zero.
+    RangeLimitsVerticalMinZero = 17,
+    /// Range limits maximum vertical rate is zero.
+    RangeLimitsVerticalMaxZero = 18,
+    /// Range limits minimum horizontal rate is zero.
+    RangeLimitsHorizontalMinZero = 19,
+    /// Range limits maximum horizontal rate is zero.
+    RangeLimitsHorizontalMaxZero = 20,
+    /// Range limits maximum pixel clock is zero.
+    RangeLimitsMaxPixelClockZero = 21,
     /// Range limits minimum exceeds maximum.
-    RangeLimitsMinExceedsMax = 18,
+    RangeLimitsMinExceedsMax = 22,
     /// GTF and CVT requires continuous frequency display.
-    GtfAndCvtRequiresContFreq = 19,
+    GtfAndCvtRequiresContFreq = 23,
+    /// Range limits offset byte contains a reserved value.
+    RangeLimitsOffsetReserved = 24,
 }
 
 impl FailureKind {
@@ -74,9 +84,14 @@ impl FailureKind {
             Self::StdTimingRefreshLimit => "Standard timing refresh rate exceeds 123 Hz",
             Self::InvalidEmptyStdTiming => "Use 0x01 0x01 byte code for empty Standard Timings",
             Self::UndefinedDescriptor => "Undefined display descriptor tag",
-            Self::RangeLimitsReservedByte => "Range limits contains reserved byte values",
+            Self::RangeLimitsVerticalMinZero => "Range limits minimum vertical rate is zero",
+            Self::RangeLimitsVerticalMaxZero => "Range limits maximum vertical rate is zero",
+            Self::RangeLimitsHorizontalMinZero => "Range limits minimum horizontal rate is zero",
+            Self::RangeLimitsHorizontalMaxZero => "Range limits maximum horizontal rate is zero",
+            Self::RangeLimitsMaxPixelClockZero => "Range limits maximum pixel clock is zero",
             Self::RangeLimitsMinExceedsMax => "Range limits minimum exceeds maximum",
             Self::GtfAndCvtRequiresContFreq => "GTF and CVT requires continous frequency display",
+            Self::RangeLimitsOffsetReserved => "Range limits offset byte contains reserved value",
         }
     }
 }
@@ -111,6 +126,10 @@ pub enum WarningKind {
     GtfIsDeprecated = 11,
     /// Video timing support contains a reserved value.
     VideoTimingSupportReserved = 12,
+    /// Expected line feed for Default GTF or Range Limits Only.
+    RangeLimitsExpectedLineFeed = 13,
+    /// Expected spaces for Default GTF or Range Limits Only.
+    RangeLimitsExpectedSpaces = 14,
 }
 
 impl WarningKind {
@@ -131,6 +150,8 @@ impl WarningKind {
             Self::RangeLimitsRequired => "Range limits required for continous frequency",
             Self::GtfIsDeprecated => "GTF is deprecated, use CVT instead",
             Self::VideoTimingSupportReserved => "Video timing support is set to a reserved value",
+            Self::RangeLimitsExpectedLineFeed => "Expected line feed for range limits/default GTF",
+            Self::RangeLimitsExpectedSpaces => "Expected spaces for range limits/default GTF",
         }
     }
 }
