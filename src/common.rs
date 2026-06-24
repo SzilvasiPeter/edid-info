@@ -64,6 +64,8 @@ pub enum FailureKind {
     CvtVersionZero = 25,
     /// CVT preferred vertical refresh rate is zero (reserved).
     CvtPreferredRateZero = 26,
+    /// Color point descriptor reserved bits are non-zero.
+    ColorPointReservedBits = 27,
 }
 
 impl FailureKind {
@@ -98,6 +100,7 @@ impl FailureKind {
             Self::RangeLimitsOffsetReserved => "Range limits offset byte contains reserved value",
             Self::CvtVersionZero => "CVT standard version major nibble is zero",
             Self::CvtPreferredRateZero => "CVT preferred vertical refresh rate is zero (reserved)",
+            Self::ColorPointReservedBits => "Color point descriptor reserved bits are nonzero",
         }
     }
 }
@@ -146,6 +149,10 @@ pub enum WarningKind {
     CvtPreferredAspectReserved = 18,
     /// GTF secondary curve reserved byte is non-zero.
     GtfSecondaryReservedByte = 19,
+    /// Color point descriptor expected line feed (0x0A).
+    ColorPointExpectedLineFeed = 20,
+    /// Color point descriptor expected spaces (0x20 0x20).
+    ColorPointExpectedSpaces = 21,
 }
 
 impl WarningKind {
@@ -173,6 +180,8 @@ impl WarningKind {
             Self::CvtReservedScalingBits => "CVT scaling reserved bits are non-zero",
             Self::CvtPreferredAspectReserved => "CVT preferred aspect ratio is a reserved value",
             Self::GtfSecondaryReservedByte => "GTF secondary curve reserved byte is non-zero",
+            Self::ColorPointExpectedLineFeed => "Color point descriptor expected line feed (0x0A)",
+            Self::ColorPointExpectedSpaces => "Color point descriptor expected spaces (0x20)",
         }
     }
 }

@@ -246,14 +246,14 @@ impl Basic {
         }
     }
 
-    /// Display gamma as gamma × 100 (factory default, 1.00–3.54).
+    /// Decoded display gamma (factory default, 1.00–3.54).
     /// Returns `None` when the raw value is `0xFF` (defined by an extension block).
     #[must_use]
-    pub const fn gamma(&self) -> Option<u16> {
-        if self.gamma == 255 {
+    pub fn gamma(&self) -> Option<f32> {
+        if self.gamma == 0xFF {
             None
         } else {
-            Some(self.gamma as u16 + 100)
+            Some(f32::from(self.gamma) / 100.0 + 1.0)
         }
     }
 
@@ -266,7 +266,7 @@ impl Basic {
 
     /// Validates the basic block.
     #[must_use]
-    pub const fn validate(&self, chroma_srgb: bool) -> Validation {
+    pub fn validate(&self, chroma_srgb: bool) -> Validation {
         let (bitdepth_reserved, iface_reserved) = match self.video_input().kind() {
             InputKind::Digital { depth, iface } => (
                 matches!(depth, BitDepth::Reserved),
@@ -275,10 +275,10 @@ impl Basic {
             InputKind::Analog { .. } => (false, false),
         };
         let srgb = self.features().standard_rgb();
-        let gamma_warn = match self.gamma() {
-            Some(value) => value != 220,
-            None => false,
-        };
+
+        let gamma_warn = self
+            .gamma()
+            .is_some_and(|value| (value - 2.2).abs() > f32::EPSILON);
         let small_size = self.width_cm != 0
             && self.height_cm != 0
             && (self.width_cm < 10 || self.height_cm < 10);
@@ -312,9 +312,7 @@ impl core::fmt::Display for Basic {
         write!(f, ", ")?;
         match self.gamma() {
             Some(value) => {
-                let major = value / 100;
-                let minor = value % 100;
-                write!(f, "Gamma: {major}.{minor:02}")?;
+                write!(f, "Gamma: {value:.2}%")?;
             }
             None => {
                 write!(f, "Gamma is defined by an extension")?;

@@ -38,7 +38,7 @@ fn parse_basic_acer_ek221q_h() {
             height: 260,
         })
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(out.features().dpms().standby);
     assert!(out.features().dpms().suspend);
     assert!(out.features().dpms().active_off);
@@ -83,7 +83,7 @@ fn parse_basic_a630c928b60c_landscape() {
         out.screen_size(),
         ScreenSize::Aspect(AspectRatio::new(178, 100))
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(out.features().dpms().standby);
     assert!(out.features().dpms().suspend);
     assert!(out.features().dpms().active_off);
@@ -117,7 +117,7 @@ fn parse_basic_cf24d4b470d2_portrait() {
         out.screen_size(),
         ScreenSize::Aspect(AspectRatio::new(100, 100))
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(out.features().dpms().standby);
     assert!(out.features().dpms().suspend);
     assert!(out.features().dpms().active_off);
@@ -153,7 +153,7 @@ fn parse_basic_asus_rog_pg27u() {
             height: 340,
         })
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(!out.features().dpms().standby);
     assert!(!out.features().dpms().suspend);
     assert!(out.features().dpms().active_off);
@@ -194,7 +194,7 @@ fn parse_basic_phl_221v8() {
             height: 270,
         })
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(!out.features().dpms().standby);
     assert!(!out.features().dpms().suspend);
     assert!(out.features().dpms().active_off);
@@ -235,7 +235,7 @@ fn parse_basic_rol_rolsen_c707n() {
             height: 220,
         })
     );
-    assert_eq!(out.gamma(), Some(280));
+    assert_eq!(out.gamma(), Some(2.8));
     assert!(out.features().dpms().standby);
     assert!(out.features().dpms().suspend);
     assert!(!out.features().dpms().active_off);
@@ -276,7 +276,7 @@ fn parse_basic_tsb_tv() {
             height: 500,
         })
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(!out.features().dpms().standby);
     assert!(!out.features().dpms().suspend);
     assert!(!out.features().dpms().active_off);
@@ -358,7 +358,7 @@ fn parse_basic_wg_unknown() {
             height: 300,
         })
     );
-    assert_eq!(out.gamma(), Some(220));
+    assert_eq!(out.gamma(), Some(2.2));
     assert!(!out.features().dpms().standby);
     assert!(!out.features().dpms().suspend);
     assert!(!out.features().dpms().active_off);

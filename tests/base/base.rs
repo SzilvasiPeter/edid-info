@@ -95,7 +95,7 @@ fn parse_base_asus_rog_pg27u() {
             height: 340,
         })
     );
-    assert_eq!(base.basic().gamma(), Some(220));
+    assert_eq!(base.basic().gamma(), Some(2.2));
 
     assert_eq!(base.footer().extension_count(), 2);
     assert_eq!(base.footer().checksum(), 0x72);

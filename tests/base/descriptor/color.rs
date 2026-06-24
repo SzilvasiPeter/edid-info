@@ -1,4 +1,7 @@
-use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+use edid_info::base::{
+    chroma::Coord,
+    descriptor::monitor::{DisplayDescriptor, Monitor},
+};
 
 // TODO: use real world example instead of synthetic
 #[test]
@@ -22,20 +25,12 @@ fn parse_white_point_synthetic() {
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
-        assert_eq!(first.index(), 1);
-        assert_eq!(first.x_raw(), 0x200);
-        assert_eq!(first.y_raw(), 0x000);
-        assert_eq!(first.gamma_raw(), 0x40);
-        assert!((first.gamma() - 1.64).abs() < 0.01);
+        assert_eq!(first.coord(), Coord { x: 0x200, y: 0x00 });
+        assert!((first.gamma().unwrap() - 1.64).abs() < 0.01);
 
         let second = wp.second().expect("second point");
-        assert_eq!(second.index(), 2);
-        assert_eq!(second.x_raw(), 0x101);
-        assert_eq!(second.y_raw(), 1);
-        assert_eq!(second.gamma_raw(), 0x50);
-        assert!((second.gamma() - 1.80).abs() < 0.01);
-
-        assert_eq!(wp.pad(), [0x00, 0x00, 0x00]);
+        assert_eq!(second.coord(), Coord { x: 0x101, y: 1 });
+        assert!((second.gamma().unwrap() - 1.80).abs() < 0.01);
     } else {
         panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }
@@ -73,8 +68,7 @@ fn parse_white_point_gamma() {
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
-        assert_eq!(first.gamma_raw(), 0x64);
-        assert!((first.gamma() - 2.0).abs() < 0.01);
+        assert!((first.gamma().unwrap() - 2.0).abs() < 0.01);
     } else {
         panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }

@@ -138,8 +138,8 @@ impl Display for Chroma {
 /// The color coordinates.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Coord {
-    x: u16,
-    y: u16,
+    pub x: u16,
+    pub y: u16,
 }
 
 impl Coord {

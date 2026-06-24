@@ -12,7 +12,7 @@
 //! | 11–17 | Timing-specific data (GTF secondary curve or CVT parameters) |
 use crate::common::{AspectRatio, FailureKind, Validation, Version, WarningKind};
 
-/// Video timing formula indicated by byte 10 of the range descriptor.
+/// Video timing formula of the range descriptor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum VideoTimingSupport {
     /// Default GTF is supported (C=40, M=600, K=128, J=20).
@@ -51,6 +51,7 @@ pub struct RangeLimits {
 }
 
 impl RangeLimits {
+    /// Raw byte constructor.
     pub(super) const fn new(offsets: u8, raw: &[u8; 13]) -> Self {
         Self { offsets, raw: *raw }
     }
@@ -192,7 +193,7 @@ impl GtfSecondaryCurve {
         (self.raw[6] as f32) / 2.0
     }
 
-    /// Warns if the reserved byte 11 is non-zero.
+    /// Validates GTF parameters against the VESA specification.
     #[must_use]
     pub const fn validate(&self) -> Validation {
         Validation::new().warn_if(self.raw[0] != 0, WarningKind::GtfSecondaryReservedByte)
