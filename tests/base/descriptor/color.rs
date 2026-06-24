@@ -26,11 +26,11 @@ fn parse_white_point_synthetic() {
     if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
         assert_eq!(first.coord(), Coord { x: 0x200, y: 0x00 });
-        assert!((first.gamma().unwrap() - 1.64).abs() < 0.01);
+        assert!((first.gamma().unwrap() - 1.64).abs() < f32::EPSILON);
 
         let second = wp.second().expect("second point");
         assert_eq!(second.coord(), Coord { x: 0x101, y: 1 });
-        assert!((second.gamma().unwrap() - 1.80).abs() < 0.01);
+        assert!((second.gamma().unwrap() - 1.80).abs() < f32::EPSILON);
     } else {
         panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }
@@ -68,7 +68,7 @@ fn parse_white_point_gamma() {
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::ColorPoint(wp) = monitor.descriptor() {
         let first = wp.first().expect("first point");
-        assert!((first.gamma().unwrap() - 2.0).abs() < 0.01);
+        assert!((first.gamma().unwrap() - 2.0).abs() < f32::EPSILON);
     } else {
         panic!("expected WhitePoint, got {:?}", monitor.descriptor());
     }

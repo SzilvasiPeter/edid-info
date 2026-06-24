@@ -29,7 +29,7 @@ fn parse_base_acer_ek221q_h() {
             height: 260,
         })
     );
-    assert_eq!(out.chroma().white().x(), 321);
+    assert!((out.chroma().white().x() - 321.0_f32 / 1024.0).abs() < f32::EPSILON);
     assert!(out.established_timings().iter().any(|d| d.id == 0x24));
     assert_eq!(
         out.standard_timings().iter().nth(7).map(|m| (

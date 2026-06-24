@@ -83,7 +83,7 @@ impl Monitor {
             0xFE => DisplayDescriptor::DataString(text),
             0xFD => DisplayDescriptor::RangeLimits(RangeLimits::new(self.raw[4], &payload)),
             0xFC => DisplayDescriptor::ProductName(text),
-            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::parse(&payload)),
+            0xFB => DisplayDescriptor::ColorPoint(ColorPoint::new(&payload)),
             0xFA => DisplayDescriptor::StdTimings(StdTimings::new(&payload, self.legacy)),
             0xF9 => DisplayDescriptor::Dcm(Dcm::parse(&payload)),
             0xF8 => DisplayDescriptor::Cvt3(Cvt3::parse(&payload)),

@@ -145,14 +145,14 @@ pub struct Coord {
 impl Coord {
     /// Returns the x coordinate value.
     #[must_use]
-    pub const fn x(&self) -> u16 {
-        self.x
+    pub const fn x(&self) -> f32 {
+        self.x as f32 / 1024.0
     }
 
     /// Returns the y coordinate value.
     #[must_use]
-    pub const fn y(&self) -> u16 {
-        self.y
+    pub const fn y(&self) -> f32 {
+        self.y as f32 / 1024.0
     }
 }
 

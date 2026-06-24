@@ -14,7 +14,7 @@
 //! | +3     | White point y upper 8 bits (bit 9 → bit 2) |
 //! | +4     | Gamma: `stored = (gamma × 100) - 100`, `0xFF` = undefined |
 //!
-//! Chromaticity coordinates are 10-bit binary fractions where bit 9 = 2⁻¹ = 0.5 and bit 0 = 2⁻¹⁰ ≈ 0.00098.
+//! Chromaticity coordinates are 10-bit binary fractions where bit 9 = 2^-1 = 0.5 and bit 0 = 2^-10 ≈ 0.00098.
 //! Gamma is decoded as `gamma_raw / 100.0 + 1.0`, valid range 1.00–3.54.
 //!
 //! Trailing bytes 15–17 of the descriptor must contain 0x0A (LF) followed by 0x20 0x20 (Space Space).
@@ -66,7 +66,7 @@ pub struct ColorPoint {
 impl ColorPoint {
     /// Parses a `ColorPoint` from the 13-byte descriptor payload.
     #[must_use]
-    pub(super) const fn parse(raw: &[u8; 13]) -> Self {
+    pub(super) const fn new(raw: &[u8; 13]) -> Self {
         Self { raw: *raw }
     }
 
