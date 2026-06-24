@@ -64,7 +64,6 @@ pub struct ColorPoint {
 }
 
 impl ColorPoint {
-    /// Parses a `ColorPoint` from the 13-byte descriptor payload.
     #[must_use]
     pub(super) const fn new(raw: &[u8; 13]) -> Self {
         Self { raw: *raw }

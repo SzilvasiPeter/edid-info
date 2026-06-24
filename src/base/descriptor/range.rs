@@ -51,7 +51,6 @@ pub struct RangeLimits {
 }
 
 impl RangeLimits {
-    /// Raw byte constructor.
     pub(super) const fn new(offsets: u8, raw: &[u8; 13]) -> Self {
         Self { offsets, raw: *raw }
     }

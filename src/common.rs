@@ -153,6 +153,8 @@ pub enum WarningKind {
     ColorPointExpectedLineFeed = 20,
     /// Color point descriptor expected spaces (0x20 0x20).
     ColorPointExpectedSpaces = 21,
+    /// Standard timing descriptor expected line feed (0x0A).
+    StdTimingExpectedLineFeed = 22,
 }
 
 impl WarningKind {
@@ -180,8 +182,9 @@ impl WarningKind {
             Self::CvtReservedScalingBits => "CVT scaling reserved bits are non-zero",
             Self::CvtPreferredAspectReserved => "CVT preferred aspect ratio is a reserved value",
             Self::GtfSecondaryReservedByte => "GTF secondary curve reserved byte is non-zero",
-            Self::ColorPointExpectedLineFeed => "Color point descriptor expected line feed (0x0A)",
-            Self::ColorPointExpectedSpaces => "Color point descriptor expected spaces (0x20)",
+            Self::ColorPointExpectedLineFeed => "Color point descriptor expected line feed",
+            Self::ColorPointExpectedSpaces => "Color point descriptor expected spaces",
+            Self::StdTimingExpectedLineFeed => "Standard timing descriptor expected line feed",
         }
     }
 }
