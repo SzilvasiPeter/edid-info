@@ -164,6 +164,10 @@ pub enum WarningKind {
     Cvt3VersionReserved = 24,
     /// CVT 3-byte descriptor reserved bit is non-zero.
     Cvt3ReservedBits = 25,
+    /// Established Timings III version is not 0x0A.
+    EstTimingsVersionReserved = 26,
+    /// Established Timings III reserved bits or bytes are non-zero.
+    EstTimingsReservedBits = 27,
 }
 
 impl WarningKind {
@@ -197,6 +201,10 @@ impl WarningKind {
             Self::DcmVersionReserved => "DCM descriptor version is not 0x03",
             Self::Cvt3VersionReserved => "CVT 3-byte descriptor version is not 0x01",
             Self::Cvt3ReservedBits => "CVT 3-byte descriptor reserved bit is non-zero",
+            Self::EstTimingsVersionReserved => "Established Timings III version is not 0x0A",
+            Self::EstTimingsReservedBits => {
+                "Established Timings III reserved bits or bytes are non-zero"
+            }
         }
     }
 }

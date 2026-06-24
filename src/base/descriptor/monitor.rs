@@ -87,7 +87,7 @@ impl Monitor {
             0xFA => DisplayDescriptor::StdTimings(StdTimings::new(&payload, self.legacy)),
             0xF9 => DisplayDescriptor::Dcm(Dcm::new(&payload)),
             0xF8 => DisplayDescriptor::Cvt3(Cvt3::new(&payload)),
-            0xF7 => DisplayDescriptor::EstTimings(EstTimings::parse(&payload)),
+            0xF7 => DisplayDescriptor::EstTimings(EstTimings::new(&payload)),
             0x10 => DisplayDescriptor::Dummy,
             0x00..=0x0F => DisplayDescriptor::VendorReserved(payload),
             0x11..=0xF6 => DisplayDescriptor::Undefined(payload),
