@@ -28,7 +28,7 @@ pub struct Dcm {
 }
 
 impl Dcm {
-    pub(super) const fn parse(raw: &[u8; 13]) -> Self {
+    pub(super) const fn new(raw: &[u8; 13]) -> Self {
         Self { raw: *raw }
     }
 

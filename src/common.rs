@@ -66,6 +66,8 @@ pub enum FailureKind {
     CvtPreferredRateZero = 26,
     /// Color point descriptor reserved bits are non-zero.
     ColorPointReservedBits = 27,
+    /// CVT 3-byte preferred rate not listed in supported rates.
+    Cvt3PreferredRateMismatch = 28,
 }
 
 impl FailureKind {
@@ -101,6 +103,7 @@ impl FailureKind {
             Self::CvtVersionZero => "CVT standard version major nibble is zero",
             Self::CvtPreferredRateZero => "CVT preferred vertical refresh rate is zero (reserved)",
             Self::ColorPointReservedBits => "Color point descriptor reserved bits are nonzero",
+            Self::Cvt3PreferredRateMismatch => "CVT 3-byte preferred rate not in supported rates",
         }
     }
 }
@@ -157,6 +160,10 @@ pub enum WarningKind {
     StdTimingExpectedLineFeed = 22,
     /// DCM descriptor version is not 0x03.
     DcmVersionReserved = 23,
+    /// CVT 3-byte descriptor version is not 0x01.
+    Cvt3VersionReserved = 24,
+    /// CVT 3-byte descriptor reserved bit is non-zero.
+    Cvt3ReservedBits = 25,
 }
 
 impl WarningKind {
@@ -188,6 +195,8 @@ impl WarningKind {
             Self::ColorPointExpectedSpaces => "Color point descriptor expected spaces",
             Self::StdTimingExpectedLineFeed => "Standard timing descriptor expected line feed",
             Self::DcmVersionReserved => "DCM descriptor version is not 0x03",
+            Self::Cvt3VersionReserved => "CVT 3-byte descriptor version is not 0x01",
+            Self::Cvt3ReservedBits => "CVT 3-byte descriptor reserved bit is non-zero",
         }
     }
 }
@@ -271,6 +280,13 @@ impl core::fmt::Display for Version {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}.{}", self.major, self.minor)
     }
+}
+
+/// CVT blanking support flags.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Blanking {
+    pub reduced: bool,
+    pub standard: bool,
 }
 
 /// Physical dimensions in millimeters.

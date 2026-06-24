@@ -1,4 +1,4 @@
-use edid_info::base::descriptor::cvt3::PrefRate;
+use edid_info::base::descriptor::cvt3::Rate;
 use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
 use edid_info::common::AspectRatio;
 
@@ -39,37 +39,38 @@ fn parse_cvt3_synthetic() {
 
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
-        let mode1 = cvt3.mode1();
-        assert_eq!(mode1.addr_lines(), 0);
-        assert_eq!(mode1.aspect(), AspectRatio::new(4, 3));
-        assert_eq!(mode1.pref(), PrefRate::Hz50);
-        assert!(!mode1.hz50());
-        assert!(!mode1.hz60());
-        assert!(!mode1.hz75());
-        assert!(!mode1.hz85());
-        assert!(!mode1.hz60_rb());
+        let p1 = cvt3.priority1();
+        assert_eq!(p1.vertical_lines(), 2);
+        assert_eq!(p1.aspect_ratio(), AspectRatio::new(4, 3));
+        assert_eq!(p1.preferred_rate(), Rate::Hz50);
+        assert_eq!(p1.rates().count(), 0);
+        assert!(!p1.blanking().standard);
+        assert!(!p1.blanking().reduced);
 
-        let mode2 = cvt3.mode2();
-        assert_eq!(mode2.addr_lines(), 16);
-        assert_eq!(mode2.aspect(), AspectRatio::new(16, 9));
-        assert_eq!(mode2.pref(), PrefRate::Hz60);
+        let p2 = cvt3.priority2();
+        assert_eq!(p2.vertical_lines(), 34);
+        assert_eq!(p2.aspect_ratio(), AspectRatio::new(16, 9));
+        assert_eq!(p2.preferred_rate(), Rate::Hz60);
+        assert!(p2.rates().eq([Rate::Hz50]));
+        assert!(p2.blanking().standard);
+        assert!(!p2.blanking().reduced);
 
-        let mode3 = cvt3.mode3();
-        assert_eq!(mode3.addr_lines(), 32);
-        assert_eq!(mode3.aspect(), AspectRatio::new(16, 10));
-        assert_eq!(mode3.pref(), PrefRate::Hz75);
+        let p3 = cvt3.priority3();
+        assert_eq!(p3.vertical_lines(), 66);
+        assert_eq!(p3.aspect_ratio(), AspectRatio::new(16, 10));
+        assert_eq!(p3.preferred_rate(), Rate::Hz75);
 
-        let mode4 = cvt3.mode4();
-        assert_eq!(mode4.addr_lines(), 48);
-        assert_eq!(mode4.aspect(), AspectRatio::new(15, 9));
-        assert_eq!(mode4.pref(), PrefRate::Hz85);
+        let p4 = cvt3.priority4();
+        assert_eq!(p4.vertical_lines(), 98);
+        assert_eq!(p4.aspect_ratio(), AspectRatio::new(15, 9));
+        assert_eq!(p4.preferred_rate(), Rate::Hz85);
     } else {
         panic!("expected Cvt3, got {:?}", monitor.descriptor());
     }
 }
 
 #[test]
-fn parse_mode_v_lines() {
+fn parse_mode_vertical_lines() {
     let mut raw = [0u8; 18];
     raw[3] = 0xF8;
     raw[5] = 0x01;
@@ -79,16 +80,15 @@ fn parse_mode_v_lines() {
 
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
-        let mode1 = cvt3.mode1();
-        assert_eq!(mode1.addr_lines(), 9);
-        assert_eq!(mode1.v_lines(), 20);
+        let p1 = cvt3.priority1();
+        assert_eq!(p1.vertical_lines(), 20);
     } else {
         panic!("expected Cvt3, got {:?}", monitor.descriptor());
     }
 }
 
 #[test]
-fn parse_mode_h_pixels() {
+fn parse_mode_horizontal_pixels() {
     let mut raw = [0u8; 18];
     raw[3] = 0xF8;
     raw[5] = 0x01;
@@ -98,8 +98,8 @@ fn parse_mode_h_pixels() {
 
     let monitor = Monitor::new(&raw, false);
     if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
-        let mode1 = cvt3.mode1();
-        assert_eq!(mode1.h_pixels(), 24);
+        let p1 = cvt3.priority1();
+        assert_eq!(p1.horizontal_pixels(), 24);
     } else {
         panic!("expected Cvt3, got {:?}", monitor.descriptor());
     }

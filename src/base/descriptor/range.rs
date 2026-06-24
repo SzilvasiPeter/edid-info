@@ -10,7 +10,7 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Video timing support flag (00h=GTF, 01h=limits only, 02h=GTF secondary, 04h=CVT) |
 //! | 11–17 | Timing-specific data (GTF secondary curve or CVT parameters) |
-use crate::common::{AspectRatio, FailureKind, Validation, Version, WarningKind};
+use crate::common::{AspectRatio, Blanking, FailureKind, Validation, Version, WarningKind};
 
 /// Video timing formula of the range descriptor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -197,13 +197,6 @@ impl GtfSecondaryCurve {
     pub const fn validate(&self) -> Validation {
         Validation::new().warn_if(self.raw[0] != 0, WarningKind::GtfSecondaryReservedByte)
     }
-}
-
-/// CVT blanking support flags.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Blanking {
-    pub reduced: bool,
-    pub standard: bool,
 }
 
 /// CVT timing parameters.
