@@ -132,3 +132,31 @@ fn test_gtf_is_deprecated_warning() {
         0
     );
 }
+
+fn assert_has_warning(v: edid_info::common::Validation, kind: WarningKind) {
+    assert!(
+        v.warnings & (1 << kind as u8) != 0,
+        "expected warning {kind:?}",
+    );
+}
+
+#[test]
+fn validate_dummy_rejects_nonzero_payload() {
+    let mut raw = [0u8; 18];
+    raw[3] = 0x10;
+    raw[5] = 0x01;
+
+    let monitor = Monitor::new(&raw, false);
+    let v = monitor.validate();
+    assert_has_warning(v, WarningKind::DummyNonZeroBytes);
+}
+
+#[test]
+fn validate_dummy_accepts_zero_payload() {
+    let mut raw = [0u8; 18];
+    raw[3] = 0x10;
+
+    let monitor = Monitor::new(&raw, false);
+    let v = monitor.validate();
+    assert!(v.is_valid());
+}

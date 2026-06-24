@@ -9,7 +9,7 @@ use super::dcm::Dcm;
 use super::established::EstTimings;
 use super::range::RangeLimits;
 use super::standard::StdTimings;
-use crate::common::{DESC_LEN, FailureKind, Validation};
+use crate::common::{DESC_LEN, FailureKind, Validation, WarningKind};
 
 /// Display metadata descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -32,8 +32,8 @@ pub enum DisplayDescriptor {
     Cvt3(Cvt3),
     /// Tag 0xF7: Established Timings III.
     EstTimings(EstTimings),
-    /// Tag 0x10: Dummy Descriptor.
-    Dummy,
+    /// Tag 0x10: Dummy Descriptor (payload must be all zeroes).
+    Dummy([u8; 13]),
     /// Tags 0x00–0x0F: Manufacturer Specified Display Descriptors.
     VendorReserved([u8; 13]),
     /// Tags 0x11–0xF6: Reserved / Undefined.
@@ -51,10 +51,12 @@ impl DisplayDescriptor {
             Self::Dcm(d) => d.validate(),
             Self::Cvt3(d) => d.validate(),
             Self::EstTimings(d) => d.validate(),
+            Self::Dummy(d) => {
+                Validation::new().warn_if(d.iter().any(|&b| b != 0), WarningKind::DummyNonZeroBytes)
+            }
             Self::SerialNumber(_)
             | Self::DataString(_)
             | Self::ProductName(_)
-            | Self::Dummy
             | Self::VendorReserved(_)
             | Self::Undefined(_) => Validation::new(),
         }
@@ -109,7 +111,7 @@ impl Monitor {
             0xF9 => DisplayDescriptor::Dcm(Dcm::new(&payload)),
             0xF8 => DisplayDescriptor::Cvt3(Cvt3::new(&payload)),
             0xF7 => DisplayDescriptor::EstTimings(EstTimings::new(&payload)),
-            0x10 => DisplayDescriptor::Dummy,
+            0x10 => DisplayDescriptor::Dummy(payload),
             0x00..=0x0F => DisplayDescriptor::VendorReserved(payload),
             0x11..=0xF6 => DisplayDescriptor::Undefined(payload),
         }
