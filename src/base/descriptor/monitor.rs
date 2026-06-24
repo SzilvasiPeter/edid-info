@@ -11,24 +11,6 @@ use super::range::RangeLimits;
 use super::standard::StdTimings;
 use crate::common::{DESC_LEN, FailureKind, Validation};
 
-/// A descriptor containing ASCII text.
-///
-/// Used for Serial Number, Monitor Name, and other text fields.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct DescriptorString {
-    raw: [u8; 13],
-}
-
-impl DescriptorString {
-    /// Returns the text as a string slice, trimmed of trailing whitespace and nulls.
-    #[must_use]
-    pub fn text(&self) -> &str {
-        core::str::from_utf8(&self.raw)
-            .unwrap_or("")
-            .trim_end_matches(['\0', '\n', ' '])
-    }
-}
-
 /// Display metadata descriptors.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DisplayDescriptor {
@@ -56,6 +38,45 @@ pub enum DisplayDescriptor {
     VendorReserved([u8; 13]),
     /// Tags 0x11–0xF6: Reserved / Undefined.
     Undefined([u8; 13]),
+}
+
+impl DisplayDescriptor {
+    /// Validates the specific inner metadata of the display descriptor.
+    #[must_use]
+    pub fn validate(&self) -> Validation {
+        match self {
+            Self::RangeLimits(d) => d.validate(),
+            Self::ColorPoint(d) => d.validate(),
+            Self::StdTimings(d) => d.validate(),
+            Self::Dcm(d) => d.validate(),
+            Self::Cvt3(d) => d.validate(),
+            Self::EstTimings(d) => d.validate(),
+            Self::SerialNumber(_)
+            | Self::DataString(_)
+            | Self::ProductName(_)
+            | Self::Dummy
+            | Self::VendorReserved(_)
+            | Self::Undefined(_) => Validation::new(),
+        }
+    }
+}
+
+/// A descriptor containing ASCII text.
+///
+/// Used for Serial Number, Monitor Name, and other text fields.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct DescriptorString {
+    raw: [u8; 13],
+}
+
+impl DescriptorString {
+    /// Returns the text as a string slice, trimmed of trailing whitespace and nulls.
+    #[must_use]
+    pub fn text(&self) -> &str {
+        core::str::from_utf8(&self.raw)
+            .unwrap_or("")
+            .trim_end_matches(['\0', '\n', ' '])
+    }
 }
 
 /// An 18-byte Monitor Descriptor parser.
@@ -97,15 +118,11 @@ impl Monitor {
     /// Validates the monitor descriptor according to the VESA specification.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        let raw = self.raw;
+        let all_zero = self.raw.iter().all(|&b| b == 0);
+        let bad_reserved = self.raw[2] != 0 || (self.raw[3] != 0xFD && self.raw[4] != 0);
         Validation::new()
-            .fail_if(raw.iter().all(|&b| b == 0), FailureKind::AllZeroDescriptor)
-            .fail_if(
-                raw[2] != 0 || (raw[3] != 0xFD && raw[4] != 0),
-                FailureKind::MonitorReservedByteIsNonZero,
-            )
-        // TODO: If the descriptor can validate, call it.
-        // It should be simply a `self.descriptor().validate()` call.
-        // Implement trait or similar to handle descriptor validation.
+            .fail_if(all_zero, FailureKind::AllZeroDescriptor)
+            .fail_if(bad_reserved, FailureKind::MonitorReservedByteIsNonZero)
+            .then(self.descriptor().validate())
     }
 }
