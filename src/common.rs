@@ -155,6 +155,8 @@ pub enum WarningKind {
     ColorPointExpectedSpaces = 21,
     /// Standard timing descriptor expected line feed (0x0A).
     StdTimingExpectedLineFeed = 22,
+    /// DCM descriptor version is not 0x03.
+    DcmVersionReserved = 23,
 }
 
 impl WarningKind {
@@ -185,6 +187,7 @@ impl WarningKind {
             Self::ColorPointExpectedLineFeed => "Color point descriptor expected line feed",
             Self::ColorPointExpectedSpaces => "Color point descriptor expected spaces",
             Self::StdTimingExpectedLineFeed => "Standard timing descriptor expected line feed",
+            Self::DcmVersionReserved => "DCM descriptor version is not 0x03",
         }
     }
 }

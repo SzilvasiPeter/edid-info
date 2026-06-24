@@ -1,57 +1,78 @@
-//! Display Color Management (DCM) Descriptor.
+//! Display Color Management (DCM) descriptor (tag 0xF9).
 //!
-//! Describes color correction coefficients for the display panel.
-//! Uses tag 0xF9 and version 0x03.
+//! Stores color correction polynomial coefficients for the display panel.
+//! Each coefficient is a 16-bit unsigned integer stored LSB-first.
+//!
+//! # Descriptor Layout (18 bytes)
+//!
+//! | Byte | Content |
+//! |------|---------|
+//! | 0–4  | `0x0000F900` (tag header) |
+//! | 5    | Version (`0x03`) |
+//! | 6–7  | Red a3 |
+//! | 8–9  | Red a2 |
+//! | 10–11| Green a3 |
+//! | 12–13| Green a2 |
+//! | 14–15| Blue a3 |
+//! | 16–17| Blue a2 |
 
+use crate::common::{Validation, WarningKind};
+
+/// Display Color Management polynomial coefficients.
+///
+/// Stores the raw 13-byte descriptor payload and lazily computes
+/// each 16-bit coefficient on access.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Dcm {
-    red_a3: u16,
-    red_a2: u16,
-    green_a3: u16,
-    green_a2: u16,
-    blue_a3: u16,
-    blue_a2: u16,
+    raw: [u8; 13],
 }
 
 impl Dcm {
     pub(super) const fn parse(raw: &[u8; 13]) -> Self {
-        Self {
-            red_a3: u16::from_le_bytes([raw[1], raw[2]]),
-            red_a2: u16::from_le_bytes([raw[3], raw[4]]),
-            green_a3: u16::from_le_bytes([raw[5], raw[6]]),
-            green_a2: u16::from_le_bytes([raw[7], raw[8]]),
-            blue_a3: u16::from_le_bytes([raw[9], raw[10]]),
-            blue_a2: u16::from_le_bytes([raw[11], raw[12]]),
-        }
+        Self { raw: *raw }
     }
 
+    /// Red a3 coefficient.
     #[must_use]
     pub const fn red_a3(&self) -> u16 {
-        self.red_a3
+        u16::from_le_bytes([self.raw[1], self.raw[2]])
     }
 
+    /// Red a2 coefficient.
     #[must_use]
     pub const fn red_a2(&self) -> u16 {
-        self.red_a2
+        u16::from_le_bytes([self.raw[3], self.raw[4]])
     }
 
+    /// Green a3 coefficient.
     #[must_use]
     pub const fn green_a3(&self) -> u16 {
-        self.green_a3
+        u16::from_le_bytes([self.raw[5], self.raw[6]])
     }
 
+    /// Green a2 coefficient.
     #[must_use]
     pub const fn green_a2(&self) -> u16 {
-        self.green_a2
+        u16::from_le_bytes([self.raw[7], self.raw[8]])
     }
 
+    /// Blue a3 coefficient.
     #[must_use]
     pub const fn blue_a3(&self) -> u16 {
-        self.blue_a3
+        u16::from_le_bytes([self.raw[9], self.raw[10]])
     }
 
+    /// Blue a2 coefficient.
     #[must_use]
     pub const fn blue_a2(&self) -> u16 {
-        self.blue_a2
+        u16::from_le_bytes([self.raw[11], self.raw[12]])
+    }
+
+    /// Validates the DCM descriptor.
+    ///
+    /// **Warnings**: version byte is not `0x03`.
+    #[must_use]
+    pub const fn validate(&self) -> Validation {
+        Validation::new().warn_if(self.raw[0] != 0x03, WarningKind::DcmVersionReserved)
     }
 }
