@@ -1,9 +1,8 @@
 //! Display Color Management (DCM) descriptor (tag 0xF9).
 //!
 //! Stores color correction polynomial coefficients for the display panel.
-//! Each coefficient is a 16-bit unsigned integer stored LSB-first.
 //!
-//! # Descriptor Layout (18 bytes)
+//! # Descriptor Layout
 //!
 //! | Byte | Content |
 //! |------|---------|
@@ -15,6 +14,29 @@
 //! | 12–13| Green a2 |
 //! | 14–15| Blue a3 |
 //! | 16–17| Blue a2 |
+//!
+//! Each coefficient is a 16-bit unsigned integer stored LSB-first.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::DESC_LEN;
+//!
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xF9; // DCM tag
+//! raw[5] = 0x03; // Version
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::Dcm(dcm) = monitor.descriptor() {
+//!     assert_eq!(dcm.red_a3(), 0);
+//!     assert_eq!(dcm.green_a3(), 0);
+//!     assert_eq!(dcm.blue_a3(), 0);
+//!     assert!(dcm.validate().is_valid());
+//! } else {
+//!     panic!("expected DCM descriptor");
+//! }
+//! ```
 
 use crate::common::{Validation, WarningKind};
 

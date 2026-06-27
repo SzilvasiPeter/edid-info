@@ -3,7 +3,7 @@
 //! Provides up to 6 additional standard timings beyond the 8 in the base block.
 //! Uses the same 2-byte encoding as [`crate::base::standard::StdTimings`].
 //!
-//! # Descriptor Layout (18 bytes)
+//! # Descriptor Layout
 //!
 //! | Byte | Content |
 //! |------|---------|
@@ -16,6 +16,26 @@
 //!
 //! The 6 entries are labeled *Standard Timing Identification 9–14* in the spec,
 //! continuing sequentially from the 8 entries in the base block.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::DESC_LEN;
+//!
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xFA; // StdTimings tag
+//! raw[5..17].fill(0x01); // All 6 entries unused (0x01 0x01)
+//! raw[17] = 0x0A; // Trailer line feed
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::StdTimings(std) = monitor.descriptor() {
+//!     assert_eq!(std.iter().count(), 0);
+//!     assert!(std.validate().is_valid());
+//! } else {
+//!     panic!("expected StdTimings descriptor");
+//! }
+//! ```
 
 use crate::base::standard::{StandardTiming, parse_std};
 use crate::common::{Validation, WarningKind};

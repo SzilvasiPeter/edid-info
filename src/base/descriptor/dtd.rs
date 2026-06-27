@@ -1,10 +1,9 @@
 //! Detailed Timing Descriptor (DTD).
 //!
 //! An 18-byte structure describing a single video timing mode with
-//! precise parameters including pixel clock, active pixels, blanking,
-//! sync polarities, and physical display size.
+//! precise parameters including pixel clock, active pixels, blanking, sync polarities, and physical display size.
 //!
-//! # DTD Structure (18 bytes)
+//! # Descriptor Layout
 //!
 //! | Bytes | Description |
 //! |-------|-------------|
@@ -15,6 +14,46 @@
 //! | 12–13 | Image size (mm, little-endian) |
 //! | 14    | Border size |
 //! | 15–17 | Flags (interlace, stereo, sync type) |
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::dtd::{
+//!     DetailedTiming, Stereo, SyncSignal,
+//! };
+//! use edid_info::common::{
+//!     DESC_LEN, Polarity, Size, SyncPolarity, Timing,
+//! };
+//!
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[0] = 0x01; // Pixel clock LSB (10 kHz × 1 = 10 kHz)
+//! raw[2] = 100;  // h_active LSB
+//! raw[3] = 20;   // h_blank LSB
+//! raw[5] = 100;  // v_active LSB
+//! raw[6] = 20;   // v_blank LSB
+//! raw[8] = 5;    // h_front LSB
+//! raw[9] = 3;    // h_sync LSB
+//! raw[10] = 0x53; // v_front LSB [7:4]=5, v_sync LSB [3:0]=3
+//! raw[12] = 44;  // physical width LSB
+//! raw[13] = 30;  // physical height LSB
+//! raw[17] = 0x1E; // DigitalSeparate(Positive, Positive), stereo=None
+//!
+//! let timing = DetailedTiming::new(&raw);
+//! assert_eq!(timing.pixel_clock_khz(), 10);
+//! assert!(!timing.interlaced());
+//! assert_eq!(timing.horizontal(), Timing::new(100, 20, 5, 3, 0));
+//! assert_eq!(timing.vertical(), Timing::new(100, 20, 5, 3, 0));
+//! assert_eq!(timing.physical(), Size { width: 44, height: 30 });
+//! assert_eq!(timing.stereo(), Stereo::None);
+//! assert_eq!(
+//!     timing.signal(),
+//!     SyncSignal::DigitalSeparate(SyncPolarity {
+//!         horizontal: Polarity::Positive,
+//!         vertical: Polarity::Positive,
+//!     })
+//! );
+//! assert!(timing.validate().is_valid());
+//! ```
 
 use crate::bit::{get_bits, is_set, pack_bits};
 use crate::common::{

@@ -3,7 +3,7 @@
 //! A bitmap of supported additional standard timings defined in the
 //! VESA Monitor Timing Standard but not included in Established Timings I or II.
 //!
-//! # Descriptor Layout (18 bytes)
+//! # Descriptor Layout
 //!
 //! | Byte | Content |
 //! |------|---------|
@@ -18,6 +18,25 @@
 //! | 12–17| Reserved (`0x00`) |
 //!
 //! Each bit corresponds to a DMT timing entry. Support is indicated by a `1`.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::DESC_LEN;
+//!
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xF7; // EstTimings III tag
+//! raw[5] = 0x0A; // Version
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::EstTimings(est) = monitor.descriptor() {
+//!     assert_eq!(est.iter().count(), 0);
+//!     assert!(est.validate().is_valid());
+//! } else {
+//!     panic!("expected EstTimings descriptor");
+//! }
+//! ```
 
 use crate::base::dmt::Dmt;
 use crate::base::established::flag_dmt;

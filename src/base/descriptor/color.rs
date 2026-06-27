@@ -2,22 +2,53 @@
 //!
 //! Contains up to two white point index entries with chromaticity coordinates and gamma values.
 //!
-//! # Structure
+//! # Descriptor Layout
 //!
-//! Each white point entry occupies 5 bytes in the descriptor payload (bytes 5–9 for the first entry, bytes 10–14 for the second):
+//! Each white point entry occupies 5 bytes in the descriptor payload:
 //!
 //! | Offset | Field |
 //! |--------|-------|
-//! | +0     | Index (0 = unused) |
-//! | +1     | Combined LSB nibble: bits 3–2 = x low, bits 1–0 = y low |
-//! | +2     | White point x upper 8 bits (bit 9 → bit 2) |
-//! | +3     | White point y upper 8 bits (bit 9 → bit 2) |
-//! | +4     | Gamma: `stored = (gamma × 100) - 100`, `0xFF` = undefined |
+//! | 0-4 | First white point entry |
+//! | 0 | Index |
+//! | 1 | Combined LSB nibble: bits 3–2 = x low, bits 1–0 = y low |
+//! | 2 | White point x upper 8 bits (bit 9 → bit 2) |
+//! | 3 | White point y upper 8 bits (bit 9 → bit 2) |
+//! | 4 | Gamma: `stored = (gamma × 100) - 100`, `0xFF` = undefined |
+//! | 5-9 | Second white point entry |
+//! | 10 | Line feed (0x0A) |
+//! | 11-12 | Space (0x20) |
 //!
 //! Chromaticity coordinates are 10-bit binary fractions where bit 9 = 2^-1 = 0.5 and bit 0 = 2^-10 ≈ 0.00098.
 //! Gamma is decoded as `gamma_raw / 100.0 + 1.0`, valid range 1.00–3.54.
 //!
-//! Trailing bytes 15–17 of the descriptor must contain 0x0A (LF) followed by 0x20 0x20 (Space Space).
+//! Trailing bytes of the descriptor must contain 0x0A (LF) followed by 0x20 0x20 (Space Space).
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::DESC_LEN;
+//!
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xFB; // ColorPoint tag
+//! raw[5] = 1;    // First white point index
+//! raw[6] = 0x00; // Combined LSB: x-low = 0, y-low = 0
+//! raw[7] = 163;  // White-x MSB
+//! raw[8] = 84;   // White-y MSB
+//! raw[9] = 120;  // Gamma (2.20)
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::ColorPoint(cp) = monitor.descriptor() {
+//!     let first = cp.first().unwrap();
+//!     assert_eq!(first.coord().x, 652);
+//!     assert_eq!(first.coord().y, 336);
+//!     assert!((first.gamma().unwrap() - 2.20).abs() < f32::EPSILON);
+//!     let second = cp.second();
+//!     assert_eq!(second, None);
+//! } else {
+//!     panic!("expected ColorPoint descriptor");
+//! }
+//! ```
 
 use crate::base::chroma::Coord;
 use crate::common::{FailureKind, Validation, WarningKind};
@@ -56,8 +87,7 @@ impl Point {
 
 /// Color Point Descriptor (tag 0xFB).
 ///
-/// Holds the 13-byte payload (bytes 5–17 of the 18-byte descriptor)
-/// and provides access to up to two white point entries.
+/// Holds the 13-byte payload (bytes 5–17 of the 18-byte descriptor) and provides access to up to two white point entries.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ColorPoint {
     raw: [u8; 13],
@@ -69,7 +99,7 @@ impl ColorPoint {
         Self { raw: *raw }
     }
 
-    /// First white point entry (bytes 5–9 of the descriptor).
+    /// First white point entry.
     ///
     /// Returns `None` when the index is zero (entry absent).
     #[must_use]
@@ -88,7 +118,7 @@ impl ColorPoint {
         })
     }
 
-    /// Second white point entry (bytes 10–14 of the descriptor).
+    /// Second white point entry.
     ///
     /// Per spec, the second index must be in range `02h–FFh`.
     /// Returns `None` when the index is `0x00` (absent) or `0x01` (invalid for a second entry).
@@ -111,11 +141,8 @@ impl ColorPoint {
 
     /// Validates the color point descriptor.
     ///
-    /// **Failures**: reserved bits (bits 7–4 of the combined LSB byte)
-    /// are non-zero for any present entry.
-    ///
-    /// **Warnings**: trailing bytes deviate from the expected
-    /// `0x0A 0x20 0x20` (LF, Space, Space).
+    /// **Failures**: reserved bits (bits 7–4 of the combined LSB byte) are non-zero for any present entry.
+    /// **Warnings**: trailing bytes deviate from the expected `0x0A 0x20 0x20` (LF, Space, Space).
     #[must_use]
     pub const fn validate(&self) -> Validation {
         let raw = self.raw;

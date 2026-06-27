@@ -2,6 +2,26 @@
 //!
 //! Monitor descriptors provide display metadata such as serial number,
 //! name, range limits, and color characteristics. Identified by bytes 0–1 being zero.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::DESC_LEN;
+//!
+//! // Product name descriptor (tag 0xFC)
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xFC;
+//! raw[5..11].copy_from_slice(b"My Mon");
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::ProductName(name) = monitor.descriptor() {
+//!     assert_eq!(name.text(), "My Mon");
+//! } else {
+//!     panic!("expected ProductName descriptor");
+//! }
+//! assert!(monitor.validate().is_valid());
+//! ```
 
 use super::color::ColorPoint;
 use super::cvt3::Cvt3;

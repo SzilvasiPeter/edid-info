@@ -3,7 +3,7 @@
 //! Defines up to 4 video timing modes using 3-byte CVT codes.
 //! Each entry encodes the addressable vertical line count, aspect ratio, preferred refresh rate, and supported refresh rates.
 //!
-//! # Descriptor Layout (18 bytes)
+//! # Descriptor Layout
 //!
 //! | Byte | Content |
 //! |------|---------|
@@ -31,8 +31,42 @@
 //! | 2    | 0     | 60 Hz reduced blanking supported |
 //!
 //! The entry stores addressable lines value `a = (v_lines / 2) - 1`.
-//! Horizontal pixels are computed as:
-//! `H = 8 × trunc((V × aspect.width / aspect.height) / 8)`
+//! Horizontal pixels are computed as: `H = 8 × trunc((V × aspect.width / aspect.height) / 8)`
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::cvt3::Rate;
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::common::{AspectRatio, DESC_LEN};
+//!
+//! // Only priority 1 is present; priorities 2-4 are all-zero (absent).
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xF8; // CVT3 tag
+//! raw[5] = 0x01; // Version
+//! raw[6] = 0x00; // Addressable lines LSB (v_lines = (0 + 1) * 2 = 2)
+//! raw[7] = 0x00; // Lines MSB=0, aspect 4:3=00, reserved=00
+//! raw[8] = 0x11; // Preferred 50 Hz, Hz50 + reduced 60 Hz supported
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::Cvt3(cvt3) = monitor.descriptor() {
+//!     let p1 = cvt3.priority1().unwrap();
+//!     assert_eq!(p1.vertical_lines(), 2);
+//!     assert_eq!(p1.horizontal_pixels(), 0);
+//!     assert_eq!(p1.aspect_ratio(), AspectRatio::new(4, 3));
+//!     assert_eq!(p1.preferred_rate(), Rate::Hz50);
+//!     assert!(p1.rates().eq([Rate::Hz50, Rate::Hz60]));
+//!     assert!(p1.blanking().standard);
+//!     assert!(p1.blanking().reduced);
+//!
+//!     assert!(cvt3.priority2().is_none());
+//!     assert!(cvt3.priority3().is_none());
+//!     assert!(cvt3.priority4().is_none());
+//!     assert!(cvt3.validate().is_valid());
+//! } else {
+//!     panic!("expected Cvt3 descriptor");
+//! }
+//! ```
 
 use crate::common::{AspectRatio, Blanking, FailureKind, Validation, WarningKind};
 
@@ -59,6 +93,15 @@ impl Entry {
     pub const fn vertical_lines(&self) -> u16 {
         let addr_lines = (self.raw[0] as u16) | ((self.raw[1] as u16 >> 4) & 0x0F) << 8;
         (addr_lines + 1) * 2
+    }
+
+    /// Horizontal pixels, computed as `trunc((v_lines × aspect) / 8) * 8`.
+    #[must_use]
+    pub const fn horizontal_pixels(&self) -> u16 {
+        let v = self.vertical_lines();
+        let r = self.aspect_ratio();
+        let h = (v / r.height()) * r.width() + (v % r.height()) * r.width() / r.height();
+        (h / 8) * 8
     }
 
     /// Aspect ratio.
@@ -105,15 +148,6 @@ impl Entry {
             reduced: self.raw[2] & 0b0000_0001 != 0,
         }
     }
-
-    /// Horizontal pixels, computed as `trunc((v_lines × aspect) / 8) * 8`.
-    #[must_use]
-    pub const fn horizontal_pixels(&self) -> u16 {
-        let v = self.vertical_lines();
-        let r = self.aspect_ratio();
-        let h = (v / r.height()) * r.width() + (v % r.height()) * r.width() / r.height();
-        (h / 8) * 8
-    }
 }
 
 /// CVT 3-Byte Timing Codes (tag 0xF8).
@@ -129,32 +163,56 @@ impl Cvt3 {
         Self { raw: *raw }
     }
 
-    /// Highest priority entry (descriptor bytes 6–8).
+    /// Highest priority entry.
+    ///
+    /// Returns `None` when the three-byte encoding is all-zero (entry absent).
     #[must_use]
-    pub const fn priority1(&self) -> Entry {
+    pub const fn priority1(&self) -> Option<Entry> {
         let raw = [self.raw[1], self.raw[2], self.raw[3]];
-        Entry { raw }
+        if raw[0] == 0 && raw[1] == 0 && raw[2] == 0 {
+            None
+        } else {
+            Some(Entry { raw })
+        }
     }
 
-    /// Second priority entry (descriptor bytes 9–11).
+    /// Second priority entry.
+    ///
+    /// Returns `None` when the three-byte encoding is all-zero (entry absent).
     #[must_use]
-    pub const fn priority2(&self) -> Entry {
+    pub const fn priority2(&self) -> Option<Entry> {
         let raw = [self.raw[4], self.raw[5], self.raw[6]];
-        Entry { raw }
+        if raw[0] == 0 && raw[1] == 0 && raw[2] == 0 {
+            None
+        } else {
+            Some(Entry { raw })
+        }
     }
 
-    /// Third priority entry (descriptor bytes 12–14).
+    /// Third priority entry.
+    ///
+    /// Returns `None` when the three-byte encoding is all-zero (entry absent).
     #[must_use]
-    pub const fn priority3(&self) -> Entry {
+    pub const fn priority3(&self) -> Option<Entry> {
         let raw = [self.raw[7], self.raw[8], self.raw[9]];
-        Entry { raw }
+        if raw[0] == 0 && raw[1] == 0 && raw[2] == 0 {
+            None
+        } else {
+            Some(Entry { raw })
+        }
     }
 
-    /// Lowest priority entry (descriptor bytes 15–17).
+    /// Lowest priority entry.
+    ///
+    /// Returns `None` when the three-byte encoding is all-zero (entry absent).
     #[must_use]
-    pub const fn priority4(&self) -> Entry {
+    pub const fn priority4(&self) -> Option<Entry> {
         let raw = [self.raw[10], self.raw[11], self.raw[12]];
-        Entry { raw }
+        if raw[0] == 0 && raw[1] == 0 && raw[2] == 0 {
+            None
+        } else {
+            Some(Entry { raw })
+        }
     }
 
     /// Validates the CVT 3-byte descriptor.
@@ -163,15 +221,15 @@ impl Cvt3 {
     /// **Warnings**: version is not `0x01`, or reserved bits are non-zero.
     #[must_use]
     pub fn validate(&self) -> Validation {
-        let entries: [_; 4] = [
+        let pref_not_supported = [
             self.priority1(),
             self.priority2(),
             self.priority3(),
             self.priority4(),
-        ];
-        let pref_not_supported = entries
-            .iter()
-            .any(|e| e.raw != [0; 3] && !e.rates().any(|r| r == e.preferred_rate()));
+        ]
+        .iter()
+        .flatten()
+        .any(|e| !e.rates().any(|r| r == e.preferred_rate()));
 
         let bad_reserved = (0..4).any(|i| {
             let off = 1 + i * 3;

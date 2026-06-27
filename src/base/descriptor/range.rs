@@ -1,5 +1,7 @@
 //! Display Range Limits & Additional Timing descriptor (tag 0xFD).
 //!
+//! # Descriptor Layout
+//!
 //! | Byte | Description |
 //! |------|-------------|
 //! | 4    | Offsets for rate over-255 extensions |
@@ -10,6 +12,39 @@
 //! | 9    | Maximum pixel clock (×10 MHz) |
 //! | 10   | Video timing support flag (00h=GTF, 01h=limits only, 02h=GTF secondary, 04h=CVT) |
 //! | 11–17 | Timing-specific data (GTF secondary curve or CVT parameters) |
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+//! use edid_info::base::descriptor::range::VideoTimingSupport;
+//! use edid_info::common::DESC_LEN;
+//!
+//! // Range-limits-only descriptor (tag 0xFD, timing type 0x01)
+//! let mut raw = [0u8; DESC_LEN];
+//! raw[3] = 0xFD; // RangeLimits tag
+//! raw[5] = 50;   // Min vertical Hz
+//! raw[6] = 60;   // Max vertical Hz
+//! raw[7] = 30;   // Min horizontal kHz
+//! raw[8] = 80;   // Max horizontal kHz
+//! raw[9] = 15;   // Max pixel clock (150 MHz)
+//! raw[10] = 0x01; // RangeLimitsOnly
+//! raw[11] = 0x0A; // Line feed
+//! raw[12..18].fill(0x20); // Spaces
+//!
+//! let monitor = Monitor::new(&raw, false);
+//! if let DisplayDescriptor::RangeLimits(rl) = monitor.descriptor() {
+//!     assert_eq!(rl.vertical_hz().min, 50);
+//!     assert_eq!(rl.vertical_hz().max, 60);
+//!     assert_eq!(rl.horizontal_khz().min, 30);
+//!     assert_eq!(rl.horizontal_khz().max, 80);
+//!     assert_eq!(rl.max_pixel_clock_mhz(), 150);
+//!     assert_eq!(rl.timing(), VideoTimingSupport::RangeLimitsOnly);
+//!     assert!(rl.validate().is_valid());
+//! } else {
+//!     panic!("expected RangeLimits descriptor");
+//! }
+//! ```
 use crate::common::{AspectRatio, Blanking, FailureKind, Validation, Version, WarningKind};
 
 /// Video timing formula of the range descriptor.
