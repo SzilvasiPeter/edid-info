@@ -1258,3 +1258,65 @@ pub const DMT_ARRAY: [Dmt; 88] = [
         },
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::{find_cvt, find_dmt, find_std};
+    use crate::common::{Polarity, SyncPolarity, Timing};
+
+    #[test]
+    fn examples_docstring() {
+        // Look up a DMT timing by its ID (e.g., 0x04 is 640x480 @ 60Hz)
+        let dmt = find_dmt(0x04).unwrap();
+        assert_eq!(dmt.id, 0x04);
+        assert_eq!(dmt.std_code, Some(0x3140));
+        assert_eq!(dmt.cvt_code, None);
+        assert_eq!(dmt.pixel_clock_khz, 25_175);
+        assert!(!dmt.interlaced);
+        assert_eq!(dmt.horizontal, Timing::new(640, 160, 8, 96, 8));
+        assert_eq!(dmt.vertical, Timing::new(480, 45, 2, 2, 8));
+        assert_eq!(
+            dmt.sync,
+            SyncPolarity {
+                horizontal: Polarity::Negative,
+                vertical: Polarity::Negative
+            }
+        );
+        assert_eq!(dmt.h_freq_hz(), 31_469);
+        assert_eq!(dmt.v_freq_mhz(), 59_941);
+
+        // Look up by standard timing code 0x3140 (which resolves to 640x480 @ 60Hz)
+        let dmt_std = find_std(0x3140).unwrap();
+        assert_eq!(dmt_std.id, 0x04);
+
+        // Look up by CVT code 0x7F_1C21 (1280x768 @ 60Hz, DMT ID 0x16)
+        let dmt_cvt = find_cvt(0x7F_1C21).unwrap();
+        assert_eq!(dmt_cvt.id, 0x16);
+    }
+
+    #[test]
+    fn find_cvt_entries() {
+        let expected = [
+            (0x7F_1C21u32, 0x16),
+            (0x7F_1C28, 0x17),
+            (0x7F_1C44, 0x18),
+            (0x7F_1C62, 0x19),
+            (0x8F_1821, 0x1B),
+            (0x8F_1828, 0x1C),
+            (0x8F_1844, 0x1D),
+            (0x8F_1862, 0x1E),
+            (0x0C_2021, 0x29),
+            (0xC1_1821, 0x2E),
+            (0x57_2821, 0x44),
+            (0x1F_3821, 0x4C),
+        ];
+
+        for (cvt_code, expected_id) in expected {
+            let dmt = find_cvt(cvt_code).unwrap();
+            assert_eq!(dmt.id, expected_id);
+            assert_eq!(dmt.cvt_code, Some(cvt_code));
+        }
+
+        assert_eq!(find_cvt(0xDEAD_BEEF), None);
+    }
+}

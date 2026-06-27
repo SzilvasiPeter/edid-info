@@ -2,10 +2,6 @@ use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
 use edid_info::base::header::Header;
 use edid_info::common::{BLOCK_LEN, Version, WarningKind};
 
-fn is_legacy(raw_base: &[u8; BLOCK_LEN]) -> bool {
-    Header::new(raw_base).version() < Version { major: 1, minor: 3 }
-}
-
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../../data/ASUS_ROG_PG27U.edid");
 const SDC: &[u8] = include_bytes!("../../data/SDC_123YL01.edid");
@@ -133,30 +129,6 @@ fn test_gtf_is_deprecated_warning() {
     );
 }
 
-fn assert_has_warning(v: edid_info::common::Validation, kind: WarningKind) {
-    assert!(
-        v.warnings & (1 << kind as u8) != 0,
-        "expected warning {kind:?}",
-    );
-}
-
-#[test]
-fn validate_dummy_rejects_nonzero_payload() {
-    let mut raw = [0u8; 18];
-    raw[3] = 0x10;
-    raw[5] = 0x01;
-
-    let monitor = Monitor::new(&raw, false);
-    let v = monitor.validate();
-    assert_has_warning(v, WarningKind::DummyNonZeroBytes);
-}
-
-#[test]
-fn validate_dummy_accepts_zero_payload() {
-    let mut raw = [0u8; 18];
-    raw[3] = 0x10;
-
-    let monitor = Monitor::new(&raw, false);
-    let v = monitor.validate();
-    assert!(v.is_valid());
+fn is_legacy(raw_base: &[u8; BLOCK_LEN]) -> bool {
+    Header::new(raw_base).version() < Version { major: 1, minor: 3 }
 }

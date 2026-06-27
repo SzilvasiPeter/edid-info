@@ -82,3 +82,36 @@ impl<'a> Edid<'a> {
             .fail_if(ext_num != self.ext_len, FailureKind::ExtensionCountMismatch)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_edid_invalid_length() {
+        let short = [0u8; 100];
+        assert!(matches!(Edid::parse(&short), Err(ParseError::InvalidLen)));
+
+        let unaligned = [0u8; 200];
+        assert!(matches!(
+            Edid::parse(&unaligned),
+            Err(ParseError::InvalidLen)
+        ));
+    }
+
+    #[test]
+    fn parse_edid_bad_header() {
+        let bad = [0u8; 128];
+        assert!(matches!(Edid::parse(&bad), Err(ParseError::BadHeader)));
+    }
+
+    #[test]
+    fn parse_edid_ext_count_too_large() {
+        let mut large = [0u8; 128 * 66];
+        large[..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]);
+        assert!(matches!(
+            Edid::parse(&large),
+            Err(ParseError::ExtCountTooLarge)
+        ));
+    }
+}

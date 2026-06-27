@@ -98,3 +98,26 @@ impl Dcm {
         Validation::new().warn_if(self.raw[0] != 0x03, WarningKind::DcmVersionReserved)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::DESC_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xF9; // DCM tag
+        raw[5] = 0x03; // Version
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::Dcm(dcm) = monitor.descriptor() {
+            assert_eq!(dcm.red_a3(), 0);
+            assert_eq!(dcm.green_a3(), 0);
+            assert_eq!(dcm.blue_a3(), 0);
+            assert!(dcm.validate().is_valid());
+        } else {
+            panic!("expected DCM descriptor");
+        }
+    }
+}

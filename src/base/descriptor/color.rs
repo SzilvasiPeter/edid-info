@@ -158,3 +158,77 @@ impl ColorPoint {
             .warn_if(raw[12] != 0x20, WarningKind::ColorPointExpectedSpaces)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::DESC_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFB; // ColorPoint tag
+        raw[5] = 1; // First white point index
+        raw[6] = 0x00; // Combined LSB: x-low = 0, y-low = 0
+        raw[7] = 163; // White-x MSB
+        raw[8] = 84; // White-y MSB
+        raw[9] = 120; // Gamma (2.20)
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::ColorPoint(cp) = monitor.descriptor() {
+            let first = cp.first().unwrap();
+            assert_eq!(first.coord().x, 652);
+            assert_eq!(first.coord().y, 336);
+            assert!((first.gamma().unwrap() - 2.20).abs() < f32::EPSILON);
+            let second = cp.second();
+            assert_eq!(second, None);
+        }
+    }
+
+    #[test]
+    fn both_none() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFB;
+        raw[15] = 0x0A;
+        raw[16] = 0x20;
+        raw[17] = 0x20;
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::ColorPoint(cp) = monitor.descriptor() {
+            assert!(cp.first().is_none());
+            assert!(cp.second().is_none());
+        }
+    }
+
+    #[test]
+    fn both_some() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFB;
+        raw[5] = 1;
+        raw[6] = 0x00;
+        raw[7] = 163;
+        raw[8] = 84;
+        raw[9] = 120;
+        raw[10] = 2;
+        raw[11] = 0x00;
+        raw[12] = 163;
+        raw[13] = 84;
+        raw[14] = 0xFF; // gamma undefined
+        raw[15] = 0x0A;
+        raw[16] = 0x20;
+        raw[17] = 0x20;
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::ColorPoint(cp) = monitor.descriptor() {
+            let first = cp.first().unwrap();
+            assert_eq!(first.coord().x, 652);
+            assert_eq!(first.coord().y, 336);
+            assert!((first.gamma().unwrap() - 2.20).abs() < f32::EPSILON);
+
+            let second = cp.second().unwrap();
+            assert_eq!(second.coord().x, 652);
+            assert_eq!(second.coord().y, 336);
+            assert!(second.gamma().is_none());
+        }
+    }
+}

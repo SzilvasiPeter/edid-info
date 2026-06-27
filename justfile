@@ -11,7 +11,7 @@ lint:
 test:
     cargo test --doc
     cargo test --all-targets --all-features
-    cargo +nightly bench
+    cargo +nightly bench --bench parse
 
 cov:
     cargo llvm-cov --all-features --html --output-dir target/coverage

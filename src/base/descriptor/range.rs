@@ -365,3 +365,38 @@ const fn adjust(min: u8, max: u8, mode: u8) -> (u16, u16) {
         _ => (min as u16, max as u16),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::VideoTimingSupport;
+    use crate::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::DESC_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        // Range-limits-only descriptor (tag 0xFD, timing type 0x01)
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFD; // RangeLimits tag
+        raw[5] = 50; // Min vertical Hz
+        raw[6] = 60; // Max vertical Hz
+        raw[7] = 30; // Min horizontal kHz
+        raw[8] = 80; // Max horizontal kHz
+        raw[9] = 15; // Max pixel clock (150 MHz)
+        raw[10] = 0x01; // RangeLimitsOnly
+        raw[11] = 0x0A; // Line feed
+        raw[12..18].fill(0x20); // Spaces
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::RangeLimits(rl) = monitor.descriptor() {
+            assert_eq!(rl.vertical_hz().min, 50);
+            assert_eq!(rl.vertical_hz().max, 60);
+            assert_eq!(rl.horizontal_khz().min, 30);
+            assert_eq!(rl.horizontal_khz().max, 80);
+            assert_eq!(rl.max_pixel_clock_mhz(), 150);
+            assert_eq!(rl.timing(), VideoTimingSupport::RangeLimitsOnly);
+            assert!(rl.validate().is_valid());
+        } else {
+            panic!("expected RangeLimits descriptor");
+        }
+    }
+}

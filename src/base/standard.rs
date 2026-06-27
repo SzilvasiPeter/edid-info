@@ -172,3 +172,71 @@ pub(super) const fn parse_std(byte1: u8, byte2: u8, legacy: bool) -> Option<Stan
         legacy,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    extern crate alloc;
+    use super::StdTimings;
+    use crate::common::{AspectRatio, BLOCK_LEN, FailureKind};
+    use alloc::vec::Vec;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw_block = [0u8; BLOCK_LEN];
+        raw_block[38..54].fill(0x01); // Fill unused with 01 01
+        raw_block[38] = 0xD1; // Width: 1920
+        raw_block[39] = 0xC0; // Aspect ratio: 16:9, Refresh: 60 Hz
+
+        let std_timings = StdTimings::new(&raw_block);
+        let timings = std_timings.iter().collect::<Vec<_>>();
+        assert_eq!(timings.len(), 1);
+        assert_eq!(timings[0].standard_timing_code(), 0xD1C0);
+        assert_eq!(timings[0].horizontal_active(), 1920);
+        assert_eq!(timings[0].vertical_active(), 1080);
+        assert_eq!(timings[0].aspect_ratio(), AspectRatio::new(16, 9));
+        assert_eq!(timings[0].refresh_rate(), 60);
+        assert!(std_timings.validate().is_valid());
+    }
+
+    #[test]
+    fn validate_standard_rejects_zero_empty_slot() {
+        let mut raw = [0x00; 128];
+        raw[38..54].fill(0x01);
+        raw[38] = 0x00;
+        raw[39] = 0x00;
+
+        let validation = StdTimings::new(&raw).validate();
+
+        assert!(!validation.is_valid());
+        assert_eq!(
+            validation.errors,
+            1 << (FailureKind::InvalidEmptyStdTiming as u8),
+        );
+        assert_eq!(validation.warnings, 0);
+        assert_eq!(
+            FailureKind::InvalidEmptyStdTiming.message(),
+            "Use 0x01 0x01 byte code for empty Standard Timings"
+        );
+    }
+
+    #[test]
+    fn validate_standard_rejects_too_small_horizontal() {
+        let mut raw = [0x00; 128];
+        raw[38..54].fill(0x01);
+        raw[38] = 0x00;
+        raw[39] = 0x40;
+
+        let validation = StdTimings::new(&raw).validate();
+
+        assert!(!validation.is_valid());
+        assert_eq!(
+            validation.errors,
+            1 << (FailureKind::StdTimingHorizontalLimit as u8),
+        );
+        assert_eq!(validation.warnings, 0);
+        assert_eq!(
+            FailureKind::StdTimingHorizontalLimit.message(),
+            "Standard timing horizontal pixels outside 256-2288"
+        );
+    }
+}

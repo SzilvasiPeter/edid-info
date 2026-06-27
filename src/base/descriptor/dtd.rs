@@ -229,3 +229,91 @@ impl DetailedTiming {
             .warn_if((width == 0) != (height == 0), WarningKind::DubiousImageSize)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DetailedTiming, Stereo, SyncSignal};
+    use crate::common::{DESC_LEN, Polarity, Size, SyncPolarity, Timing};
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[0] = 0x01; // Pixel clock LSB (10 kHz × 1 = 10 kHz)
+        raw[2] = 100; // h_active LSB
+        raw[3] = 20; // h_blank LSB
+        raw[5] = 100; // v_active LSB
+        raw[6] = 20; // v_blank LSB
+        raw[8] = 5; // h_front LSB
+        raw[9] = 3; // h_sync LSB
+        raw[10] = 0x53; // v_front LSB [7:4]=5, v_sync LSB [3:0]=3
+        raw[12] = 44; // physical width LSB
+        raw[13] = 30; // physical height LSB
+        raw[17] = 0x1E; // DigitalSeparate(Positive, Positive), stereo=None
+
+        let timing = DetailedTiming::new(&raw);
+        assert_eq!(timing.pixel_clock_khz(), 10);
+        assert!(!timing.interlaced());
+        assert_eq!(timing.horizontal(), Timing::new(100, 20, 5, 3, 0));
+        assert_eq!(timing.vertical(), Timing::new(100, 20, 5, 3, 0));
+        assert_eq!(
+            timing.physical(),
+            Size {
+                width: 44,
+                height: 30
+            }
+        );
+        assert_eq!(timing.stereo(), Stereo::None);
+        assert_eq!(
+            timing.signal(),
+            SyncSignal::DigitalSeparate(SyncPolarity {
+                horizontal: Polarity::Positive,
+                vertical: Polarity::Positive,
+            })
+        );
+        assert!(timing.validate().is_valid());
+    }
+
+    #[test]
+    fn test_projector_and_zero_image_size_validation() {
+        use crate::common::WarningKind;
+
+        // Both zero (projector) -> valid, no DubiousImageSize warning
+        let mut raw = [0_u8; 18];
+        raw[0] = 1; // pixel clock LSB to make it non-zero
+        raw[1] = 1; // pixel clock MSB
+        // raw[12..=14] are 0, so physical width and height are 0.
+        let dtd = DetailedTiming::new(&raw);
+        let validation = dtd.validate();
+        assert_eq!(
+            validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+            0,
+            "both image sizes zero (projector) should not warn"
+        );
+
+        // Only width zero -> triggers warning
+        let mut raw_width_zero = [0_u8; 18];
+        raw_width_zero[0] = 1;
+        raw_width_zero[1] = 1;
+        raw_width_zero[13] = 10; // height = 10
+        let dtd = DetailedTiming::new(&raw_width_zero);
+        let validation = dtd.validate();
+        assert_ne!(
+            validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+            0,
+            "only width zero should warn"
+        );
+
+        // Only height zero -> triggers warning
+        let mut raw_height_zero = [0_u8; 18];
+        raw_height_zero[0] = 1;
+        raw_height_zero[1] = 1;
+        raw_height_zero[12] = 10; // width = 10
+        let dtd = DetailedTiming::new(&raw_height_zero);
+        let validation = dtd.validate();
+        assert_ne!(
+            validation.warnings & (1 << (WarningKind::DubiousImageSize as u8)),
+            0,
+            "only height zero should warn"
+        );
+    }
+}

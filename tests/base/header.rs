@@ -14,13 +14,9 @@ const TSB_MODEL_YEAR: &[u8] = include_bytes!("../data/TSB_TV.edid");
 
 const HEADER_PATTERN: [u8; 8] = [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
 
-fn base(raw: &[u8]) -> [u8; 128] {
-    core::array::from_fn(|i| raw[i])
-}
-
 #[test]
 fn parse_header_acer_ek221q_h() {
-    let raw = base(ACER);
+    let raw = core::array::from_fn(|i| ACER[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['A', 'C', 'R']);
@@ -54,7 +50,7 @@ fn parse_header_acer_ek221q_h() {
 
 #[test]
 fn parse_header_asus_rog_pg27u() {
-    let raw = base(ASUS);
+    let raw = core::array::from_fn(|i| ASUS[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['A', 'U', 'S']);
@@ -81,7 +77,7 @@ fn parse_header_asus_rog_pg27u() {
 
 #[test]
 fn parse_header_cm_cm2400t() {
-    let raw = base(CM);
+    let raw = core::array::from_fn(|i| CM[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['C', 'M', '_']);
@@ -122,7 +118,7 @@ fn parse_header_cm_cm2400t() {
 
 #[test]
 fn parse_header_cs_1920x1080() {
-    let raw = base(CS);
+    let raw = core::array::from_fn(|i| CS[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['C', 'S', '_']);
@@ -156,7 +152,7 @@ fn parse_header_cs_1920x1080() {
 
 #[test]
 fn parse_header_lpl_lp154w01_zeroweek() {
-    let raw = base(LPL);
+    let raw = core::array::from_fn(|i| LPL[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['L', 'P', 'L']);
@@ -195,7 +191,7 @@ fn parse_header_lpl_lp154w01_zeroweek() {
 
 #[test]
 fn parse_header_ms_hsd_1903_a00() {
-    let raw = base(MS);
+    let raw = core::array::from_fn(|i| MS[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['M', 'S', '_']);
@@ -242,7 +238,7 @@ fn parse_header_ms_hsd_1903_a00() {
 
 #[test]
 fn parse_header_tk_tianma() {
-    let raw = base(TK);
+    let raw = core::array::from_fn(|i| TK[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['T', 'K', '@']);
@@ -283,7 +279,7 @@ fn parse_header_tk_tianma() {
 
 #[test]
 fn parse_header_wg_unknown() {
-    let raw = base(WG);
+    let raw = core::array::from_fn(|i| WG[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['W', 'G', '@']);
@@ -334,7 +330,7 @@ fn parse_header_wg_unknown() {
 
 #[test]
 fn parse_header_phl_bad_date() {
-    let raw = base(PHL_BAD_DATE);
+    let raw = core::array::from_fn(|i| PHL_BAD_DATE[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['P', 'H', 'L']);
@@ -375,7 +371,7 @@ fn parse_header_phl_bad_date() {
 
 #[test]
 fn parse_header_tsb_model_year() {
-    let raw = base(TSB_MODEL_YEAR);
+    let raw = core::array::from_fn(|i| TSB_MODEL_YEAR[i]);
     let out = Header::new(&raw);
     assert_eq!(out.pattern(), HEADER_PATTERN);
     assert_eq!(out.manufacturer(), ['T', 'S', 'B']);

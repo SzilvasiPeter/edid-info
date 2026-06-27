@@ -1,4 +1,4 @@
-use edid_info::edid::{Edid, ParseError};
+use edid_info::edid::Edid;
 use edid_info::extensions::Extension;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
@@ -42,32 +42,4 @@ fn parse_edid_asus_rog_pg27u() {
     if let Extension::Cta(cta) = first {
         assert_eq!(cta.revision(), 3);
     }
-}
-
-#[test]
-fn parse_edid_invalid_length() {
-    let short = &ACER[..100];
-    assert!(matches!(Edid::parse(short), Err(ParseError::InvalidLen)));
-
-    let unaligned = &ACER[..200];
-    assert!(matches!(
-        Edid::parse(unaligned),
-        Err(ParseError::InvalidLen)
-    ));
-}
-
-#[test]
-fn parse_edid_bad_header() {
-    let bad = [0u8; 128];
-    assert!(matches!(Edid::parse(&bad), Err(ParseError::BadHeader)));
-}
-
-#[test]
-fn parse_edid_ext_count_too_large() {
-    let mut large = vec![0u8; 128 * 66];
-    large[..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]);
-    assert!(matches!(
-        Edid::parse(&large),
-        Err(ParseError::ExtCountTooLarge)
-    ));
 }

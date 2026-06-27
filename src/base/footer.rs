@@ -75,3 +75,20 @@ impl core::fmt::Display for Footer {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Footer;
+    use crate::common::BLOCK_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw_block = [0u8; BLOCK_LEN];
+        raw_block[126] = 2; // 2 Extension blocks
+        raw_block[127] = 0xAA; // Checksum value
+
+        let footer = Footer::new(&raw_block);
+        assert_eq!(footer.extension_count(), 2);
+        assert_eq!(footer.checksum(), 0xAA);
+    }
+}

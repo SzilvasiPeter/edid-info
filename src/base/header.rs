@@ -219,3 +219,40 @@ const fn decode(manufacturer: u16) -> (u8, u8, u8) {
         (manufacturer & 0b11111) as u8,
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DateInfo, Header};
+    use crate::common::{BLOCK_LEN, Version};
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw_block = [0u8; BLOCK_LEN];
+        raw_block[0..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]); // Header pattern
+        raw_block[8..10].copy_from_slice(&[0x04, 0x21]); // Manufacturer ID: "AAA"
+        raw_block[10..12].copy_from_slice(&[0x01, 0x00]); // Product code: 1
+        raw_block[12..16].copy_from_slice(&[0x40, 0xE2, 0x01, 0x00]); // Serial number: 123456
+        raw_block[16] = 12; // Manufacture week
+        raw_block[17] = 34; // Manufacture year (1990 + 34 = 2024)
+        raw_block[18] = 1; // Major version
+        raw_block[19] = 4; // Minor version
+
+        let header = Header::new(&raw_block);
+        assert_eq!(
+            header.pattern(),
+            [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+        );
+        assert_eq!(header.manufacturer(), ['A', 'A', 'A']);
+        assert_eq!(header.product(), 1);
+        assert_eq!(header.serial(), 123_456);
+        assert_eq!(
+            header.date(),
+            DateInfo::Manufacture {
+                week: 12,
+                year: 2024
+            }
+        );
+        assert_eq!(header.version(), Version { major: 1, minor: 4 });
+        assert!(header.validate().is_valid());
+    }
+}

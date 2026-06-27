@@ -48,3 +48,28 @@ pub mod established;
 pub mod monitor;
 pub mod range;
 pub mod standard;
+
+#[cfg(test)]
+mod tests {
+    use super::dtd::DetailedTiming;
+    use super::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::DESC_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        // A detailed timing descriptor (non-zero pixel clock)
+        let mut dtd_raw = [0u8; DESC_LEN];
+        dtd_raw[0] = 0x01;
+        let timing = DetailedTiming::new(&dtd_raw);
+        assert_eq!(timing.pixel_clock_khz(), 10);
+
+        // A monitor descriptor: product name (tag 0xFC)
+        let mut mon_raw = [0u8; DESC_LEN];
+        mon_raw[3] = 0xFC;
+        mon_raw[5..12].copy_from_slice(b"My Disp");
+        let monitor = Monitor::new(&mon_raw, false);
+        if let DisplayDescriptor::ProductName(name) = monitor.descriptor() {
+            assert_eq!(name.text(), "My Disp");
+        }
+    }
+}

@@ -124,3 +124,80 @@ impl EstTimings {
             .warn_if(bad_reserved, WarningKind::EstTimingsReservedBits)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::{DESC_LEN, WarningKind};
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xF7; // EstTimings III tag
+        raw[5] = 0x0A; // Version
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::EstTimings(est) = monitor.descriptor() {
+            assert_eq!(est.iter().count(), 0);
+            assert!(est.validate().is_valid());
+        } else {
+            panic!("expected EstTimings descriptor");
+        }
+    }
+
+    #[test]
+    fn validate_std3_rejects_bad_version() {
+        let mut raw = [0u8; 18];
+        raw[3] = 0xF7;
+        raw[5] = 0xFF;
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::EstTimings(est) = monitor.descriptor() {
+            let v = est.validate();
+            assert!(
+                v.warnings & (1 << WarningKind::EstTimingsVersionReserved as u8) != 0,
+                "expected warning EstTimingsVersionReserved",
+            );
+        } else {
+            panic!("expected EstTimings, got {:?}", monitor.descriptor());
+        }
+    }
+
+    #[test]
+    fn validate_std3_rejects_reserved_bits() {
+        let mut raw = [0u8; 18];
+        raw[3] = 0xF7;
+        raw[5] = 0x0A;
+        raw[11] = 0x01; // lower nibble of byte 11 is reserved
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::EstTimings(est) = monitor.descriptor() {
+            let v = est.validate();
+            assert!(
+                v.warnings & (1 << WarningKind::EstTimingsReservedBits as u8) != 0,
+                "expected warning EstTimingsReservedBits",
+            );
+        } else {
+            panic!("expected EstTimings, got {:?}", monitor.descriptor());
+        }
+    }
+
+    #[test]
+    fn validate_std3_rejects_reserved_bytes() {
+        let mut raw = [0u8; 18];
+        raw[3] = 0xF7;
+        raw[5] = 0x0A;
+        raw[12] = 0x01; // byte 12 is reserved
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::EstTimings(est) = monitor.descriptor() {
+            let v = est.validate();
+            assert!(
+                v.warnings & (1 << WarningKind::EstTimingsReservedBits as u8) != 0,
+                "expected warning EstTimingsReservedBits",
+            );
+        } else {
+            panic!("expected EstTimings, got {:?}", monitor.descriptor());
+        }
+    }
+}

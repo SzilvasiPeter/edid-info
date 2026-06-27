@@ -175,3 +175,24 @@ const APPLE_1152X870_75: Dmt = Dmt {
         vertical: Polarity::Positive,
     },
 };
+
+#[cfg(test)]
+mod tests {
+    extern crate alloc;
+    use super::EstTimings;
+    use crate::common::BLOCK_LEN;
+    use alloc::vec::Vec;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw_block = [0u8; BLOCK_LEN];
+        raw_block[35] = 0x20; // 640x480 at 60 Hz (DMT 0x04)
+        raw_block[37] = 0x85; // 1152x870 at 75 Hz (bit 7) and manufacturer-defined flags (0x05)
+
+        let est = EstTimings::new(&raw_block);
+        let modes = est.iter().collect::<Vec<_>>();
+        assert_eq!(modes.len(), 2);
+        assert_eq!(modes[0].id, 0x04);
+        assert_eq!(est.manufacturer_bits(), 0x05);
+    }
+}

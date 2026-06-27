@@ -148,3 +148,49 @@ impl Monitor {
             .then(self.descriptor().validate())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DisplayDescriptor, Monitor};
+    use crate::common::{DESC_LEN, WarningKind};
+
+    #[test]
+    fn examples_docstring() {
+        // Product name descriptor (tag 0xFC)
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFC;
+        raw[5..11].copy_from_slice(b"My Mon");
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::ProductName(name) = monitor.descriptor() {
+            assert_eq!(name.text(), "My Mon");
+        } else {
+            panic!("expected ProductName descriptor");
+        }
+        assert!(monitor.validate().is_valid());
+    }
+
+    #[test]
+    fn validate_dummy_rejects_nonzero_payload() {
+        let mut raw = [0u8; 18];
+        raw[3] = 0x10;
+        raw[5] = 0x01;
+
+        let monitor = Monitor::new(&raw, false);
+        let v = monitor.validate();
+        assert!(
+            v.warnings & (1 << WarningKind::DummyNonZeroBytes as u8) != 0,
+            "expected warning DummyNonZeroBytes",
+        );
+    }
+
+    #[test]
+    fn validate_dummy_accepts_zero_payload() {
+        let mut raw = [0u8; 18];
+        raw[3] = 0x10;
+
+        let monitor = Monitor::new(&raw, false);
+        let v = monitor.validate();
+        assert!(v.is_valid());
+    }
+}

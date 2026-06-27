@@ -71,3 +71,25 @@ impl StdTimings {
         Validation::new().warn_if(self.raw[12] != 0x0A, WarningKind::StdTimingExpectedLineFeed)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+    use crate::common::DESC_LEN;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw = [0u8; DESC_LEN];
+        raw[3] = 0xFA; // StdTimings tag
+        raw[5..17].fill(0x01); // All 6 entries unused (0x01 0x01)
+        raw[17] = 0x0A; // Trailer line feed
+
+        let monitor = Monitor::new(&raw, false);
+        if let DisplayDescriptor::StdTimings(std) = monitor.descriptor() {
+            assert_eq!(std.iter().count(), 0);
+            assert!(std.validate().is_valid());
+        } else {
+            panic!("expected StdTimings descriptor");
+        }
+    }
+}

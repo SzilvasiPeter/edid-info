@@ -174,3 +174,106 @@ impl Descriptors {
         validation
     }
 }
+
+#[cfg(test)]
+mod tests {
+    extern crate alloc;
+    use super::{Descriptor, Descriptors};
+    use crate::base::descriptor::monitor::DisplayDescriptor;
+    use crate::base::descriptors::DESCRIPTORS_OFF;
+    use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind};
+    use alloc::vec::Vec;
+
+    #[test]
+    fn examples_docstring() {
+        let mut raw_block = [0u8; BLOCK_LEN];
+        raw_block[18] = 1; // Major version
+        raw_block[19] = 4; // Minor version
+
+        // 1. First descriptor: detailed timing (non-zero pixel clock)
+        raw_block[54] = 0x01;
+        raw_block[55] = 0x01;
+
+        // 2. Second descriptor: product name (tag 0xFC)
+        raw_block[72..74].copy_from_slice(&[0x00, 0x00]);
+        raw_block[75] = 0xFC;
+        raw_block[77..90].copy_from_slice(b"My Monitor\n\0\0");
+
+        // 3. Third descriptor: dummy descriptor (tag 0x10)
+        raw_block[90..92].copy_from_slice(&[0x00, 0x00]);
+        raw_block[93] = 0x10;
+
+        // 4. Fourth descriptor: dummy descriptor (tag 0x10)
+        raw_block[108..110].copy_from_slice(&[0x00, 0x00]);
+        raw_block[111] = 0x10;
+
+        let descriptors = Descriptors::new(&raw_block);
+        let list = descriptors.iter().collect::<Vec<_>>();
+        assert_eq!(list.len(), 4);
+        assert!(matches!(list[0], Descriptor::Timing(_)));
+        if let Descriptor::Display(m) = &list[1] {
+            if let DisplayDescriptor::ProductName(name) = m.descriptor() {
+                assert_eq!(name.text(), "My Monitor");
+            } else {
+                panic!("Expected product name descriptor");
+            }
+        } else {
+            panic!("Expected display descriptor");
+        }
+        assert!(descriptors.validate(false).is_valid());
+    }
+
+    #[test]
+    fn parse_dtd_low_pixel_clock() {
+        let mut raw = [0_u8; 128];
+        let off = DESCRIPTORS_OFF;
+        // Set low pixel clock: LSB = 1, MSB = 0 (represents 10 kHz pixel clock)
+        raw[off] = 1;
+        raw[off + 1] = 0;
+
+        let out = Descriptors::new(&raw);
+        match out.iter().next() {
+            Some(Descriptor::Timing(timing)) => {
+                assert_eq!(timing.pixel_clock_khz(), 10);
+            }
+            _ => panic!("first slot should parse as timing descriptor despite MSB being zero"),
+        }
+    }
+
+    #[test]
+    fn validate_rejects_missing_preferred_timing() {
+        let raw = [0_u8; 128];
+        let validation = Descriptors::new(&raw).validate(false);
+
+        assert_eq!(
+            validation.errors & (1 << (FailureKind::FirstDescriptorNotDetailedTiming as u8)),
+            1 << (FailureKind::FirstDescriptorNotDetailedTiming as u8),
+            "{}",
+            FailureKind::FirstDescriptorNotDetailedTiming.message()
+        );
+    }
+
+    #[test]
+    fn validate_rejects_undefined_descriptor() {
+        let mut raw = [0_u8; 128];
+        // First slot: valid DTD (pixel clock non-zero)
+        raw[DESCRIPTORS_OFF] = 1;
+        raw[DESCRIPTORS_OFF + 1] = 1;
+
+        // Second slot: display descriptor (first two bytes 0), tag 0x11 (undefined)
+        let off = DESCRIPTORS_OFF + DESC_LEN;
+        raw[off] = 0;
+        raw[off + 1] = 0;
+        raw[off + 2] = 0; // reserved byte 2
+        raw[off + 3] = 0x11; // undefined tag
+
+        let validation = Descriptors::new(&raw).validate(false);
+
+        assert_eq!(
+            validation.errors & (1 << (FailureKind::UndefinedDescriptor as u8)),
+            1 << (FailureKind::UndefinedDescriptor as u8),
+            "{}",
+            FailureKind::UndefinedDescriptor.message()
+        );
+    }
+}
