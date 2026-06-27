@@ -3,6 +3,50 @@
 //! Four 18-byte descriptors provide detailed timing information or
 //! monitor metadata (serial number, name, range limits, color data, etc.).
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::descriptors::{Descriptors, Descriptor};
+//! use edid_info::base::descriptor::monitor::DisplayDescriptor;
+//! use edid_info::common::BLOCK_LEN;
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[18] = 1; // Major version
+//! raw_block[19] = 4; // Minor version
+//!
+//! // 1. First descriptor: detailed timing (non-zero pixel clock)
+//! raw_block[54] = 0x01;
+//! raw_block[55] = 0x01;
+//!
+//! // 2. Second descriptor: product name (tag 0xFC)
+//! raw_block[72..74].copy_from_slice(&[0x00, 0x00]);
+//! raw_block[75] = 0xFC;
+//! raw_block[77..90].copy_from_slice(b"My Monitor\n\0\0");
+//!
+//! // 3. Third descriptor: dummy descriptor (tag 0x10)
+//! raw_block[90..92].copy_from_slice(&[0x00, 0x00]);
+//! raw_block[93] = 0x10;
+//!
+//! // 4. Fourth descriptor: dummy descriptor (tag 0x10)
+//! raw_block[108..110].copy_from_slice(&[0x00, 0x00]);
+//! raw_block[111] = 0x10;
+//!
+//! let descriptors = Descriptors::new(&raw_block);
+//! let list: Vec<_> = descriptors.iter().collect();
+//! assert_eq!(list.len(), 4);
+//! assert!(matches!(list[0], Descriptor::Timing(_)));
+//! if let Descriptor::Display(m) = &list[1] {
+//!     if let DisplayDescriptor::ProductName(name) = m.descriptor() {
+//!         assert_eq!(name.text(), "My Monitor");
+//!     } else {
+//!         panic!("Expected product name descriptor");
+//!     }
+//! } else {
+//!     panic!("Expected display descriptor");
+//! }
+//! assert!(descriptors.validate(false).is_valid());
+//! ```
+//!
 //! # Structure
 //!
 //! Each descriptor is 18 bytes. If bytes 0–1 are both zero, the descriptor
@@ -14,9 +58,10 @@
 
 use super::descriptor::dtd::DetailedTiming;
 use super::descriptor::monitor::Monitor;
+use super::header::Header;
 use crate::base::descriptor::monitor::DisplayDescriptor;
 use crate::base::descriptor::range::VideoTimingSupport;
-use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, WarningKind};
+use crate::common::{BLOCK_LEN, DESC_LEN, FailureKind, Validation, Version, WarningKind};
 
 /// Byte offset of the first descriptor block in the EDID base block.
 pub const DESCRIPTORS_OFF: usize = 54;
@@ -44,9 +89,10 @@ pub struct Descriptors {
 impl Descriptors {
     /// Parses descriptors from base block bytes.
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut bytes = [0u8; DTD_SIZE];
         bytes.copy_from_slice(&raw[DESCRIPTORS_OFF..DESCRIPTORS_OFF + DTD_SIZE]);
+        let legacy = Header::new(raw).version() < Version { major: 1, minor: 3 };
         Self { bytes, legacy }
     }
 

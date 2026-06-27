@@ -10,7 +10,7 @@ fn parse_dtd_synthetic() {
     raw[off] = 1;
     raw[off + 1] = 29;
 
-    let out = Descriptors::new(&raw, false);
+    let out = Descriptors::new(&raw);
     match out.iter().nth(1) {
         Some(Descriptor::Timing(timing)) => assert_eq!(timing.pixel_clock_khz(), 74_250),
         _ => panic!("slot 1 should parse as timing"),
@@ -20,7 +20,7 @@ fn parse_dtd_synthetic() {
 #[test]
 fn validate_rejects_missing_preferred_timing() {
     let raw = [0_u8; 128];
-    let validation = Descriptors::new(&raw, false).validate(false);
+    let validation = Descriptors::new(&raw).validate(false);
 
     assert_eq!(
         validation.errors & (1 << (FailureKind::FirstDescriptorNotDetailedTiming as u8)),
@@ -41,7 +41,7 @@ fn validate_rejects_timing_after_display_descriptor() {
     let later_off = DESCRIPTORS_OFF + 2 * DESC_LEN;
     raw[later_off..later_off + DESC_LEN].copy_from_slice(&dtd);
 
-    let validation = Descriptors::new(&raw, false).validate(false);
+    let validation = Descriptors::new(&raw).validate(false);
 
     assert_eq!(
         validation.errors & (1 << (FailureKind::InvalidDescriptorOrder as u8)),
@@ -59,7 +59,7 @@ fn parse_dtd_low_pixel_clock() {
     raw[off] = 1;
     raw[off + 1] = 0;
 
-    let out = Descriptors::new(&raw, false);
+    let out = Descriptors::new(&raw);
     match out.iter().next() {
         Some(Descriptor::Timing(timing)) => {
             assert_eq!(timing.pixel_clock_khz(), 10);
@@ -82,7 +82,7 @@ fn validate_rejects_undefined_descriptor() {
     raw[off + 2] = 0; // reserved byte 2
     raw[off + 3] = 0x11; // undefined tag
 
-    let validation = Descriptors::new(&raw, false).validate(false);
+    let validation = Descriptors::new(&raw).validate(false);
 
     assert_eq!(
         validation.errors & (1 << (FailureKind::UndefinedDescriptor as u8)),

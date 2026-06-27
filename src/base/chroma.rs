@@ -3,6 +3,37 @@
 //! 10-bit 2° [CIE 1931 xy coordinates](https://en.wikipedia.org/wiki/CIE_1931_color_space) for red, green, blue, and white point.
 //! In simple terms, it stores where the red, green, blue, and [white](https://en.wikipedia.org/wiki/White_point) colors land on a standard color map.
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::chroma::Chroma;
+//! use edid_info::common::BLOCK_LEN;
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[25] = 0xEE; // Red and Green LSBs
+//! raw_block[26] = 0x91; // Blue and White LSBs
+//! raw_block[27] = 163;  // Red-x MSB
+//! raw_block[28] = 84;   // Red-y MSB
+//! raw_block[29] = 76;   // Green-x MSB
+//! raw_block[30] = 153;  // Green-y MSB
+//! raw_block[31] = 38;   // Blue-x MSB
+//! raw_block[32] = 15;   // Blue-y MSB
+//! raw_block[33] = 80;   // White-x MSB
+//! raw_block[34] = 84;   // White-y MSB
+//!
+//! let chroma = Chroma::new(&raw_block);
+//! assert_eq!(chroma.red().x, 655);
+//! assert_eq!(chroma.red().y, 338);
+//! assert_eq!(chroma.green().x, 307);
+//! assert_eq!(chroma.green().y, 614);
+//! assert_eq!(chroma.blue().x, 154);
+//! assert_eq!(chroma.blue().y, 61);
+//! assert_eq!(chroma.white().x, 320);
+//! assert_eq!(chroma.white().y, 337);
+//! assert!(chroma.is_srgb());
+//! assert!(chroma.validate(false).is_valid());
+//! ```
+//!
 //! # Structure
 //!
 //! | Byte | Description |

@@ -3,6 +3,23 @@
 //! This optional field is a compact bitmap of factory-supported legacy timings, where each bit set to `1` means that exact mode is supported.
 //! Byte 37 bits 6-0 are manufacturer-defined flags that must not be used to infer display limits.
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::established::EstTimings;
+//! use edid_info::common::BLOCK_LEN;
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[35] = 0x20; // 640x480 at 60 Hz (DMT 0x04)
+//! raw_block[37] = 0x85; // 1152x870 at 75 Hz (bit 7) and manufacturer-defined flags (0x05)
+//!
+//! let est = EstTimings::new(&raw_block);
+//! let modes: Vec<_> = est.iter().collect();
+//! assert_eq!(modes.len(), 2);
+//! assert_eq!(modes[0].id, 0x04);
+//! assert_eq!(est.manufacturer_bits(), 0x05);
+//! ```
+//!
 //! # Structure
 //!
 //! | Byte | Description |

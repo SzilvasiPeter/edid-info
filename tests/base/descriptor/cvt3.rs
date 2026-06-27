@@ -1,5 +1,6 @@
 use edid_info::base::descriptor::cvt3::Rate;
 use edid_info::base::descriptor::monitor::{DisplayDescriptor, Monitor};
+use edid_info::base::dmt::find_cvt;
 use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../../data/ACER_EK221Q_H.edid");
@@ -103,4 +104,30 @@ fn parse_mode_horizontal_pixels() {
     } else {
         panic!("expected Cvt3, got {:?}", monitor.descriptor());
     }
+}
+
+#[test]
+fn find_cvt_entries() {
+    let expected = [
+        (0x7F_1C21u32, 0x16),
+        (0x7F_1C28, 0x17),
+        (0x7F_1C44, 0x18),
+        (0x7F_1C62, 0x19),
+        (0x8F_1821, 0x1B),
+        (0x8F_1828, 0x1C),
+        (0x8F_1844, 0x1D),
+        (0x8F_1862, 0x1E),
+        (0x0C_2021, 0x29),
+        (0xC1_1821, 0x2E),
+        (0x57_2821, 0x44),
+        (0x1F_3821, 0x4C),
+    ];
+
+    for (cvt_code, expected_id) in expected {
+        let dmt = find_cvt(cvt_code).unwrap();
+        assert_eq!(dmt.id, expected_id);
+        assert_eq!(dmt.cvt_code, Some(cvt_code));
+    }
+
+    assert_eq!(find_cvt(0xDEAD_BEEF), None);
 }

@@ -1,5 +1,26 @@
 //! Basic display parameters (bytes 20–24).
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::basic::{Basic, InputKind, BitDepth, Interface, ScreenSize};
+//! use edid_info::common::BLOCK_LEN;
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[20] = 0x80 | 0x20 | 0x05; // Digital, 8 bits/color, DisplayPort
+//! raw_block[21] = 48; // Width: 48 cm
+//! raw_block[22] = 27; // Height: 27 cm
+//! raw_block[23] = 120; // Gamma: 2.20
+//! raw_block[24] = 0x04; // Feature: sRGB
+//!
+//! let basic = Basic::new(&raw_block);
+//! assert!(matches!(basic.video_input().kind(), InputKind::Digital { depth: BitDepth::B8, iface: Interface::DisplayPort }));
+//! assert!(matches!(basic.screen_size(), ScreenSize::Dimensions(size) if size.width == 480 && size.height == 270));
+//! assert!((basic.gamma().unwrap() - 2.2).abs() < f32::EPSILON);
+//! assert!(basic.features().standard_rgb());
+//! assert!(basic.validate(true).is_valid());
+//! ```
+//!
 //! # Structure
 //!
 //! | Byte | Description |

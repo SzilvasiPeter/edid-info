@@ -3,6 +3,28 @@
 //! Up to 8 2-byte fields describing standard display modes.
 //! Unused fields are filled with 01 01 hex.
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::standard::StdTimings;
+//! use edid_info::common::{AspectRatio, BLOCK_LEN};
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[38..54].fill(0x01); // Fill unused with 01 01
+//! raw_block[38] = 0xD1;          // Width: 1920
+//! raw_block[39] = 0xC0;          // Aspect ratio: 16:9, Refresh: 60 Hz
+//!
+//! let std_timings = StdTimings::new(&raw_block);
+//! let timings: Vec<_> = std_timings.iter().collect();
+//! assert_eq!(timings.len(), 1);
+//! assert_eq!(timings[0].standard_timing_code(), 0xD1C0);
+//! assert_eq!(timings[0].horizontal_active(), 1920);
+//! assert_eq!(timings[0].vertical_active(), 1080);
+//! assert_eq!(timings[0].aspect_ratio(), AspectRatio::new(16, 9));
+//! assert_eq!(timings[0].refresh_rate(), 60);
+//! assert!(std_timings.validate().is_valid());
+//! ```
+//!
 //! # Structure
 //!
 //! Each 2-byte entry encodes:
@@ -12,7 +34,10 @@
 //! | Offset | Count | Description |
 //! |--------|-------|-------------|
 //! | 38–53  | 8×2   | Standard timing descriptors |
-use crate::common::{AspectRatio, BLOCK_LEN, FailureKind, Validation, WarningKind};
+use crate::{
+    base::header::Header,
+    common::{AspectRatio, BLOCK_LEN, FailureKind, Validation, Version, WarningKind},
+};
 
 /// Standard timings offset in the base block.
 pub const STANDARD_OFF: usize = 38;
@@ -31,9 +56,10 @@ impl StdTimings {
     /// Initialize the standard timings from base block bytes.
     /// If the EDID version is less than 1.3, use legacy mode.
     #[must_use]
-    pub fn new(raw: &[u8; BLOCK_LEN], legacy: bool) -> Self {
+    pub fn new(raw: &[u8; BLOCK_LEN]) -> Self {
         let mut bytes = [0u8; STANDARD_LEN];
         bytes.copy_from_slice(&raw[STANDARD_OFF..STANDARD_OFF + STANDARD_LEN]);
+        let legacy = Header::new(raw).version() < Version { major: 1, minor: 3 };
         Self { bytes, legacy }
     }
 

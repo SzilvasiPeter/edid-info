@@ -4,6 +4,84 @@
 //! contains all essential display information including:
 //! manufacturer data, display parameters, color characteristics, and timing descriptors.
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::Base;
+//! use edid_info::common::{BLOCK_LEN, Version};
+//!
+//! let mut raw = [0u8; BLOCK_LEN];
+//!
+//! // Header (bytes 0–19)
+//! raw[0..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]);
+//! raw[8..10].copy_from_slice(&[0x04, 0x21]); // Manufacturer: "AAA"
+//! raw[10..12].copy_from_slice(&[0x01, 0x00]); // Product code: 1
+//! raw[12..16].copy_from_slice(&[0x01, 0x00, 0x00, 0x00]); // Serial: 1
+//! raw[16] = 12; // Manufacture week
+//! raw[17] = 34; // Manufacture year (1990 + 34 = 2024)
+//! raw[18] = 1;  // Major version
+//! raw[19] = 4;  // Minor version
+//!
+//! // Basic display parameters (bytes 20–24)
+//! raw[20] = 0xA5; // Digital, 8-bit, DisplayPort
+//! raw[21] = 48;   // Width: 48 cm
+//! raw[22] = 27;   // Height: 27 cm
+//! raw[23] = 120;  // Gamma: 2.20
+//! raw[24] = 0x04; // Features: sRGB
+//!
+//! // Chromaticity (bytes 25–34) — sRGB coordinates
+//! raw[25] = 0xEE;
+//! raw[26] = 0x91;
+//! raw[27] = 163;
+//! raw[28] = 84;
+//! raw[29] = 76;
+//! raw[30] = 153;
+//! raw[31] = 38;
+//! raw[32] = 15;
+//! raw[33] = 80;
+//! raw[34] = 84;
+//!
+//! // Standard timings (bytes 38–53) — all unused
+//! raw[38..54].fill(0x01);
+//!
+//! // First descriptor (bytes 54–71): detailed timing
+//! raw[54] = 0x01;
+//! raw[55] = 0x01;
+//!
+//! // Second descriptor (bytes 72–89): product name
+//! raw[72] = 0x00;
+//! raw[73] = 0x00;
+//! raw[75] = 0xFC;
+//! raw[77..90].copy_from_slice(b"My Monitor\n\0\0");
+//!
+//! // Third descriptor (bytes 90–107): dummy
+//! raw[90] = 0x00;
+//! raw[91] = 0x00;
+//! raw[93] = 0x10;
+//!
+//! // Fourth descriptor (bytes 108–125): dummy
+//! raw[108] = 0x00;
+//! raw[109] = 0x00;
+//! raw[111] = 0x10;
+//!
+//! // Checksum: set byte 127 so all 128 bytes sum to zero
+//! let mut checksum: u8 = 0;
+//! let mut i = 0;
+//! while i < 127 {
+//!     checksum = checksum.wrapping_add(raw[i]);
+//!     i += 1;
+//! }
+//! raw[127] = checksum.wrapping_neg();
+//!
+//! let base = Base::new(&raw);
+//! assert_eq!(base.header().version(), Version { major: 1, minor: 4 });
+//! assert!(base.chroma().is_srgb());
+//! assert_eq!(base.standard_timings().iter().count(), 0);
+//! assert!(base.descriptors().iter().any(|d| matches!(d, edid_info::base::descriptors::Descriptor::Timing(_))));
+//! assert_eq!(base.footer().extension_count(), 0);
+//! assert!(base.validate().is_valid());
+//! ```
+//!
 //! # Structure
 //!
 //! | Offset | Size | Description |
@@ -30,7 +108,7 @@ pub mod footer;
 pub mod header;
 pub mod standard;
 
-use crate::common::{BLOCK_LEN, FailureKind, Validation, Version, checksum_ok};
+use crate::common::{BLOCK_LEN, FailureKind, Validation, checksum_ok};
 use basic::{AnalogType, DisplayType};
 
 /// Base block structure containing header, display parameters, chroma, timings and descriptors.
@@ -73,15 +151,13 @@ impl<'a> Base<'a> {
     /// Returns the standard timing information.
     #[must_use]
     pub fn standard_timings(&self) -> standard::StdTimings {
-        let legacy = self.header().version() < Version { major: 1, minor: 3 };
-        standard::StdTimings::new(self.raw, legacy)
+        standard::StdTimings::new(self.raw)
     }
 
     /// Returns the display timing and monitor descriptors.
     #[must_use]
     pub fn descriptors(&self) -> descriptors::Descriptors {
-        let legacy = self.header().version() < Version { major: 1, minor: 3 };
-        descriptors::Descriptors::new(self.raw, legacy)
+        descriptors::Descriptors::new(self.raw)
     }
 
     /// Returns the extension flag and checksum.

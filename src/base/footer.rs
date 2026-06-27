@@ -2,6 +2,21 @@
 //!
 //! Contains the extension count and checksum for the block.
 //!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::footer::Footer;
+//! use edid_info::common::BLOCK_LEN;
+//!
+//! let mut raw_block = [0u8; BLOCK_LEN];
+//! raw_block[126] = 2;   // 2 Extension blocks
+//! raw_block[127] = 0xAA; // Checksum value
+//!
+//! let footer = Footer::new(&raw_block);
+//! assert_eq!(footer.extension_count(), 2);
+//! assert_eq!(footer.checksum(), 0xAA);
+//! ```
+//!
 //! # Structure
 //!
 //! | Byte | Description |

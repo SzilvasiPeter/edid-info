@@ -1,6 +1,34 @@
 //! VESA DMT timing metadata.
 //!
 //! This module provides a fixed list of DMT timing entries and helper functions to look up modes and compute horizontal and vertical refresh rates.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use edid_info::base::dmt::{find_cvt, find_dmt, find_std};
+//! use edid_info::common::{Polarity, SyncPolarity, Timing};
+//!
+//! // Look up a DMT timing by its ID (e.g., 0x04 is 640x480 @ 60Hz)
+//! let dmt = find_dmt(0x04).unwrap();
+//! assert_eq!(dmt.id, 0x04);
+//! assert_eq!(dmt.std_code, Some(0x3140));
+//! assert_eq!(dmt.cvt_code, None);
+//! assert_eq!(dmt.pixel_clock_khz, 25_175);
+//! assert!(!dmt.interlaced);
+//! assert_eq!(dmt.horizontal, Timing::new(640, 160, 8, 96, 8));
+//! assert_eq!(dmt.vertical, Timing::new(480, 45, 2, 2, 8));
+//! assert_eq!(dmt.sync, SyncPolarity { horizontal: Polarity::Negative, vertical: Polarity::Negative });
+//! assert_eq!(dmt.h_freq_hz(), 31_469);
+//! assert_eq!(dmt.v_freq_mhz(), 59_941);
+//!
+//! // Look up by standard timing code 0x3140 (which resolves to 640x480 @ 60Hz)
+//! let dmt_std = find_std(0x3140).unwrap();
+//! assert_eq!(dmt_std.id, 0x04);
+//!
+//! // Look up by CVT code 0x7F_1C21 (1280x768 @ 60Hz, DMT ID 0x16)
+//! let dmt_cvt = find_cvt(0x7F_1C21).unwrap();
+//! assert_eq!(dmt_cvt.id, 0x16);
+//! ```
 
 use crate::common::{Polarity, SyncPolarity, Timing};
 
@@ -55,11 +83,26 @@ pub const fn find_dmt(id: u8) -> Option<Dmt> {
 
 /// Finds a DMT timing entry by standard timing code.
 #[must_use]
-pub const fn find_std(id: u16) -> Option<Dmt> {
+pub const fn find_std(code: u16) -> Option<Dmt> {
     let mut i = 0;
     while i < DMT_ARRAY.len() {
         if let Some(std) = DMT_ARRAY[i].std_code
-            && std == id
+            && std == code
+        {
+            return Some(DMT_ARRAY[i]);
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Finds a DMT timing entry by CVT code.
+#[must_use]
+pub const fn find_cvt(code: u32) -> Option<Dmt> {
+    let mut i = 0;
+    while i < DMT_ARRAY.len() {
+        if let Some(cvt) = DMT_ARRAY[i].cvt_code
+            && cvt == code
         {
             return Some(DMT_ARRAY[i]);
         }
