@@ -1,0 +1,35 @@
+[package]
+name = "edid-info-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.edid-info]
+path = ".."
+
+[[bin]]
+name = "tg1"
+path = "fuzz_targets/fuzz_target_1.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tg2"
+path = "fuzz_targets/fuzz_target_2.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tg3"
+path = "fuzz_targets/fuzz_target_3.rs"
+test = false
+doc = false
+bench = false
