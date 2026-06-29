@@ -13,11 +13,8 @@ Lightweight Rust library for reading EDID data, extracting monitor name, resolut
 
 ## Installation
 
-Add to your `Cargo.toml`:
-
-```toml
-[dependencies]
-edid-info = "0.1"
+```sh
+cargo add edid-info
 ```
 
 ## API Overview
