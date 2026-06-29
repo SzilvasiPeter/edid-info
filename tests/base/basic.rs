@@ -14,14 +14,10 @@ const TSB: &[u8] = include_bytes!("../data/TSB_TV.edid");
 const VIT: &[u8] = include_bytes!("../data/VIT_VT988.edid");
 const WG: &[u8] = include_bytes!("../data/WG@_UNKNOWN.edid");
 
-fn base(raw: &[u8]) -> [u8; 128] {
-    core::array::from_fn(|i| raw[i])
-}
-
 #[test]
 fn parse_basic_acer_ek221q_h() {
     assert_eq!(ACER.len(), 256);
-    let raw = base(ACER);
+    let raw = core::array::from_fn(|i| ACER[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -59,7 +55,7 @@ fn parse_basic_acer_ek221q_h() {
 #[test]
 fn parse_basic_a630c928b60c_landscape() {
     assert_eq!(A630.len(), 256);
-    let raw = base(A630);
+    let raw = core::array::from_fn(|i| A630[i]);
     let out = Basic::new(&raw);
 
     let InputKind::Analog {
@@ -103,7 +99,7 @@ fn parse_basic_a630c928b60c_landscape() {
 
 #[test]
 fn parse_basic_cf24d4b470d2_portrait() {
-    let raw = base(CF24);
+    let raw = core::array::from_fn(|i| CF24[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -136,7 +132,7 @@ fn parse_basic_cf24d4b470d2_portrait() {
 
 #[test]
 fn parse_basic_asus_rog_pg27u() {
-    let raw = base(ASUS);
+    let raw = core::array::from_fn(|i| ASUS[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -173,7 +169,7 @@ fn parse_basic_asus_rog_pg27u() {
 
 #[test]
 fn parse_basic_phl_221v8() {
-    let raw = base(PHL);
+    let raw = core::array::from_fn(|i| PHL[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -214,7 +210,7 @@ fn parse_basic_phl_221v8() {
 
 #[test]
 fn parse_basic_rol_rolsen_c707n() {
-    let raw = base(ROL);
+    let raw = core::array::from_fn(|i| ROL[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -255,7 +251,7 @@ fn parse_basic_rol_rolsen_c707n() {
 
 #[test]
 fn parse_basic_tsb_tv() {
-    let raw = base(TSB);
+    let raw = core::array::from_fn(|i| TSB[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -296,7 +292,7 @@ fn parse_basic_tsb_tv() {
 
 #[test]
 fn parse_basic_vit_vt988() {
-    let raw = base(VIT);
+    let raw = core::array::from_fn(|i| VIT[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(
@@ -337,7 +333,7 @@ fn parse_basic_vit_vt988() {
 
 #[test]
 fn parse_basic_wg_unknown() {
-    let raw = base(WG);
+    let raw = core::array::from_fn(|i| WG[i]);
     let out = Basic::new(&raw);
 
     assert_eq!(

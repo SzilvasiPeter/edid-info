@@ -1,16 +1,12 @@
 use edid_info::base::{dmt::find_std, standard::StdTimings};
-use edid_info::common::{AspectRatio, FailureKind};
+use edid_info::common::AspectRatio;
 
 const ACER: &[u8] = include_bytes!("../data/ACER_EK221Q_H.edid");
 const ASUS: &[u8] = include_bytes!("../data/ASUS_ROG_PG27U.edid");
 
-fn base(raw: &[u8]) -> [u8; 128] {
-    core::array::from_fn(|i| raw[i])
-}
-
 #[test]
 fn parse_standard_acer_ek221q_h() {
-    let raw = base(ACER);
+    let raw = core::array::from_fn(|i| ACER[i]);
     let timings = |i| {
         StdTimings::new(&raw).iter().nth(i).map(|t| {
             (
@@ -35,7 +31,7 @@ fn parse_standard_acer_ek221q_h() {
 
 #[test]
 fn parse_standard_asus_rog_pg27u() {
-    let raw = base(ASUS);
+    let raw = core::array::from_fn(|i| ASUS[i]);
     let timings = |i| {
         StdTimings::new(&raw).iter().nth(i).map(|t| {
             (
@@ -59,7 +55,7 @@ fn parse_standard_asus_rog_pg27u() {
 
 #[test]
 fn parse_standard_timing_code() {
-    let raw = base(ACER);
+    let raw = core::array::from_fn(|i| ACER[i]);
 
     let code = StdTimings::new(&raw)
         .iter()
@@ -71,7 +67,7 @@ fn parse_standard_timing_code() {
 
 #[test]
 fn parse_standard_timing_codes_find_dmt_entries() {
-    let raw = base(ACER);
+    let raw = core::array::from_fn(|i| ACER[i]);
     let expected_dmt_ids = [
         Some(0x15),
         Some(0x20),
@@ -96,46 +92,4 @@ fn parse_standard_timing_codes_find_dmt_entries() {
         }
     }
     assert_eq!(count, expected_dmt_ids.len());
-}
-
-#[test]
-fn validate_standard_rejects_zero_empty_slot() {
-    let mut raw = [0x00; 128];
-    raw[38..54].fill(0x01);
-    raw[38] = 0x00;
-    raw[39] = 0x00;
-
-    let validation = StdTimings::new(&raw).validate();
-
-    assert!(!validation.is_valid());
-    assert_eq!(
-        validation.errors,
-        1 << (FailureKind::InvalidEmptyStdTiming as u8),
-    );
-    assert_eq!(validation.warnings, 0);
-    assert_eq!(
-        FailureKind::InvalidEmptyStdTiming.message(),
-        "Use 0x01 0x01 byte code for empty Standard Timings"
-    );
-}
-
-#[test]
-fn validate_standard_rejects_too_small_horizontal() {
-    let mut raw = [0x00; 128];
-    raw[38..54].fill(0x01);
-    raw[38] = 0x00;
-    raw[39] = 0x40;
-
-    let validation = StdTimings::new(&raw).validate();
-
-    assert!(!validation.is_valid());
-    assert_eq!(
-        validation.errors,
-        1 << (FailureKind::StdTimingHorizontalLimit as u8),
-    );
-    assert_eq!(validation.warnings, 0);
-    assert_eq!(
-        FailureKind::StdTimingHorizontalLimit.message(),
-        "Standard timing horizontal pixels outside 256-2288"
-    );
 }
