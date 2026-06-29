@@ -43,6 +43,22 @@ edid.base().dtd()         // Detailed timing descriptors
 edid.base().footer()      // Extension count, checksum
 ```
 
+### Extension Support
+
+- [x] `02` — CTA-861 Timing Extension
+- [ ] `00` — Timing Extension
+- [ ] `10` — Video Timing Block Extension (VTB-EXT)
+- [ ] `20` — EDID 2.0 Extension
+- [ ] `40` — Display Information Extension (DI-EXT)
+- [ ] `50` — Localized String Extension (LS-EXT)
+- [ ] `60` — Microdisplay Interface Extension (MI-EXT)
+- [ ] `70` — Display ID Extension
+- [ ] `A7` / `AF` / `BF` — Display Transfer Characteristics Data Block (DTCDB)
+- [ ] `F0` — Block Map
+- [ ] `FF` — Display Device Data Block (DDDB) / Manufacturer-Specific
+
+Unrecognized extensions are stored as raw bytes via `Extension::Unknown`.
+
 ## Implementation References
 
 - **Extended Display Identification Data (EDID) Wikipedia**: https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
