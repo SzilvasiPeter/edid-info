@@ -30,8 +30,3 @@ To match on the raw continous hex values, use the faster `rg` instead. For examp
 ```
 rg -l "00 00 00 fb 00" ../EDID/
 ```
-
-### EDID sources
-
-- https://github.com/linuxhw/EDID
-- https://github.com/bsdhw/EDID
