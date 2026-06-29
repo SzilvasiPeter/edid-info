@@ -4,7 +4,10 @@ This directory contains helper scripts for development and maintenance.
 
 ## `check-bytes`
 
-Checks if specific bytes in EDID files match a given condition.
+Checks if specific bytes in EDID files match a given condition. A *super* useful repositories for real world data:
+
+- https://github.com/linuxhw/EDID
+- https://github.com/bsdhw/EDID
 
 ### Build
 
@@ -22,7 +25,7 @@ Checks if the minor version is 4 (byte 19), then if the width is not zero (byte 
 
 ### RipGrep on Hex
 
-To match on the raw hex values, use the faster `rg` instead:
+To match on the raw continous hex values, use the faster `rg` instead. For example, get the a EDID files with color point descriptor:
 
 ```
 rg -l "00 00 00 fb 00" ../EDID/
