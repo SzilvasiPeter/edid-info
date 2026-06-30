@@ -24,7 +24,7 @@ cargo add edid-info
 | Type | Description |
 |------|-------------|
 | `Edid` | Main entry point for parsing EDID data |
-| `BaseEdid` | EDID 1.4 base block (128 bytes) |
+| `Base` | EDID 1.4 base block (128 bytes) |
 | `Extension` | Extension block (CTA) |
 | `Cta` | CTA-861 extension block |
 

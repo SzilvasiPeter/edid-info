@@ -2,10 +2,6 @@
 //!
 //! Parse flow: validate length, parse base block, then parse
 //! extensions and keep unknown blocks as raw bytes.
-//!
-//! # References
-//! - [Extended Display Identification Wikipedia](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data)
-//! - [VESA Enhanced Extended Display Identification Data Standard](https://glenwing.github.io/docs/VESA-EEDID-A2.pdf)
 
 use crate::base::Base;
 use crate::common::{BLOCK_LEN, FailureKind, Validation};

@@ -22,10 +22,6 @@
 //! - **Audio (tag 1)**: Short Audio Descriptors (SADs)
 //! - **Vendor (tag 3)**: Vendor-specific data (e.g., HDMI VSDB)
 //! - **Speaker (tag 4)**: Speaker allocation map
-//!
-//! # References
-//! - [Wikipedia: CTA Extension Block](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#CTA_EDID_Timing_Extension_Block)
-//! - [CTA-861-G Standard](https://ia800707.us.archive.org/27/items/CTA-861-G/CTA-861-G.pdf)
 
 pub mod audio;
 pub mod block;

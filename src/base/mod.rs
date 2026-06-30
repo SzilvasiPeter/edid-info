@@ -94,9 +94,6 @@
 //! | 54–125 | 72   | Display descriptors |
 //! | 126    | 1    | Extension block count |
 //! | 127    | 1    | Checksum |
-//!
-//! # References
-//! - [Wikipedia: EDID 1.4 Structure](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#Structure,_version_1.4)
 
 pub mod basic;
 pub mod chroma;

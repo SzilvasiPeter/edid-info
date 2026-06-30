@@ -473,9 +473,6 @@ impl core::fmt::Display for VideoInput {
 /// | 7 | DPMS standby supported |
 /// | 6 | DPMS suspend supported |
 /// | 5 | DPMS active-off supported |
-///
-/// # References
-/// - [DPMS](https://en.wikipedia.org/wiki/VESA_Display_Power_Management_Signaling) (Display Power Management Signaling)
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Dpms {
     pub standby: bool,

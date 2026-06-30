@@ -115,9 +115,6 @@ impl HdmiVsdb {
 /// - `1..=250` → `(value - 1) * 2` ms (i.e., 0 ms to 498 ms in 2 ms steps)
 /// - `251` → 500 ms (maximum representable latency)
 /// - `252..=255` → reserved/invalid (returns `None`)
-///
-/// # References
-/// - CTA-861-G, Section 6.4.5: Vendor Specific Data Block
 const fn lat_ms(raw: u8) -> Option<u16> {
     if raw == 0 {
         None
