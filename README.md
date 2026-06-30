@@ -1,6 +1,7 @@
 # edid-info
 
 [![coverage](https://img.shields.io/endpoint?url=https://szilvasipeter.github.io/edid-info/coverage/badge.json)](https://szilvasipeter.github.io/edid-info/coverage/index.html)
+[![crates.io](https://img.shields.io/crates/v/edid-info.svg)](https://crates.io/crates/edid-info)
 
 Lightweight Rust library for reading EDID data, extracting monitor name, resolution, and refresh rate.
 
